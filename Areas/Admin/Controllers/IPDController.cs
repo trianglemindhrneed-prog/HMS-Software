@@ -6,9 +6,10 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HMSCore.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class IPDController : Controller
+public class IPDController : BaseController
 {
     private readonly IDbLayer _dbLayer;
 
