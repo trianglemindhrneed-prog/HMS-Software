@@ -1,0 +1,129 @@
+﻿@model HMSCore.Areas.Admin.Models.Nurse
+@{
+    ViewData["Title"] = Model.NurseId == 0 ? "Add Nurse" : "Edit Nurse";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>Nurse <small>create &amp; edit nurse</small></h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/index"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#">Nurse</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+</section>
+
+<section class="content">
+    <form asp-action="AddNurse" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="NurseId" />
+
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="box">
+                    <div class="box-body">
+                        <div class="row">
+
+                            <!-- LEFT -->
+                            <div class="col-md-9">
+                                <div class="row"> 
+                                    <!-- Full Name -->
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Full Name *</label>
+                                            <input asp-for="FullName" class="form-control" maxlength="50" autocomplete="off" />
+                                            <span asp-validation-for="FullName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Phone -->
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Phone *</label>
+                                            <input asp-for="MobileNu" class="form-control"
+                                                   maxlength="10"
+                                                   oninput="validatePhone(this)"
+                                                   placeholder="Enter 10-digit number" />
+                                            <span class="text-danger" id="phoneError" style="display:none">
+                                                Phone must be exactly 10 digits
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Email -->
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Email (Username) *</label>
+                                            <input autocomplete="off" asp-for="Email" class="form-control" type="email" />
+                                            <span asp-validation-for="Email" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Password -->
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>Password</label>
+                                            <input autocomplete="off" asp-for="Password" class="form-control" type="password" />
+                                        </div>
+                                    </div>
+
+                               
+
+                                </div>
+
+                                <!-- Status -->
+                                <div class="form-group">
+                                    <label>Status *</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="IsActive" value="true"
+                                                   @(Model.IsActive ? "checked" : "") /> Active
+                                        </label>
+                                        <label style="margin-left:10px;">
+                                            <input type="radio" name="IsActive" value="false"
+                                                   @(!Model.IsActive ? "checked" : "") /> Inactive
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT -->
+                            <div class="col-md-3 text-center">
+                                <img src="@(string.IsNullOrEmpty(Model.ProfileImagePath)
+                                                                                                                ? "/adminassets/img/def-profile-img.png"
+                                                                                                                : Model.ProfileImagePath)"
+                                     class="profile-user-img img-responsive img-circle" />
+
+                                <div class="form-group">
+                                    <div class="btn btn-default btn-file">
+                                        <i class="fa fa-user-circle"></i>&nbsp;Profile Picture
+                                        <input type="file" name="ProfileImage" />
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-actions text-center">
+                            <button type="submit" class="btn btn-success btn-flat">Save</button>
+                            <a href="/Admin/Master/NurseList" class="btn btn-default btn-flat">
+                                <i class="fa fa-ban"></i> Cancel
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <script>
+        function validatePhone(input) {
+            input.value = input.value.replace(/[^0-9]/g, '').slice(0, 10);
+            document.getElementById("phoneError").style.display =
+                (input.value.length > 0 && input.value.length !== 10) ? "inline" : "none";
+        }
+    </script>
+}

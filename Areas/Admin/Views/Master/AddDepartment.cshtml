@@ -1,0 +1,64 @@
+﻿@model HMSCore.Areas.Admin.Models.Department
+@{
+    ViewData["Title"] = "Add Department";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    }
+<section class="content-header">
+    <h1>Departments</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Add Department</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    @if (TempData["Message"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Message"]</div>
+                    }
+                </div>
+                <div class="box-body">
+                    <form asp-action="AddDepartment" method="post" class="form-horizontal">
+                        <input type="hidden" asp-for="DepartmentId" />
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Department Name <span class="required">*</span></label>
+                            <div class="col-md-4">
+                                <input autocomplete="off" asp-for="DepartmentName" class="form-control" maxlength="200" required />
+                                <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Status</label>
+                            <div class="col-md-4">
+                                <div class="radio-inline">
+                                    <input type="radio" name="IsActive" value="true" @(Model.IsActive ? "checked" : "") /> Active
+                                </div>
+                                <div class="radio-inline">
+                                    <input type="radio" name="IsActive" value="false" @(!Model.IsActive ? "checked" : "") /> Inactive
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit" class="btn btn-success btn-flat">Save</button>
+                                <button type="reset" class="btn btn-primary btn-flat">Reset</button>
+                                <a asp-action="DepartmentList" class="btn btn-primary btn-flat"><i class="fa fa-ban"></i>&nbsp;Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

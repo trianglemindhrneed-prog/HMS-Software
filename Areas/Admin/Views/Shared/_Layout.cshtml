@@ -1,6 +1,7 @@
 ﻿@{
     var role = ViewBag.UserRole as string;
-} 
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,11 +9,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Admin Triangle Mind Technologies | Dashboard</title>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="icon" type="image/x-icon" href="img/logo.png" />
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" />
     <link rel="stylesheet" href="~/adminassets/bower_components/bootstrap/dist/css/bootstrap.min.css" />
- 
+
     <link rel="stylesheet" href="~/adminassets/bower_components/Ionicons/css/ionicons.min.css" />
     <link rel="stylesheet" href="~/adminassets/dist/css/AdminLTE.min.css" />
     <link rel="stylesheet" href="~/adminassets/dist/css/PageIndexing.css" />
@@ -29,31 +30,35 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
 
-         .custom-btn {
-             background-color: #ff0000ad;
-             color: #fff;
-             border: none;
-             transition: background-color 0.3s ease;
-         }
-             .custom-btns {
-             background-color: #008000a1;
-             color: #fff;
-             border: none;
-             transition: background-color 0.3s ease;
-         }
+        .custom-btn {
+            background-color: #ff0000ad;
+            color: #fff;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
 
-         .custom-btn:hover {
-             background-color: #0056b3;
-             color: #fff;
-         }
-         .custom-btn:focus {
-             outline: none;
-             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
-         }
-            .custom-btns:hover {
+        .custom-btns {
+            background-color: #008000a1;
+            color: #fff;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-btn:hover {
             background-color: #0056b3;
             color: #fff;
         }
+
+        .custom-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+        }
+
+        .custom-btns:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+
         .custom-btns:focus {
             outline: none;
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
@@ -83,7 +88,7 @@
                         <li class="dropdown user user-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <img src="~/adminassets/img/def-profile-img.png" class="user-image" alt="User Image" />
-                          
+
                                 <span class="hidden-xs">HMS</span>
                             </a>
                             <ul class="dropdown-menu">
@@ -129,12 +134,12 @@
 
                 <ul class="sidebar-menu" data-widget="tree">
                     <li class="active">
-                        <a href="Dashboard.aspx">
+                        <a href="/admin/Dashboard/index">
                             <i class="fa fa-grip"></i> <span>Dashboard</span>
                         </a>
                     </li>
-                    @if (ViewBag.UserRole == "Admin")
-                    { 
+                    @if (role == "Admin")
+                    {
 
                         <!-- Admin-only pages -->
                         <li class="treeview">
@@ -146,44 +151,44 @@
                             <ul class="treeview-menu">
 
                                 <li>
-                                    <a href="DepartmentList.aspx">
+                                    <a href="/admin/Master/DepartmentList">
                                         <i class="fa fa-sitemap"></i>
                                         <span>Department</span>
                                     </a>
                                 </li>
 
-                                <li><a href="DoctorsList.aspx"><i class="fa fa-user-doctor"></i> <span>Doctors</span></a></li>
-                                <li><a href="NurseList.aspx"><i class="fa fa-user-nurse"></i> <span>Nurses</span></a></li>
+                                <li><a href="/admin/Master/DoctorsList"><i class="fa fa-user-doctor"></i> <span>Doctors</span></a></li>
+                                <li><a href="/admin/Master/NurseList"><i class="fa fa-user-nurse"></i> <span>Nurses</span></a></li>
                             </ul>
                         </li>
                     }
 
-                  
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
-                    { 
 
-                    <!-- Appointment Management -->
-                    <li class="treeview">
-                        <a href="#">
-                            <i class="fa fa-calendar-check"></i> <span>Appointment Management</span>
-                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                        </a>
-                        <ul class="treeview-menu"> 
-                            <li><a href="DoctorSlot.aspx"><i class="fa fa-user-doctor"></i>Create Doctor Slot</a></li>
-                            <li><a href="SearchSlot.aspx"><i class="fa fa-user-doctor"></i>Search Doctor Slot</a></li>
-                            <li><a href="UnblockSlot.aspx"><i class="fa fa-unlock"></i>Unblock Doctor Slot</a></li>
+                    @if (role == "Admin" || role == "Doctor")
+                    {
 
-                            <li><a href="AppointmentReport.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
-                            <li><a href="TodayPatientAppointment.aspx"><i class="fa fa-calendar-check"></i> Today's Appointments</a></li>
-                        </ul>
-                    </li> 
-                     }
-                    @if (ViewBag.UserRole == "Doctor")
-                    { 
+                        <!-- Appointment Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-calendar-check"></i> <span>Appointment Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="DoctorSlot.aspx"><i class="fa fa-user-doctor"></i>Create Doctor Slot</a></li>
+                                <li><a href="SearchSlot.aspx"><i class="fa fa-user-doctor"></i>Search Doctor Slot</a></li>
+                                <li><a href="UnblockSlot.aspx"><i class="fa fa-unlock"></i>Unblock Doctor Slot</a></li>
+
+                                <li><a href="AppointmentReport.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                                <li><a href="TodayPatientAppointment.aspx"><i class="fa fa-calendar-check"></i> Today's Appointments</a></li>
+                            </ul>
+                        </li>
+                    }
+                    @if (role == "Doctor")
+                    {
                         <li><a href="PatientAppointment.aspx"><i class="fa fa-calendar-check"></i> <span>Appointments</span></a></li>
                     }
                     @* Check if user role is Admin, Doctor, or Nurse *@
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    @if (role == "Admin" || role == "Doctor" || role == "Nurse")
                     {
 
                         <!-- IPD Management -->
@@ -193,27 +198,31 @@
                                 <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                             </a>
                             <ul class="treeview-menu">
-                                @if (ViewBag.UserRole == "Admin")
-                                { 
-                                    <li><a href="AddIPDAdmission.aspx"><i class="fa fa-user-plus"></i> IPD Admission</a></li>
-                                    } 
-                                        <li><a href="IPDPatients.aspx"><i class="fa fa-procedures"></i> IPD Patients</a></li>
-                                        <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
-                                        <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
-                                        <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
-                                        <li><a href="IPDPNDetails.aspx"><i class="fa fa-notes-medical"></i> Progress Notes</a></li>
-                                        <li><a href="IPDBillingLedgerDetails.aspx"><i class="fa fa-file-invoice-dollar"></i> Billing Ledger</a></li>
-                                        <li><a href="IPDNursingTasksDetails.aspx"><i class="fa fa-tasks"></i> Nursing Tasks / Order Sheet</a></li>
-                                        <li><a href="IPDTRTPlanDetails.aspx"><i class="fa fa-stethoscope"></i> Treatment Plan</a></li>
-                                        <li><a href="IPDConsentDetails.aspx"><i class="fa fa-file-signature"></i> Consent Forms</a></li>
-                                        <li><a href="IpdDietPlanDetails.aspx"><i class="fa fa-apple-alt"></i> Diet Plan</a></li>
-                                        <li><a href="IpdBillSaleProductPatient.aspx"><i class="fa fa-box"></i> Medicine Sale Details</a></li>
+                                @if (role == "Admin")
+                                {
+                                    <li>
+                                        <a href="@Url.Action("AddIPDAdmission", "IPD")">
+                                            <i class="fa fa-user-plus"></i> IPD Admission
+                                        </a>
+                                    </li>
+                                }
+                                <li><a href="IPDPatients.aspx"><i class="fa fa-procedures"></i> IPD Patients</a></li>
+                                <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
+                                <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
+                                <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
+                                <li><a href="IPDPNDetails.aspx"><i class="fa fa-notes-medical"></i> Progress Notes</a></li>
+                                <li><a href="IPDBillingLedgerDetails.aspx"><i class="fa fa-file-invoice-dollar"></i> Billing Ledger</a></li>
+                                <li><a href="IPDNursingTasksDetails.aspx"><i class="fa fa-tasks"></i> Nursing Tasks / Order Sheet</a></li>
+                                <li><a href="IPDTRTPlanDetails.aspx"><i class="fa fa-stethoscope"></i> Treatment Plan</a></li>
+                                <li><a href="IPDConsentDetails.aspx"><i class="fa fa-file-signature"></i> Consent Forms</a></li>
+                                <li><a href="IpdDietPlanDetails.aspx"><i class="fa fa-apple-alt"></i> Diet Plan</a></li>
+                                <li><a href="IpdBillSaleProductPatient.aspx"><i class="fa fa-box"></i> Medicine Sale Details</a></li>
                             </ul>
                         </li>
                     }
 
                     @* Check if user role is Admin, Doctor, or Nurse *@
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    @if (role == "Admin" || role == "Doctor" || role == "Nurse")
                     {
 
                         <!-- OPD Management -->
@@ -232,14 +241,14 @@
                                 <li><a href="OtherSaleProduct.aspx"><i class="fa fa-capsules"></i>Outside Sale Medicine</a></li>
                                 <li><a href="OtherBillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Outside Medicine Sale Details</a></li>
                                 <% if (userType == "Admin") { %>
-                                    <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
-                                    <% } %>
+                                <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
+                                <% } %>
                             </ul>
                         </li>
                     }
 
                     @* Check if user is Admin or Doctor *@
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
+                    @if (role == "Admin" || role == "Doctor")
                     {
 
                         <!-- Pharmacy Management -->
@@ -256,7 +265,7 @@
                     }
 
                     @* Check if user is Admin, Doctor, or Nurse *@
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    @if (role == "Admin" || role == "Doctor" || role == "Nurse")
                     {
 
                         <!-- Bed Management -->
@@ -274,74 +283,74 @@
                     }
 
                     @* Check if user is Admin or Doctor *@
-                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
-                    { 
-
-                    <!-- Lab Management -->
-                    <li class="treeview">
-                        <a href="#">
-                            <i class="fa fa-flask"></i> <span>Lab Management</span>
-                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                        </a>
-                        <ul class="treeview-menu">
-                            <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
-                            <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
-                            <li><a href="patienttest.aspx"><i class="fa fa-user-md"></i> Patient Lab Tests</a></li>
-                        </ul>
-                    </li>
-                      } 
-
-                    @if (ViewBag.UserRole == "Pathology")
+                    @if (role == "Admin" || role == "Doctor")
                     {
-                        
 
-                    <!-- Pathology Management -->
-                    <li class="treeview">
-                        <a href="#">
-                            <i class="fa fa-flask"></i> <span>Lab Management</span>
-                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                        </a>
-                        <ul class="treeview-menu">
-                            <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
-                            <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
-                            <li><a href="pathologypatienttest.aspx"><i class="fa fa-user-md"></i> Pending Tests</a></li>
-                            <li><a href="deliverdpatienttest.aspx"><i class="fa fa-user-md"></i> Delivered Tests</a></li>
-                        </ul>
-                    </li>
+                        <!-- Lab Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-flask"></i> <span>Lab Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                                <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                                <li><a href="patienttest.aspx"><i class="fa fa-user-md"></i> Patient Lab Tests</a></li>
+                            </ul>
+                        </li>
                     }
-                    @if (ViewBag.UserRole == "Admin")
-                    { 
 
-                    <!-- OPD MIS Reports -->
-                    <li class="treeview">
-                        <a href="#">
-                            <i class="fa fa-chart-line"></i> <span>OPD MIS Reports</span>
-                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                        </a>
-                        <ul class="treeview-menu">
-                            <li><a href="PatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
-                            <li><a href="PaidAmountReport.aspx"><i class="fa fa-money-bill"></i> Paid Amount</a></li>
-                            <li><a href="DueAmountReport.aspx"><i class="fa fa-money-bill-wave"></i> Due Amount</a></li>
-                            <li><a href="BillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
-                            <li><a href="PatientAppointmentMIS.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
-                        </ul>
-                    </li>
+                    @if (role == "Pathology")
+                    {
 
-                    <!-- IPD MIS Reports -->
-                    <li class="treeview">
-                        <a href="#">
-                            <i class="fa fa-chart-bar"></i> <span>IPD MIS Reports</span>
-                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                        </a>
-                        <ul class="treeview-menu">
-                            <li><a href="IpdPatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
-                            <li><a href="IpdBillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
-                            <li><a href="BedAllotmentMIS.aspx"><i class="fa fa-bed"></i> Bed Allotment</a></li>
-                            <li><a href="PatientTestMis.aspx"><i class="fa fa-flask-vial"></i> Lab Reports</a></li>
 
-                        </ul>
-                    </li>
-                     }  
+                        <!-- Pathology Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-flask"></i> <span>Lab Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                                <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                                <li><a href="pathologypatienttest.aspx"><i class="fa fa-user-md"></i> Pending Tests</a></li>
+                                <li><a href="deliverdpatienttest.aspx"><i class="fa fa-user-md"></i> Delivered Tests</a></li>
+                            </ul>
+                        </li>
+                    }
+                    @if (role == "Admin")
+                    {
+
+                        <!-- OPD MIS Reports -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-chart-line"></i> <span>OPD MIS Reports</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="PatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
+                                <li><a href="PaidAmountReport.aspx"><i class="fa fa-money-bill"></i> Paid Amount</a></li>
+                                <li><a href="DueAmountReport.aspx"><i class="fa fa-money-bill-wave"></i> Due Amount</a></li>
+                                <li><a href="BillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
+                                <li><a href="PatientAppointmentMIS.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- IPD MIS Reports -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-chart-bar"></i> <span>IPD MIS Reports</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="IpdPatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
+                                <li><a href="IpdBillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
+                                <li><a href="BedAllotmentMIS.aspx"><i class="fa fa-bed"></i> Bed Allotment</a></li>
+                                <li><a href="PatientTestMis.aspx"><i class="fa fa-flask-vial"></i> Lab Reports</a></li>
+
+                            </ul>
+                        </li>
+                    }
 
                     <!-- Common Option for All Roles -->
                     <li><a href="ChangePassword.aspx"><i class="fa fa-key"></i> <span>Change Password</span></a></li>
@@ -350,7 +359,7 @@
         </aside>
 
 
-        <div class="content-wrapper">       
+        <div class="content-wrapper">
             @RenderBody()
             <div class="control-sidebar-bg"></div>
         </div>

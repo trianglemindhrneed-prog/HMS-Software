@@ -5,7 +5,7 @@ using System.Data;
 namespace HMSCore.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    public class DashboardController : Controller
+    public class DashboardController : BaseController
     {
         private readonly IDbLayer _dbLayer;
 
@@ -13,22 +13,13 @@ namespace HMSCore.Areas.Admin.Controllers
         {
             _dbLayer = dbLayer;
         }
-
-        public async Task<IActionResult> Index()
-        { 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var userName = HttpContext.Session.GetString("UserName");
-            var userType = HttpContext.Session.GetString("UserType"); 
-             
-            if (userId == null || string.IsNullOrEmpty(userName))
-            {
-                return RedirectToAction("Login", "Account");
-            }
-             
-            ViewBag.UserName = userName;
-            ViewBag.UserRole = userType; 
-
+        public IActionResult Index()
+        {  
             return View();
         }
+
+       
+
+
     }
 }

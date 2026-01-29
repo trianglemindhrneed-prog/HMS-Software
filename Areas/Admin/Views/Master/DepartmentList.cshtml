@@ -1,0 +1,125 @@
+﻿@model List<HMSCore.Areas.Admin.Models.Department>
+
+@{
+    ViewData["Title"] = "Department List";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    string search = ViewData["Search"] as string;
+    int? status = ViewData["Status"] as int?;
+}
+
+<section class="content-header">
+    <h1>Departments</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Departments</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+             
+            <div class="pull-left">
+                <a class="btn btn-danger btn-flat" href="@Url.Action("AddDepartment", "Master", new { area = "Admin" })">
+                        <i class="fa fa-plus"></i> Add Department
+                    </a>
+                     
+                    <button type="submit" form="deleteSelectedForm" class="btn btn-primary btn-flat" style="margin-left:10px;">
+                        Delete Selected
+                    </button>
+                 
+            </div> 
+            <!-- Search & Filter -->
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <input autocomplete="off" type="text" name="search" class="form-control input-sm" style="width:150px;"
+                           placeholder="Department Name" value="@search" />
+                    <select name="status" class="form-control input-sm" style="margin-left:5px;">
+                        @if (status == null)
+                        {
+                            <option value="" selected>All</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        }
+                        else if (status == 1)
+                        {
+                            <option value="">All</option>
+                            <option value="1" selected>Active</option>
+                            <option value="0">Inactive</option>
+                        }
+                        else
+                        {
+                            <option value="">All</option>
+                            <option value="1">Active</option>
+                            <option value="0" selected>Inactive</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:5px;">Search</button>
+                    <a href="@Url.Action("DepartmentList", "Master", new { area = "Admin" })" class="btn btn-default btn-flat" style="margin-left:5px;">Show All</a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="box-body table-responsive">
+        <form method="post" asp-action="DeleteSelectedDepartments" id="deleteSelectedForm">
+            <div class="box-body table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="chkAll" /></th>
+                            <th>Department Name</th>
+                            <th>Status</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dept in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selectedIds" value="@dept.DepartmentId" class="chkItem" />
+                                </td>
+                                <td>@dept.DepartmentName</td>
+                                <td>
+                                    <form method="post" asp-action="ManageDepartment">
+                                        <input type="hidden" name="id" value="@dept.DepartmentId" />
+                                        <input type="hidden" name="actionType" value="ToggleStatus" />
+                                        <button type="submit" class="btn btn-xs @(dept.IsActive ? "btn-success" : "btn-danger")">
+                                            @(dept.IsActive ? "Active" : "Inactive")
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                        <a class="btn btn-sm btn-warning" href="@Url.Action("AddDepartment", "Master", new { id = dept.DepartmentId, area = "Admin" })">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    <form method="post" asp-action="ManageDepartment" onsubmit="return confirm('Are you sure?')">
+                                        <input type="hidden" name="id" value="@dept.DepartmentId" />
+                                        <input type="hidden" name="actionType" value="Delete" />
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script> 
+        document.getElementById("chkAll").addEventListener("click", function () {
+            var checked = this.checked;
+            document.querySelectorAll(".chkItem").forEach(chk => chk.checked = checked);
+        });
+    </script>
+}
