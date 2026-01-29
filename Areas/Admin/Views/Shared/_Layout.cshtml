@@ -194,8 +194,12 @@
                             </a>
                             <ul class="treeview-menu">
                                 @if (ViewBag.UserRole == "Admin")
-                                { 
-                                    <li><a href="AddIPDAdmission.aspx"><i class="fa fa-user-plus"></i> IPD Admission</a></li>
+                                {
+                                    <li>
+                                        <a href="@Url.Action("AddIPDAdmission", "IPD")">
+                                            <i class="fa fa-user-plus"></i> IPD Admission
+                                        </a>
+                                    </li>
                                     } 
                                         <li><a href="IPDPatients.aspx"><i class="fa fa-procedures"></i> IPD Patients</a></li>
                                         <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>

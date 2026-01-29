@@ -1,9 +1,10 @@
 ﻿using Microsoft.Data.SqlClient;
-using System.Data; 
-
+using System.Data;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace HMSCore.Data
-{ 
+{
     public class DbLayer : IDbLayer
     {
         private readonly IConfiguration _configuration;
@@ -33,18 +34,16 @@ namespace HMSCore.Data
             return dt;
         }
 
-        public async Task<int> ExecuteNonQueryAsync(string spName, SqlParameter[] parameters)
+        public async Task<object> ExecuteScalarAsync(string query, SqlParameter[] parameters = null)
         {
             using SqlConnection con = new SqlConnection(_connectionString);
-            using SqlCommand cmd = new SqlCommand(spName, con);
+            using SqlCommand cmd = new SqlCommand(query, con);
 
-            cmd.CommandType = CommandType.StoredProcedure;
             if (parameters != null)
                 cmd.Parameters.AddRange(parameters);
 
             await con.OpenAsync();
-            return await cmd.ExecuteNonQueryAsync();
+            return await cmd.ExecuteScalarAsync();
         }
     }
-
 }
