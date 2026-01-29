@@ -1,0 +1,35 @@
+﻿/* Pager container */
+.grid-pager {
+    text-align: center;
+    padding: 10px 0;
+}
+
+    /* Normal page number */
+    .grid-pager a {
+        display: inline-block;
+        margin: 0 2px; /* 👈 spacing between 1 2 */
+        padding: 2px 9px;
+        background-color: #f4f4f4;
+        color: #333;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+        /* Hover */
+        .grid-pager a:hover {
+            background-color: #3c8dbc;
+            color: #fff;
+        }
+
+    /* Current active page */
+    .grid-pager span {
+        display: inline-block;
+        margin: 0 2px;
+        padding: 2px 9px;
+        background-color: #3c8dbc; /* active blue */
+        color: #fff;
+        border-radius: 4px;
+        font-weight: bold;
+    }

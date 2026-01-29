@@ -1,0 +1,404 @@
+﻿@{
+    var role = ViewBag.UserRole as string;
+} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Triangle Mind Technologies | Dashboard</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+    <link rel="icon" type="image/x-icon" href="img/logo.png" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport" />
+    <link rel="stylesheet" href="~/adminassets/bower_components/bootstrap/dist/css/bootstrap.min.css" />
+ 
+    <link rel="stylesheet" href="~/adminassets/bower_components/Ionicons/css/ionicons.min.css" />
+    <link rel="stylesheet" href="~/adminassets/dist/css/AdminLTE.min.css" />
+    <link rel="stylesheet" href="~/adminassets/dist/css/PageIndexing.css" />
+    <link rel="stylesheet" href="~/adminassets/dist/css/skins/_all-skins.min.css" />
+    <link rel="stylesheet" href="~/adminassets/bower_components/morris.js/morris.css" />
+    <link rel="stylesheet" href="~/adminassets/bower_components/jvectormap/jquery-jvectormap.css" />
+    <link rel="stylesheet" href="~/adminassets/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" />
+    <link rel="stylesheet" href="~/adminassets/bower_components/bootstrap-daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="~/adminassets/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css" />
+
+    <!-- Google Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+
+         .custom-btn {
+             background-color: #ff0000ad;
+             color: #fff;
+             border: none;
+             transition: background-color 0.3s ease;
+         }
+             .custom-btns {
+             background-color: #008000a1;
+             color: #fff;
+             border: none;
+             transition: background-color 0.3s ease;
+         }
+
+         .custom-btn:hover {
+             background-color: #0056b3;
+             color: #fff;
+         }
+         .custom-btn:focus {
+             outline: none;
+             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+         }
+            .custom-btns:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+        .custom-btns:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+
+        <header class="main-header header-fixed">
+            <!-- Logo -->
+            <a href="#" class="logo">
+                <span class="logo-mini"></span>
+                <span id="logoText" runat="server" class="logo-lg"><b>Admin</b></span>
+
+            </a>
+            <!-- Header Navbar: style can be found in header.less -->
+            <nav class="navbar navbar-static-top">
+                <!-- Sidebar toggle button-->
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button" style="display: flex; align-items: center;">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span style="font-family: 'Source Sans Pro';margin-left: 20px; font-weight: bold; color: white;font-size:20px">Triangle Mind Technologies</span>
+                </a>
+
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <img src="~/adminassets/img/def-profile-img.png" class="user-image" alt="User Image" />
+                          
+                                <span class="hidden-xs">HMS</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="~/adminassets/img/def-profile-img.png" class="img-circle" alt="User Image" />
+                                    <p>
+                                        HMS
+                                    </p>
+                                </li>
+                                <!-- Menu Footer-->
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <a href="ChangePassword.aspx" class="btn custom-btns">Setting</a>
+                                    </div>
+                                    <div class="pull-right">
+                                        <form asp-controller="Account" asp-action="Logout" asp-area="">
+                                            <button type="submit" class="btn custom-btn">Sign out</button>
+                                        </form>
+                                    </div>
+
+
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+        </header>
+        <aside class="main-sidebar">
+            <section class="sidebar">
+                <div class="user-panel">
+                    <div class="pull-left image">
+                        <img src="~/adminassets/img/def-profile-img.png" class="img-circle" alt="User Image" />
+                    </div>
+                    <div class="pull-left info">
+                        <p>HMS</p>
+                        <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+                    </div>
+                </div>
+
+                <ul class="sidebar-menu" data-widget="tree">
+                    <li class="active">
+                        <a href="Dashboard.aspx">
+                            <i class="fa fa-grip"></i> <span>Dashboard</span>
+                        </a>
+                    </li>
+                    @if (ViewBag.UserRole == "Admin")
+                    { 
+
+                        <!-- Admin-only pages -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-cogs"></i> <span>Master</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+
+                            <ul class="treeview-menu">
+
+                                <li>
+                                    <a href="DepartmentList.aspx">
+                                        <i class="fa fa-sitemap"></i>
+                                        <span>Department</span>
+                                    </a>
+                                </li>
+
+                                <li><a href="DoctorsList.aspx"><i class="fa fa-user-doctor"></i> <span>Doctors</span></a></li>
+                                <li><a href="NurseList.aspx"><i class="fa fa-user-nurse"></i> <span>Nurses</span></a></li>
+                            </ul>
+                        </li>
+                    }
+
+                  
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
+                    { 
+
+                    <!-- Appointment Management -->
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-calendar-check"></i> <span>Appointment Management</span>
+                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        </a>
+                        <ul class="treeview-menu"> 
+                            <li><a href="DoctorSlot.aspx"><i class="fa fa-user-doctor"></i>Create Doctor Slot</a></li>
+                            <li><a href="SearchSlot.aspx"><i class="fa fa-user-doctor"></i>Search Doctor Slot</a></li>
+                            <li><a href="UnblockSlot.aspx"><i class="fa fa-unlock"></i>Unblock Doctor Slot</a></li>
+
+                            <li><a href="AppointmentReport.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                            <li><a href="TodayPatientAppointment.aspx"><i class="fa fa-calendar-check"></i> Today's Appointments</a></li>
+                        </ul>
+                    </li> 
+                     }
+                    @if (ViewBag.UserRole == "Doctor")
+                    { 
+                        <li><a href="PatientAppointment.aspx"><i class="fa fa-calendar-check"></i> <span>Appointments</span></a></li>
+                    }
+                    @* Check if user role is Admin, Doctor, or Nurse *@
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    {
+
+                        <!-- IPD Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-bed-pulse"></i> <span>IPD Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                @if (ViewBag.UserRole == "Admin")
+                                { 
+                                    <li><a href="AddIPDAdmission.aspx"><i class="fa fa-user-plus"></i> IPD Admission</a></li>
+                                    } 
+                                        <li><a href="IPDPatients.aspx"><i class="fa fa-procedures"></i> IPD Patients</a></li>
+                                        <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
+                                        <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
+                                        <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
+                                        <li><a href="IPDPNDetails.aspx"><i class="fa fa-notes-medical"></i> Progress Notes</a></li>
+                                        <li><a href="IPDBillingLedgerDetails.aspx"><i class="fa fa-file-invoice-dollar"></i> Billing Ledger</a></li>
+                                        <li><a href="IPDNursingTasksDetails.aspx"><i class="fa fa-tasks"></i> Nursing Tasks / Order Sheet</a></li>
+                                        <li><a href="IPDTRTPlanDetails.aspx"><i class="fa fa-stethoscope"></i> Treatment Plan</a></li>
+                                        <li><a href="IPDConsentDetails.aspx"><i class="fa fa-file-signature"></i> Consent Forms</a></li>
+                                        <li><a href="IpdDietPlanDetails.aspx"><i class="fa fa-apple-alt"></i> Diet Plan</a></li>
+                                        <li><a href="IpdBillSaleProductPatient.aspx"><i class="fa fa-box"></i> Medicine Sale Details</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* Check if user role is Admin, Doctor, or Nurse *@
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    {
+
+                        <!-- OPD Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-user-plus"></i> <span>OPD Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="AddPatient.aspx"><i class="fa fa-plus"></i> Add Patients</a></li>
+                                <li><a href="ExistingPatientsaspx.aspx"><i class="fa fa-users"></i> Existing Patients</a></li>
+                                <li><a href="PatientsBill.aspx"><i class="fa fa-receipt"></i> Create Patient Bill</a></li>
+                                <li><a href="BillHistory.aspx"><i class="fa fa-history"></i> Bill History</a></li>
+                                <li><a href="AdminNewSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
+                                <li><a href="BillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Medicine Sale Details</a></li>
+                                <li><a href="OtherSaleProduct.aspx"><i class="fa fa-capsules"></i>Outside Sale Medicine</a></li>
+                                <li><a href="OtherBillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Outside Medicine Sale Details</a></li>
+                                <% if (userType == "Admin") { %>
+                                    <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
+                                    <% } %>
+                            </ul>
+                        </li>
+                    }
+
+                    @* Check if user is Admin or Doctor *@
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
+                    {
+
+                        <!-- Pharmacy Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-prescription-bottle"></i> <span>Pharmacy Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="ManageCategory.aspx"><i class="fa fa-layer-group"></i> Add Category</a></li>
+                                <li><a href="NewProductAdd.aspx"><i class="fa fa-capsules"></i> Add Medicine</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* Check if user is Admin, Doctor, or Nurse *@
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor" || ViewBag.UserRole == "Nurse")
+                    {
+
+                        <!-- Bed Management -->
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-bed"></i> <span>Bed Management</span>
+                                <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="Bed.aspx"><i class="fa fa-plus"></i> Beds</a></li>
+                                <li><a href="BedCategories.aspx"><i class="fa fa-layer-group"></i> Bed Categories</a></li>
+                                <li><a href="BedAllotment.aspx"><i class="fa fa-procedures"></i> Bed Allotment</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* Check if user is Admin or Doctor *@
+                    @if (ViewBag.UserRole == "Admin" || ViewBag.UserRole == "Doctor")
+                    { 
+
+                    <!-- Lab Management -->
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-flask"></i> <span>Lab Management</span>
+                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                            <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                            <li><a href="patienttest.aspx"><i class="fa fa-user-md"></i> Patient Lab Tests</a></li>
+                        </ul>
+                    </li>
+                      } 
+
+                    @if (ViewBag.UserRole == "Pathology")
+                    {
+                        
+
+                    <!-- Pathology Management -->
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-flask"></i> <span>Lab Management</span>
+                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                            <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                            <li><a href="pathologypatienttest.aspx"><i class="fa fa-user-md"></i> Pending Tests</a></li>
+                            <li><a href="deliverdpatienttest.aspx"><i class="fa fa-user-md"></i> Delivered Tests</a></li>
+                        </ul>
+                    </li>
+                    }
+                    @if (ViewBag.UserRole == "Admin")
+                    { 
+
+                    <!-- OPD MIS Reports -->
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-chart-line"></i> <span>OPD MIS Reports</span>
+                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="PatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
+                            <li><a href="PaidAmountReport.aspx"><i class="fa fa-money-bill"></i> Paid Amount</a></li>
+                            <li><a href="DueAmountReport.aspx"><i class="fa fa-money-bill-wave"></i> Due Amount</a></li>
+                            <li><a href="BillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
+                            <li><a href="PatientAppointmentMIS.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- IPD MIS Reports -->
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-chart-bar"></i> <span>IPD MIS Reports</span>
+                            <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="IpdPatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
+                            <li><a href="IpdBillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
+                            <li><a href="BedAllotmentMIS.aspx"><i class="fa fa-bed"></i> Bed Allotment</a></li>
+                            <li><a href="PatientTestMis.aspx"><i class="fa fa-flask-vial"></i> Lab Reports</a></li>
+
+                        </ul>
+                    </li>
+                     }  
+
+                    <!-- Common Option for All Roles -->
+                    <li><a href="ChangePassword.aspx"><i class="fa fa-key"></i> <span>Change Password</span></a></li>
+                </ul>
+            </section>
+        </aside>
+
+
+        <div class="content-wrapper">       
+            @RenderBody()
+            <div class="control-sidebar-bg"></div>
+        </div>
+
+        <footer class="main-footer" style="background-color:white;height: 56px;">
+            <div class="pull-right hidden-xs"></div>
+            <div>
+                <strong>
+                    Copyright &copy; 2025
+                    <a href="http://www.trianglemind.in/" target="_blank">TriangleMind Technologies</a>.
+                </strong> All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <script src="~/adminassets/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/adminassets/bower_components/jquery-ui/jquery-ui.min.js"></script>
+    <script>
+        $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="~/adminassets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- Morris.js charts -->
+    <script src="~/adminassets/bower_components/raphael/raphael.min.js"></script>
+    <script src="~/adminassets/bower_components/morris.js/morris.min.js"></script>
+    <!-- Sparkline -->
+    <script src="~/adminassets/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
+    <!-- jvectormap -->
+    <script src="~/adminassets/plugins/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
+    <script src="~/adminassets/plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
+    <!-- jQuery Knob Chart -->
+    <script src="~/adminassets/bower_components/jquery-knob/dist/jquery.knob.min.js"></script>
+    <!-- daterangepicker -->
+    <script src="~/adminassets/bower_components/moment/min/moment.min.js"></script>
+    <script src="~/adminassets/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <!-- datepicker -->
+    <script src="~/adminassets/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <!-- Bootstrap WYSIHTML5 -->
+    <script src="~/adminassets/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js"></script>
+    <!-- Slimscroll -->
+    <script src="~/adminassets/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+    <!-- FastClick -->
+    <script src="~/adminassets/bower_components/fastclick/lib/fastclick.js"></script>
+    <!-- AdminLTE App -->
+    <script src="~/adminassets/dist/js/adminlte.min.js"></script>
+    <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+    <script src="~/adminassets/dist/js/pages/dashboard.js"></script>
+    <!-- AdminLTE for demo purposes -->
+    <script src="~/adminassets/dist/js/demo.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

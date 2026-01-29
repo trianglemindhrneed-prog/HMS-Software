@@ -1,0 +1,106 @@
+﻿@model HMSCore.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null; // No master layout, just like your old page
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Admin Triangle Mind Technologies | Login Page</title>
+    <link rel="icon" type="image/x-icon" href="~/logo.jpeg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link href="~/adminassets/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/adminassets/dist/css/AdminLTE.css" rel="stylesheet" />
+    <link href="~/adminassets/plugins/iCheck/square/blue.css" rel="stylesheet" />
+
+    <style>
+        body.hold-transition.login-page {
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .form-group .form-control {
+            height: 45px;
+            font-size: 16px;
+        }
+
+        .flcss {
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .btncs {
+            padding: 6px 7px 6px 6px;
+            border-radius: 4px;
+            font-size: 17px;
+        }
+    </style>
+</head> 
+<body class="hold-transition login-page" style="background-image:url('../adminassets/img/background_img.jpg')">
+    <div class="login-box" style="margin-top:10%;border:1px solid black">
+        <div class="login-box-body">
+            <div class="login-logo"> 
+                <img src="~/logo.jpeg" style="width:100%;height:80px" />
+            </div>
+
+            @if (ViewData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@ViewData["ErrorMessage"]</div>
+            }
+
+            <form asp-action="Login" method="post">
+                <div class="form-group has-feedback">
+                    <input asp-for="Username" class="form-control" placeholder="User Name" />
+                    <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                </div>
+                <div class="form-group has-feedback">
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Password" />
+                    <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <div class="checkbox icheck"> 
+                         
+                            <label> 
+                                <input type="checkbox">
+                                Remember Me
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 flcss">
+                        <label>
+                            <a href="#">Forget Password ?</a>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-4"></div>
+                    <div class="col-xs-4">
+                        <button type="submit" class="btn btn-primary btn-block btn-flat btncs">Login</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/adminassets/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/adminassets/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/adminassets/plugins/iCheck/icheck.min.js"></script>
+    <script>
+        $(function () {
+            $('input').iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue',
+                increaseArea: '20%'
+            });
+        });
+    </script>
+</body>
+</html>
