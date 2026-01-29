@@ -1,0 +1,129 @@
+﻿@using HMSCore.Areas.Admin.Models
+@model IpdAdmission
+
+@{
+    ViewData["Title"] = "IPD Admission";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+
+    <section class="content-header">
+        <h1>IPD Admission</h1>
+        <ol class="breadcrumb">
+            <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+            <li class="active">IPD Admission</li>
+        </ol>
+    </section>
+    <section class="content">
+    <div class="card">
+      <div class="container-fluid" style="background-color: white; padding: 20px;">
+
+            @* Success Message *@
+            @if (ViewBag.Success != null)
+            {
+                <div class="alert alert-success">
+                    @ViewBag.Success
+                </div>
+            }
+
+            @* Patient ID Display *@
+            @if (ViewBag.PatientID != null)
+            {
+                <div class="alert alert-success">
+                    <strong>Patient ID :</strong> @ViewBag.PatientID
+                </div>
+            }
+
+            <form asp-action="AddIPDAdmission" method="post">
+             <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label">Patient ID</label>
+                        <input type="hidden" asp-for="AdmissionId" />
+                        <input asp-for="PatientID" class="form-control" readonly style="color: green; font-weight: bold;" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Name</label>
+                        <input asp-for="Name" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Age</label>
+                        <input asp-for="Age" type="number" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Gender</label>
+                        <select asp-for="Gender"  class="form-control">
+                            <option value="">-- Select Gender --</option>
+                            <option value="">Male</option>
+                            <option value="">Fmale</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Number</label>
+                        <input asp-for="Number" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Doctor</label>
+                        <select asp-for="DoctorId"
+                                asp-items="ViewBag.DoctorList"
+                                class="form-control">
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Bed Category</label>
+                        <select asp-for="BedCategoryId" asp-items="ViewBag.BedCategoryList" class="form-control">
+                            <option value="">-- Select Bed Category --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Bed</label>
+                        <select asp-for="BedId" asp-items="ViewBag.BedList" class="form-control">
+                            <option value="">-- Select Bed --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Admission Date & Time</label>
+                        <input asp-for="AdmissionDateTime"
+                               type="datetime-local"
+                               class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Initial Diagnosis</label>
+                        <textarea asp-for="InitialDiagnosis"
+                                  class="form-control"
+                                  rows="2"></textarea>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Advance Amount</label>
+                        <input asp-for="AdvanceAmount" type="number" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select asp-for="Status" asp-items="ViewBag.StatusList" class="form-control">
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fa fa-save"></i> Save
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</section>
