@@ -279,9 +279,145 @@ namespace HMSCore.Areas.Admin.Controllers
 
 
 
-        public IActionResult UnblockSlot()
+        [HttpGet]
+        public async Task<IActionResult> UnblockSlot(
+      int? DepartmentId,
+      int? DoctorId,
+      DateTime? FromDate,
+      DateTime? ToDate,
+      string ShowMorning = "true",
+      string ShowAfternoon = "true",
+      string ShowEvening = "true")
         {
-            return View();
+            var vm = new DoctorSlotViewModel
+            {
+                DepartmentId = DepartmentId,
+                DoctorId = DoctorId,
+                FromDate = FromDate,
+                ToDate = ToDate
+            };
+
+            vm.SetSessionFilters(ShowMorning, ShowAfternoon, ShowEvening);
+
+            // 1️⃣ Get Departments
+            var dtDept = await _dbLayer.ExecuteSPAsync("spSearchUnblockDoctorSlots",
+                new[] { new SqlParameter("@Action", "GetDepartments") });
+
+            vm.Departments = dtDept.AsEnumerable()
+                .Select(r => new Department
+                {
+                    DepartmentId = Convert.ToInt32(r["DepartmentId"]),
+                    DepartmentName = r["DepartmentName"].ToString()
+                }).ToList();
+
+            // 2️⃣ Get Doctors for selected Department
+            if (DepartmentId.HasValue)
+            {
+                var dtDoc = await _dbLayer.ExecuteSPAsync("spSearchUnblockDoctorSlots",
+                    new[]
+                    {
+                new SqlParameter("@Action", "GetDoctors"),
+                new SqlParameter("@DepartmentId", DepartmentId.Value)
+                    });
+
+                vm.Doctors = dtDoc.AsEnumerable()
+                    .Select(r => new Doctor
+                    {
+                        DoctorId = Convert.ToInt32(r["DoctorId"]),
+                        FullName = r["FullName"].ToString()
+                    }).ToList();
+            }
+
+            // 3️⃣ Populate only blocked slots
+            await PopulateUnblockSlots(vm);
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleUnblockTimeSlot(
+            int doctorId,
+            DateTime slotDate,
+            string slotTime,
+            int? DepartmentId,
+            int? DoctorId,
+            DateTime? FromDate,
+            DateTime? ToDate,
+            string ShowMorning = "true",
+            string ShowAfternoon = "true",
+            string ShowEvening = "true")
+        {
+            // Toggle blocked slot
+            TimeSpan time = TimeSpan.Parse(slotTime);
+
+            await _dbLayer.ExecuteSPAsync(
+                "spSearchUnblockDoctorSlots",
+                new[]
+                {
+            new SqlParameter("@Action", "ToggleBlock"),
+            new SqlParameter("@DoctorId", doctorId),
+            new SqlParameter("@SlotDate", slotDate.Date),
+            new SqlParameter("@SlotTime", time)
+                });
+
+            TempData["Message"] = "Slot status updated.";
+
+            // Redirect back to GET with filters preserved
+            return RedirectToAction("UnblockSlot", new
+            {
+                DepartmentId,
+                DoctorId,
+                FromDate = FromDate?.ToString("yyyy-MM-dd"),
+                ToDate = ToDate?.ToString("yyyy-MM-dd"),
+                ShowMorning,
+                ShowAfternoon,
+                ShowEvening
+            });
+        }
+        private async Task PopulateUnblockSlots(DoctorSlotViewModel vm)
+        {
+            vm.Slots.Clear();
+
+            if (!vm.DoctorId.HasValue || !vm.FromDate.HasValue || !vm.ToDate.HasValue)
+                return;
+
+            // Get blocked slots (SP should return SlotDuration now)
+            var dtBlocked = await _dbLayer.ExecuteSPAsync(
+                "spSearchUnblockDoctorSlots",
+                new[]
+                {
+            new SqlParameter("@Action", "GetBlockedSlots"),
+            new SqlParameter("@DoctorId", vm.DoctorId.Value),
+            new SqlParameter("@FromDate", vm.FromDate.Value),
+            new SqlParameter("@ToDate", vm.ToDate.Value)
+                });
+
+            vm.Slots = dtBlocked.AsEnumerable()
+                .Select(r =>
+                {
+                    string session = r["SessionType"].ToString();
+
+                    // Apply session filters
+                    if ((session == "Morning" && !vm.IsMorning) ||
+                        (session == "Afternoon" && !vm.IsAfternoon) ||
+                        (session == "Evening" && !vm.IsEvening))
+                        return null;
+
+                    return new DoctorSlot
+                    {
+                        ScheduleId = Convert.ToInt32(r["BlockId"]),
+                        DoctorId = Convert.ToInt32(r["DoctorId"]),
+                        DepartmentName = r["DepartmentName"].ToString(),
+                        FullName = r["DoctorName"].ToString(),
+                        ScheduleDate = Convert.ToDateTime(r["SlotDate"]),
+                        SlotTime = ((TimeSpan)r["SlotTime"]).ToString(@"hh\:mm"),
+                        SlotDuration = r["SlotDuration"] != DBNull.Value ? r["SlotDuration"].ToString() : "N/A",
+                        SessionType = session,
+                        IsBlocked = Convert.ToBoolean(r["IsActive"])
+                    };
+                })
+                .Where(s => s != null)
+                .ToList();
         }
 
 
