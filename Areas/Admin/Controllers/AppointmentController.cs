@@ -110,16 +110,15 @@ namespace HMSCore.Areas.Admin.Controllers
 
 
 
-
         [HttpGet]
         public async Task<IActionResult> SearchSlot(
-       int? DepartmentId,
-       int? DoctorId,
-       DateTime? FromDate,
-       DateTime? ToDate,
-       string IsMorning = "true",
-       string IsAfternoon = "true",
-       string IsEvening = "true")
+            int? DepartmentId,
+            int? DoctorId,
+            DateTime? FromDate,
+            DateTime? ToDate,
+            string ShowMorning = "true",
+            string ShowAfternoon = "true",
+            string ShowEvening = "true")
         {
             var vm = new DoctorSlotViewModel
             {
@@ -127,12 +126,12 @@ namespace HMSCore.Areas.Admin.Controllers
                 DoctorId = DoctorId,
                 FromDate = FromDate,
                 ToDate = ToDate
-                // ❌ IsMorning / IsAfternoon / IsEvening assign NAHI karna
             };
 
+            vm.SetSessionFilters(ShowMorning, ShowAfternoon, ShowEvening);
+
             // Departments
-            var dtDept = await _dbLayer.ExecuteSPAsync(
-                "spSearchDoctorSlots",
+            var dtDept = await _dbLayer.ExecuteSPAsync("spSearchDoctorSlots",
                 new[] { new SqlParameter("@Action", "GetDepartments") });
 
             vm.Departments = dtDept.AsEnumerable()
@@ -142,11 +141,10 @@ namespace HMSCore.Areas.Admin.Controllers
                     DepartmentName = r["DepartmentName"].ToString()
                 }).ToList();
 
-            // Doctors (IMPORTANT – warna dropdown blank rahega)
+            // Doctors if Department selected
             if (DepartmentId.HasValue)
             {
-                var dtDoc = await _dbLayer.ExecuteSPAsync(
-                    "spSearchDoctorSlots",
+                var dtDoc = await _dbLayer.ExecuteSPAsync("spSearchDoctorSlots",
                     new[]
                     {
                 new SqlParameter("@Action", "GetDoctors"),
@@ -162,55 +160,48 @@ namespace HMSCore.Areas.Admin.Controllers
             }
 
             await PopulateSlots(vm);
+
             return View(vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> ToggleBlockTimeSlot(
-         int doctorId,
-         DateTime slotDate,
-         string slotTime,
-         int? DepartmentId,
-         int? DoctorId,
-         DateTime? FromDate,
-         DateTime? ToDate,
-         string ShowMorning = "true",
-         string ShowAfternoon = "true",
-         string ShowEvening = "true")
+     public async Task<IActionResult> ToggleBlockTimeSlot(
+      int doctorId,
+      DateTime slotDate,
+      string slotTime,
+      int? DepartmentId,
+      int? DoctorId,
+      DateTime? FromDate,
+      DateTime? ToDate,
+      string ShowMorning = "true",
+      string ShowAfternoon = "true",
+      string ShowEvening = "true")
         {
-            // Parse slot time
+            // 1️⃣ Toggle the slot
             TimeSpan time = TimeSpan.Parse(slotTime);
 
-            // Toggle block using SP
             await _dbLayer.ExecuteSPAsync(
                 "spSearchDoctorSlots",
-                new[]
-                {
-            new SqlParameter("@Action", SqlDbType.NVarChar) { Value = "ToggleBlock" },
-            new SqlParameter("@DoctorId", SqlDbType.Int) { Value = doctorId },
-            new SqlParameter("@SlotDate", SqlDbType.Date) { Value = slotDate.Date },
-            new SqlParameter("@SlotTime", SqlDbType.Time) { Value = time }
+                new[] {
+            new SqlParameter("@Action", "ToggleBlock"),
+            new SqlParameter("@DoctorId", doctorId),
+            new SqlParameter("@SlotDate", slotDate.Date),
+            new SqlParameter("@SlotTime", time)
                 });
 
             TempData["Message"] = "Slot status updated.";
 
-            // Rebuild model and preserve session filters
-            var vm = new DoctorSlotViewModel
+            // 2️⃣ Redirect to SearchSlot with all filters preserved
+            return RedirectToAction("SearchSlot", new
             {
                 DepartmentId = DepartmentId,
                 DoctorId = DoctorId,
-                FromDate = FromDate,
-                ToDate = ToDate,
-                ShowMorning = ShowMorning,
-                ShowAfternoon = ShowAfternoon,
-                ShowEvening = ShowEvening
-            };
-
-            await PopulateSlots(vm);
-
-            ViewBag.Message = TempData["Message"];
-
-            return View("SearchSlot", vm);
+                FromDate = FromDate?.ToString("yyyy-MM-dd"),
+                ToDate = ToDate?.ToString("yyyy-MM-dd"),
+                ShowMorning,
+                ShowAfternoon,
+                ShowEvening
+            });
         }
 
 
