@@ -48,12 +48,14 @@
                                             </span>
                                         </div>
                                     </div>
-
                                     <!-- Email -->
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Email (Username) *</label>
-                                            <input autocomplete="off" asp-for="Email" class="form-control" type="email" />
+                                            <input autocomplete="new-email"
+                                                   asp-for="Email"
+                                                   class="form-control"
+                                                   type="email" />
                                             <span asp-validation-for="Email" class="text-danger"></span>
                                         </div>
                                     </div>
@@ -62,7 +64,12 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Password</label>
-                                            <input autocomplete="off" asp-for="Password" class="form-control" type="password" />
+                                            <input type="password"
+                                                   autocomplete="new-password"
+                                                   asp-for="Password"
+                                                   class="form-control"
+                                                   value="" />  
+                                            <small class="text-muted">Leave blank to keep existing password</small>
                                         </div>
                                     </div>
 
