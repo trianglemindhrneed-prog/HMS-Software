@@ -176,12 +176,12 @@
                                 <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                             </a>
                             <ul class="treeview-menu">
-                                <li><a href="DoctorSlot.aspx"><i class="fa fa-user-doctor"></i>Create Doctor Slot</a></li>
-                                <li><a href="SearchSlot.aspx"><i class="fa fa-user-doctor"></i>Search Doctor Slot</a></li>
-                                <li><a href="UnblockSlot.aspx"><i class="fa fa-unlock"></i>Unblock Doctor Slot</a></li>
+                                <li><a href="/admin/Appointment/DoctorSlot"><i class="fa fa-user-doctor"></i>Create Doctor Slot</a></li>
+                                <li><a href="/admin/Appointment/SearchSlot"><i class="fa fa-user-doctor"></i>Search Doctor Slot</a></li>
+                                <li><a href="/admin/Appointment/UnblockSlot"><i class="fa fa-unlock"></i>Unblock Doctor Slot</a></li>
 
-                                <li><a href="AppointmentReport.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
-                                <li><a href="TodayPatientAppointment.aspx"><i class="fa fa-calendar-check"></i> Today's Appointments</a></li>
+                                <li><a href="/admin/Appointment/AppointmentReport"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                                <li><a href="/admin/Appointment/TodayPatientAppointment"><i class="fa fa-calendar-check"></i> Today's Appointments</a></li>
                             </ul>
                         </li>
                     }
@@ -445,6 +445,56 @@
             toastr["@TempData["MessageType"]"]("@TempData["Message"]");
         </script>
     }
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            $('table').each(function() {
+                var table = $(this);
+                var rows = table.find('tbody tr');
+                var defaultRowsPerPage = parseInt($('#pageSizeSelect').val()) || 20; // read from dropdown
+                var rowsPerPage = defaultRowsPerPage;
+                var rowsCount = rows.length;
+                var pageCount = Math.ceil(rowsCount / rowsPerPage);
+                var currentPage = 1;
+
+                // Create pagination container
+                var pagination = $('<div class="table-pagination mt-2"></div>');
+                table.after(pagination);
+
+                function showPage(page) {
+                    rows.hide();
+                    var start = (page - 1) * rowsPerPage;
+                    var end = start + rowsPerPage;
+                    rows.slice(start, end).show();
+
+                    pagination.html('');
+                    for (var i = 1; i <= pageCount; i++) {
+                        pagination.append('<button class="page-btn btn btn-sm ' + (i === page ? 'btn-primary' : 'btn-default') + '">' + i + '</button>');
+                    }
+                }
+
+                // Initial display
+                showPage(1);
+
+                // Pagination button click
+                pagination.on('click', '.page-btn', function() {
+                    currentPage = parseInt($(this).text());
+                    showPage(currentPage);
+                });
+
+                // Handle page size change
+                $('#pageSizeSelect').on('change', function() {
+                    rowsPerPage = parseInt($(this).val());
+                    pageCount = Math.ceil(rowsCount / rowsPerPage);
+                    currentPage = 1;
+                    showPage(currentPage);
+                });
+            });
+
+        });
+    </script>
+
 
 </body>
 </html>
