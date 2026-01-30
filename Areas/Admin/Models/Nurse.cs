@@ -1,4 +1,6 @@
-﻿namespace HMSCore.Areas.Admin.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HMSCore.Areas.Admin.Models
 {
     public class Nurse
     {
@@ -11,6 +13,8 @@
         public string? ProfileImagePath { get; set; }
         public bool IsDeleted { get; set; } = false;
         public DateTime EntryDate { get; set; } = DateTime.Now;
+        [NotMapped]
+        public IFormFile ProfileImage { get; set; }
     }
 
 }

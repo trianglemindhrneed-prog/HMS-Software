@@ -1,0 +1,165 @@
+﻿@model HMSCore.Areas.Admin.Models.DoctorSlotViewModel
+
+@{
+    ViewData["Title"] = "Doctor Slots";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<head>
+    <style>
+        .btn-secondary {
+            background: #18d118bf;
+            font-weight: bold;
+            color: aliceblue;
+        }
+
+            .btn-secondary:hover {
+                color: aliceblue;
+            }
+    </style>
+</head>
+<section class="content-header">
+    <h1>Doctor Slots</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Doctor Slots</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-@TempData["MessageType"]">
+                    @TempData["Message"]
+                </div>
+            }
+        </div>
+
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <a href="/Admin/Appointment/DoctorSlotManager" class="btn btn-danger btn-flat">
+                    <i class="fa fa-plus"></i> Add New Slot
+                </a>
+
+                <form method="post" asp-action="DeleteSelected" style="display:inline-block;">
+                    <input type="hidden" name="selectedIds" id="selectedIds" />
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
+                </form>
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+
+
+                    <!-- Filter Column -->
+                    <select class="form-control input-sm" asp-for="FilterColumn">
+                        <option value="">-- Select --</option>
+                        <option value="DepartmentName">Department Name</option>
+                        <option value="DoctorName">Doctor Name</option>
+                        <option value="ScheduleDate">Appointment Date</option>
+                    </select>
+
+                    <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" /> 
+                    <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                    <a href="/Admin/Appointment/DoctorSlot" class="btn btn-default btn-flat">Show All</a>
+                </form>
+            </div>
+        </div>
+        <!-- Date Filter -->
+        <div class="row mt-3" style="margin-left: 3px !important;">
+            <div class="col-sm-3">
+                <label>From Date:</label>
+                <input type="date" asp-for="FromDate" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-3">
+                <label>To Date:</label>
+                <input type="date" asp-for="ToDate" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="submit" class="btn btn-primary btn-flat">Search</button>
+            </div>
+
+        </div>
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover mt-2">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th>Department Name</th>
+                        <th>Doctor</th>
+                        <th>Schedule Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Session Type</th>
+                        <th>Block</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var slot in Model.Slots)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="chkSelect" value="@slot.ScheduleId" /></td>
+                            <td>@slot.DepartmentName</td>
+                            <td>@slot.FullName</td>
+                            <td>@slot.ScheduleDate.ToString("dd/MM/yyyy")</td>
+                            <td>@slot.StartTime</td>
+                            <td>@slot.EndTime</td>
+                            <td>@slot.SlotDuration</td>
+                            <td>@slot.SessionType</td>
+                            <td>
+                                <form method="post" asp-action="ToggleBlock">
+                                    <input type="hidden" name="id" value="@slot.ScheduleId" />
+                                    <button type="submit" class="btn btn-sm @(slot.IsBlocked ? "btn-danger" : "btn-secondary")">
+                                        @(slot.IsBlocked ? "Unblock" : "Block")
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                <a href="/Admin/Appointment/DoctorSlotManager?id=@slot.ScheduleId" class="btn btn-sm btn-warning @(slot.IsBlocked ? "disabled" : "")">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <form method="post" asp-action="DeleteSlot" onsubmit="return confirm('Are you sure to delete this slot?');">
+                                    <input type="hidden" name="id" value="@slot.ScheduleId" />
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div id="pagination" class="mt-2"></div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function toggleAll(chkAll) {
+            var checkboxes = document.querySelectorAll('.chkSelect');
+            checkboxes.forEach(c => c.checked = chkAll.checked);
+        }
+
+        // Handle Delete Selected IDs
+        document.querySelector('form[asp-action="DeleteSelected"]').onsubmit = function () {
+            var selected = Array.from(document.querySelectorAll('.chkSelect:checked')).map(c => c.value);
+            if (selected.length === 0) {
+                alert('Please select at least one slot.');
+                return false;
+            }
+            document.getElementById('selectedIds').value = selected.join(',');
+        }
+    </script>
+}

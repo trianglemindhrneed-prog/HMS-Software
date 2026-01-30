@@ -1,0 +1,172 @@
+﻿@model HMSCore.Areas.Admin.Models.DoctorSlotViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Search Doctor Slots";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>Search Doctor Slots</h1>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <form id="searchSlotForm" asp-area="Admin"
+                  asp-controller="Appointment"
+                  asp-action="SearchSlot"
+                  method="get">
+
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label>Department</label>
+                        <select asp-for="DepartmentId"
+                                asp-items="@(new SelectList(Model.Departments, "DepartmentId", "DepartmentName", Model.DepartmentId))"
+                                class="form-control"
+                                onchange="this.form.submit()">
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Doctor</label>
+                        <select asp-for="DoctorId"
+                                asp-items="@(new SelectList(Model.Doctors, "DoctorId", "FullName", Model.DoctorId))"
+                                class="form-control">
+                            <option value="">Select Doctor</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>From Date</label>
+                        <input type="date" asp-for="FromDate" class="form-control" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label>To Date</label>
+                        <input type="date" asp-for="ToDate" class="form-control" />
+                    </div>
+
+                    <div class="col-md-2" style="margin-top:22px;">
+                        <button type="submit" class="btn btn-primary">Search Slots</button>
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- SESSION FILTERS -->
+                <div class="mb-3">
+                    <!-- Hidden fields for session filters -->
+                    <input type="hidden" name="ShowMorning" id="ShowMorningHidden" value="@Model.ShowMorning" />
+                    <input type="hidden" name="ShowAfternoon" id="ShowAfternoonHidden" value="@Model.ShowAfternoon" />
+                    <input type="hidden" name="ShowEvening" id="ShowEveningHidden" value="@Model.ShowEvening" />
+
+                    <!-- Morning -->
+                    <input type="checkbox"
+                           @(Model.IsMorning ? "checked" : "")
+                           onchange="updateSessionAndSubmit('Morning', this.checked)" /> Morning
+
+                    <!-- Afternoon -->
+                    <input type="checkbox"
+                           @(Model.IsAfternoon ? "checked" : "")
+                           onchange="updateSessionAndSubmit('Afternoon', this.checked)" /> Afternoon
+
+                    <!-- Evening -->
+                    <input type="checkbox"
+                           @(Model.IsEvening ? "checked" : "")
+                           onchange="updateSessionAndSubmit('Evening', this.checked)" /> Evening
+                </div>
+
+        
+
+
+
+            </form>
+
+            <!-- SLOT TABLE -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Session</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Slots != null && Model.Slots.Any())
+                        {
+                            foreach (var slot in Model.Slots)
+                            {
+                                <tr>
+                                    <td>@slot.DepartmentName</td>
+                                    <td>@slot.FullName</td>
+                                    <td>@slot.ScheduleDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@slot.SlotTime</td>
+                                    <td>@slot.SlotDuration</td>
+                                    <td>@slot.SessionType</td>
+                                    <td>
+                                        <form asp-area="Admin"
+                                              asp-controller="Appointment"
+                                              asp-action="ToggleBlockTimeSlot"
+                                              method="post"
+                                              style="display:inline">
+
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="doctorId" value="@slot.DoctorId" />
+                                            <input type="hidden" name="slotDate" value="@slot.ScheduleDate.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="slotTime" value="@DateTime.ParseExact(slot.SlotTime, "hh:mm tt", CultureInfo.InvariantCulture).ToString("HH:mm")" />
+
+                                            <input type="hidden" name="DepartmentId" value="@Model.DepartmentId" />
+                                            <input type="hidden" name="DoctorId" value="@Model.DoctorId" />
+                                            <input type="hidden" name="FromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="ToDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+                                           
+
+                                            <button type="submit"
+                                                    class="btn btn-sm @(slot.IsBlocked ? "btn-danger" : "btn-success")"
+                                                    onclick="return confirm('Are you sure?');">
+                                                @(slot.IsBlocked ? "Unblock" : "Block")
+                                            </button>
+
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-danger">No slots found</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- jQuery first -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> 
+<!-- Optional: jQuery UI for sortable() -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script> 
+ 
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            window.updateSessionAndSubmit = function(session, checked) {
+                if (session === 'Morning') document.getElementById('ShowMorningHidden').value = checked ? 'true' : 'false';
+                if (session === 'Afternoon') document.getElementById('ShowAfternoonHidden').value = checked ? 'true' : 'false';
+                if (session === 'Evening') document.getElementById('ShowEveningHidden').value = checked ? 'true' : 'false';
+
+                var form = document.getElementById('searchSlotForm');
+                if(form) form.submit();
+            };
+        });
+    </script>
+}

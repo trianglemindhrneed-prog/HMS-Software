@@ -46,72 +46,88 @@
             </div>
         </div>
 
-        <form method="post" asp-action="DeleteSelectedDoctors" id="deleteSelectedForm">
-            <div class="box-body table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead>
+        <!-- TABLE -->
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" /></th>
+                        <th>Department</th>
+                        <th>Doctor Name</th>
+                        <th>Email</th>
+                        <th>Mobile</th>
+                        <th>Status</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var d in Model)
+                    {
                         <tr>
-                            <th><input type="checkbox" id="chkAll" /></th>
-                            <th>Department</th>
-                            <th>Doctor Name</th>
-                            <th>Email</th>
-                            <th>Mobile</th>
-                            <th>Status</th>
-                            <th>Edit</th>
-                            <th>Delete</th>
+                            <!-- Checkbox for bulk delete -->
+                            <td>
+                                <input type="checkbox"
+                                       name="selectedIds"
+                                       value="@d.DoctorId"
+                                       class="chkItem"
+                                       form="deleteSelectedForm" />
+                            </td>
+
+                            <td>@d.DepartmentName</td>
+                            <td>@d.FullName</td>
+                            <td>@d.DEmail</td>
+                            <td>@d.MobileNu</td>
+
+                            <!-- STATUS Toggle -->
+                            <td>
+                                <form method="post" asp-action="ToggleDoctorStatus"
+                                      onsubmit="return confirm('Are you sure you want to change the status?');">
+                                    <input type="hidden" name="id" value="@d.DoctorId" />
+                                    <button type="submit" class="btn btn-xs @(d.IsActive ? "btn-success" : "btn-danger")">
+                                        @(d.IsActive ? "Active" : "Inactive")
+                                    </button>
+                                </form>
+
+                            </td>
+
+                            <!-- EDIT -->
+                            <td>
+                                <a class="btn btn-warning btn-sm"
+                                   href="@Url.Action("AddDoctor", "Master", new { id = d.DoctorId, area = "Admin" })">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            </td>
+
+                            <!-- DELETE -->
+                            <td>
+                                <form method="post"
+                                      asp-action="ManageDoctor"
+                                      onsubmit="return confirm('Are you sure?');">
+                                    <input type="hidden" name="id" value="@d.DoctorId" />
+                                    <input type="hidden" name="actionType" value="Delete" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var d in Model)
-                        {
-                            <tr>
-                                <td>
-                                    <input type="checkbox" class="chkItem"
-                                           name="selectedIds" value="@d.DoctorId" />
-                                </td>
-                                <td>@d.DepartmentName</td>
-                                <td>@d.FullName</td>
-                                <td>@d.Email</td>
-                                <td>@d.MobileNu</td>
-                                <td>
-                                    <form method="post" asp-action="ManageDoctor">
-                                        <input type="hidden" name="id" value="@d.DoctorId" />
-                                        <input type="hidden" name="actionType" value="ToggleStatus" />
-                                        <button class="btn btn-xs @(d.IsActive ? "btn-success" : "btn-danger")">
-                                            @(d.IsActive ? "Active" : "Inactive")
-                                        </button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <a class="btn btn-warning btn-sm"
-                                       href="@Url.Action("AddDoctor", "Master", new { id = d.DoctorId, area = "Admin" })">
-                                        <i class="fa fa-edit"></i>
-                                    </a>
-                                </td>
-                                <td>
-                                    <form method="post" asp-action="ManageDoctor"
-                                          onsubmit="return confirm('Are you sure?')">
-                                        <input type="hidden" name="id" value="@d.DoctorId" />
-                                        <input type="hidden" name="actionType" value="Delete" />
-                                        <button class="btn btn-danger btn-sm">
-                                            <i class="fa fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </form>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
 
+<!-- BULK DELETE FORM (EMPTY BUT IMPORTANT) -->
+<form method="post" asp-action="DeleteSelectedDoctors" id="deleteSelectedForm"></form>
+
 @section Scripts {
     <script>
-        document.getElementById("chkAll").addEventListener("click", function () {
-            document.querySelectorAll(".chkItem")
-                .forEach(x => x.checked = this.checked);
+        // Select All / Deselect All
+        document.getElementById("chkAll").addEventListener("change", function () {
+            document.querySelectorAll(".chkItem").forEach(chk => chk.checked = this.checked);
         });
     </script>
 }
