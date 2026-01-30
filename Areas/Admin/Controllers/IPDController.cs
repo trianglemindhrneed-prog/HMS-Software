@@ -4,12 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using HMSCore.Areas.Admin.Controllers;
 
 [Area("Admin")]
-public class IPDController : BaseController
+public class IPDController : Controller
 {
     private readonly IDbLayer _dbLayer;
 
@@ -18,24 +15,50 @@ public class IPDController : BaseController
         _dbLayer = dbLayer;
     }
 
+    /* ================= ADD / EDIT ================= */
     [HttpGet]
-    public async Task<IActionResult> AddIPDAdmission()
+    public async Task<IActionResult> AddIPDAdmission(int? id)
     {
-        var model = new IpdAdmission
-        {
-            PatientID = await GetNextPatientID() // Populate model.PatientID
-        };
+        IpdAdmission model = new();
 
-        // Populate Gender dropdown
-        ViewBag.GenderList = new List<SelectListItem>
+        if (id != null)
         {
-            new SelectListItem { Text = "-- Select Gender --", Value = "" },
-            new SelectListItem { Text = "Male", Value = "Male" },
-            new SelectListItem { Text = "Female", Value = "Female" }
-        };
+            DataTable dt = await _dbLayer.ExecuteSPAsync(
+                "sp_IPDAdmission_Manage",
+                new[]
+                {
+                    new SqlParameter("@Action","GETBYID"),
+                    new SqlParameter("@AdmissionID",id)
+                });
 
-        // ✅ Populate Doctor dropdown from SP
+            if (dt.Rows.Count == 0) return NotFound();
+
+            DataRow r = dt.Rows[0];
+            model.AdmissionId = Convert.ToInt32(r["AdmissionID"]);
+            model.PatientID = r["PatientID"].ToString();
+            model.Name = r["Name"].ToString();
+            model.Age = r["Age"] != DBNull.Value ? Convert.ToInt32(r["Age"]) : null;
+            model.Gender = r["Gender"].ToString();
+            model.Number = r["Number"].ToString();
+            model.DoctorId = r["DoctorID"] != DBNull.Value ? Convert.ToInt32(r["DoctorID"]) : null;
+            model.BedCategoryId = r["BedCategoryId"] != DBNull.Value ? Convert.ToInt32(r["BedCategoryId"]) : null;
+            model.BedId = r["BedId"] != DBNull.Value ? Convert.ToInt32(r["BedId"]) : null;
+            model.AdvanceAmount = r["AdvanceAmount"] != DBNull.Value ? Convert.ToDecimal(r["AdvanceAmount"]) : null;
+            model.AdmissionDateTime = r["AdmissionDateTime"] != DBNull.Value
+                ? Convert.ToDateTime(r["AdmissionDateTime"])
+                : DateTime.Now;
+            model.Status = r["Status"].ToString();
+        }
+        else
+        {
+            model.PatientID = await GetNextPatientID();
+            model.AdmissionDateTime = DateTime.Now;
+            model.Status = "Admitted";
+        }
+
+        ViewBag.GenderList = GetGenderList();
         ViewBag.DoctorList = await GetDoctorsDropdown();
+        ViewBag.BedCategoryList = await GetBedCategoryDropdown();
 
         return View(model);
     }
@@ -44,103 +67,141 @@ public class IPDController : BaseController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddIPDAdmission(IpdAdmission model)
     {
-        if (!ModelState.IsValid)
-        {
-            model.PatientID = await GetNextPatientID(); // Populate on validation fail
-
-            // Reload dropdowns on validation fail
-            ViewBag.GenderList = new List<SelectListItem>
-            {
-                new SelectListItem { Text = "-- Select Gender --", Value = "" },
-                new SelectListItem { Text = "Male", Value = "Male" },
-                new SelectListItem { Text = "Female", Value = "Female" }
-            };
-            ViewBag.DoctorList = await GetDoctorsDropdown();
-
-            return View(model);
-        }
-
-        string patientId = await GetNextPatientID();
-
-        SqlParameter[] parameters =
-        {
-            new SqlParameter("@Action", "INSERT"),
-            new SqlParameter("@PatientID", patientId),
-            new SqlParameter("@DoctorID", model.DoctorId),
-            new SqlParameter("@BedCategoryId", model.BedCategoryId),
-            new SqlParameter("@BedId", model.BedId),
-            new SqlParameter("@AdmissionDateTime", model.AdmissionDateTime),
-            new SqlParameter("@InitialDiagnosis", model.InitialDiagnosis ?? ""),
-            new SqlParameter("@AdvanceAmount", model.AdvanceAmount),
-            new SqlParameter("@Name", model.Name),
-            new SqlParameter("@Age", model.Age),
-            new SqlParameter("@Gender", model.Gender),
-            new SqlParameter("@Number", model.Number),
-            new SqlParameter("@Status", model.Status),
-            new SqlParameter("@Address", DBNull.Value),
-            new SqlParameter("@ProfilePath", DBNull.Value)
-        };
-
-        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_CRUD", parameters);
-
-        // Set PatientID back to model for textbox binding
-        model.PatientID = dt.Rows.Count > 0 ? dt.Rows[0]["PatientID"].ToString() : patientId;
-
-        // Reload dropdowns after save
-        ViewBag.GenderList = new List<SelectListItem>
-        {
-            new SelectListItem { Text = "-- Select Gender --", Value = "" },
-            new SelectListItem { Text = "Male", Value = "Male" },
-            new SelectListItem { Text = "Female", Value = "Female" }
-        };
+        ViewBag.GenderList = GetGenderList();
         ViewBag.DoctorList = await GetDoctorsDropdown();
+        ViewBag.BedCategoryList = await GetBedCategoryDropdown();
 
-        ViewBag.Success = "IPD Admission Saved Successfully";
-        return View(model);
+        if (!ModelState.IsValid) return View(model);
+
+        string action = model.AdmissionId > 0 ? "UPDATE" : "INSERT";
+
+        SqlParameter[] param =
+        {
+            new SqlParameter("@Action",action),
+            new SqlParameter("@AdmissionID",model.AdmissionId),
+            new SqlParameter("@PatientID",model.PatientID),
+            new SqlParameter("@DoctorID",model.DoctorId ?? (object)DBNull.Value),
+            new SqlParameter("@BedCategoryId",model.BedCategoryId ?? (object)DBNull.Value),
+            new SqlParameter("@BedId",model.BedId ?? (object)DBNull.Value),
+            new SqlParameter("@AdmissionDateTime",model.AdmissionDateTime),
+            new SqlParameter("@InitialDiagnosis",model.InitialDiagnosis ?? ""),
+            new SqlParameter("@AdvanceAmount",model.AdvanceAmount ?? (object)DBNull.Value),
+            new SqlParameter("@Name",model.Name),
+            new SqlParameter("@Age",model.Age ?? (object)DBNull.Value),
+            new SqlParameter("@Gender",model.Gender),
+            new SqlParameter("@Number",model.Number),
+            new SqlParameter("@Status",model.Status)
+        };
+
+        await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", param);
+        TempData["Success"] = "IPD Admission Saved Successfully";
+
+        return RedirectToAction("IPDPatients");
     }
 
-    // ✅ Get Next PatientID
-    private async Task<string> GetNextPatientID()
+    /* ================= LIST + SEARCH ================= */
+    [HttpGet]
+    public async Task<IActionResult> IPDPatients(string search = "", string filter = "")
     {
-        string prefix = "UH";
-        string query = "SELECT ISNULL(MAX(CAST(SUBSTRING(PatientID,3,10) AS INT)),0) FROM IPDAdmissions";
-
-        var result = await _dbLayer.ExecuteScalarAsync(query);
-        int maxId = Convert.ToInt32(result);
-        int nextId = maxId + 1;
-
-        return prefix + nextId.ToString("D4"); // e.g., UH0001
-    }
-
-
-    private async Task<List<SelectListItem>> GetDoctorsDropdown()
-    {
-        var doctors = new List<SelectListItem>
-    {
-        new SelectListItem { Text = "-- Select Doctor --", Value = "" }
+        // Call SP
+        SqlParameter[] param =
+        {
+        new SqlParameter("@Action", "LIST"),
+        new SqlParameter("@Search", string.IsNullOrWhiteSpace(search) ? DBNull.Value : search),
+        new SqlParameter("@Status", DBNull.Value) // Status optional, can add later
     };
 
-        SqlParameter[] parameters =
-        {
-        new SqlParameter("@Action", "SelectDoctors"),
-        new SqlParameter("@Search", DBNull.Value)
-    };
+        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", param);
 
-        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_ManageDoctor", parameters);
-
-        if (dt != null && dt.Rows.Count > 0)
+        // Convert to list
+        var list = dt.AsEnumerable().Select(r => new IpdAdmission
         {
-            foreach (DataRow row in dt.Rows)
+            AdmissionId = Convert.ToInt32(r["AdmissionID"]),
+            PatientID = r["PatientID"].ToString(),
+            Name = r["Name"].ToString(),
+            Number = r["Number"].ToString(),
+            Age = r["Age"] == DBNull.Value ? 0 : Convert.ToInt32(r["Age"]),
+            Gender = r["Gender"].ToString(),
+            Status = r["Status"].ToString(),
+            AdmissionDateTime = r["AdmissionDateTime"] == DBNull.Value
+                ? (DateTime?)null
+                : Convert.ToDateTime(r["AdmissionDateTime"])
+        }).ToList();
+
+        // Apply dynamic filter based on dropdown
+        if (!string.IsNullOrWhiteSpace(search) && !string.IsNullOrWhiteSpace(filter))
+        {
+            switch (filter)
             {
-                doctors.Add(new SelectListItem
-                {
-                    Text = row["FullName"].ToString(),
-                    Value = row["DoctorId"].ToString()
-                });
+                case "PatientName":
+                    list = list.Where(x => x.Name.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+                    break;
+                case "Gender":
+                    list = list.Where(x => x.Gender.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+                    break;
+                case "Contact":
+                    list = list.Where(x => x.Number.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+                    break;
             }
         }
 
-        return doctors;
+        return View(list.OrderBy(x => x.Name).ToList());
     }
-   
+    /* ================= DELETE ================= */
+    [HttpPost]
+    public async Task<IActionResult> ManageIPD(int id)
+    {
+        await _dbLayer.ExecuteSPAsync(
+            "sp_IPDAdmission_Manage",
+            new[]
+            {
+                new SqlParameter("@Action","DELETE"),
+                new SqlParameter("@AdmissionID",id)
+            });
+
+        return RedirectToAction("IPDPatients");
+    }
+
+    /* ================= HELPERS ================= */
+    private async Task<string> GetNextPatientID()
+    {
+        string q = "SELECT ISNULL(MAX(CAST(SUBSTRING(PatientID,3,10) AS INT)),0) FROM IPDAdmissions";
+        int next = Convert.ToInt32(await _dbLayer.ExecuteScalarAsync(q)) + 1;
+        return "UH" + next.ToString("D4");
+    }
+
+    private List<SelectListItem> GetGenderList() => new()
+    {
+        new SelectListItem{Text="-- Select Gender --",Value=""},
+        new SelectListItem{Text="Male",Value="Male"},
+        new SelectListItem{Text="Female",Value="Female"}
+    };
+
+    private async Task<List<SelectListItem>> GetDoctorsDropdown()
+    {
+        var list = new List<SelectListItem> { new("-- Select Doctor --", "") };
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_ManageDoctor",
+            new[] { new SqlParameter("@Action", "SelectDoctors") });
+
+        foreach (DataRow r in dt.Rows)
+            list.Add(new SelectListItem { Text = r["FullName"].ToString(), Value = r["DoctorId"].ToString() });
+
+        return list;
+    }
+
+    private async Task<List<SelectListItem>> GetBedCategoryDropdown()
+    {
+        var list = new List<SelectListItem> { new("-- Select Bed Category --", "") };
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_IPD_BedMaster",
+            new[] { new SqlParameter("@Action", "BedCategory") });
+
+        foreach (DataRow r in dt.Rows)
+            list.Add(new SelectListItem { Text = r["BedCategory"].ToString(), Value = r["BedCategoryId"].ToString() });
+
+        return list;
+    }
 }

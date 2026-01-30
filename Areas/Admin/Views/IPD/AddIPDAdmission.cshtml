@@ -6,6 +6,32 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+<script>
+        $("#ddlBedCategory").change(function () {
+        var categoryId = $(this).val();
+
+        $("#ddlBed").empty().append('<option>Loading...</option>');
+
+        if (categoryId) {
+            $.get("/Admin/IPD/GetBeds",
+                { categoryId: categoryId },
+                function (data) {
+                    $("#ddlBed").empty();
+                    $.each(data, function (i, item) {
+                        $("#ddlBed").append(
+                            $("<option></option>").val(item.value).text(item.text)
+                        );
+                    });
+                });
+        }
+    });
+</script>
 
     <section class="content-header">
         <h1>IPD Admission</h1>
@@ -55,10 +81,10 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Gender</label>
-                        <select asp-for="Gender"  class="form-control">
+                        <select asp-for="Gender" class="form-control">
                             <option value="">-- Select Gender --</option>
-                            <option value="">Male</option>
-                            <option value="">Fmale</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
                         </select>
                     </div>
 
@@ -73,18 +99,26 @@
                                 asp-items="ViewBag.DoctorList"
                                 class="form-control">
                         </select>
+
+         
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Bed Category</label>
-                        <select asp-for="BedCategoryId" asp-items="ViewBag.BedCategoryList" class="form-control">
-                            <option value="">-- Select Bed Category --</option>
+                       
+                        <select asp-for="BedCategoryId"
+                                asp-items="ViewBag.BedCategoryList"
+                                class="form-control"
+                                id="ddlBedCategory">
                         </select>
+
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label">Bed</label>
-                        <select asp-for="BedId" asp-items="ViewBag.BedList" class="form-control">
+                        <select asp-for="BedId"
+                                class="form-control"
+                                id="ddlBed">
                             <option value="">-- Select Bed --</option>
                         </select>
                     </div>
@@ -93,7 +127,9 @@
                         <label class="form-label">Admission Date & Time</label>
                         <input asp-for="AdmissionDateTime"
                                type="datetime-local"
-                               class="form-control" />
+                               class="form-control"
+                               value="@Model.AdmissionDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
+
                     </div>
 
                     <div class="col-md-3">
@@ -110,7 +146,11 @@
 
                     <div class="col-md-3">
                         <label class="form-label">Status</label>
-                        <select asp-for="Status" asp-items="ViewBag.StatusList" class="form-control">
+                        <select asp-for="Status" class="form-control">
+                            <option value="">-- Select Status --</option>
+                            <option value="Admitted">Admitted</option>
+                            <option value="Discharged">Discharged</option>
+                            <option value="Cancelled">Cancelled</option>
                         </select>
                     </div>
 

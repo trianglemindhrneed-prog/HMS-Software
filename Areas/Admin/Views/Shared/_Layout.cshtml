@@ -211,7 +211,13 @@
                                     </li>
  
                                 }
-                                <li><a href="IPDPatients.aspx"><i class="fa fa-procedures"></i> IPD Patients</a></li>
+                                <li>
+                                    <a href="@Url.Action("IPDPatients", "IPD")">
+                                        <i class="fa fa-user-plus"></i> IPD Patients
+                                    </a>
+                                    </li>
+                                    
+                                    @* <a href="IPDPatients"><i class="fa fa-procedures"></i> IPD Patients</a></li> *@
                                 <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
                                 <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
                                 <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
