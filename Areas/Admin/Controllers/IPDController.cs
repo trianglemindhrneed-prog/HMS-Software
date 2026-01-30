@@ -1,4 +1,5 @@
-﻿using HMSCore.Areas.Admin.Models;
+﻿using HMSCore.Areas.Admin.Controllers;
+using HMSCore.Areas.Admin.Models;
 using HMSCore.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -6,7 +7,7 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 
 [Area("Admin")]
-public class IPDController : Controller
+public class IPDController : BaseController
 {
     private readonly IDbLayer _dbLayer;
 

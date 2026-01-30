@@ -190,7 +190,7 @@ namespace HMSCore.Areas.Admin.Controllers
                 });
 
             TempData["Message"] = "Slot status updated.";
-
+            TempData["MessageType"] = "success";
             // 2️⃣ Redirect to SearchSlot with all filters preserved
             return RedirectToAction("SearchSlot", new
             {
@@ -360,8 +360,8 @@ namespace HMSCore.Areas.Admin.Controllers
             new SqlParameter("@SlotTime", time)
                 });
 
-            TempData["Message"] = "Slot status updated.";
-
+            TempData["Message"] = "Slot status updated."; 
+            TempData["MessageType"] = "success";
             // Redirect back to GET with filters preserved
             return RedirectToAction("UnblockSlot", new
             {
