@@ -126,11 +126,12 @@
 
 
                             <td>
-                                <form asp-action="ToggleAppointmentStatus" method="post">
+                                <form asp-action="ToggleAppointmentStatus" method="post" onsubmit="return confirm('Are you sure you want to change the status?');">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />
-                                    <button class="btn btn-link">@item.Status</button>
+                                    <button type="submit" class="btn btn-link">@item.Status</button>
                                 </form>
                             </td>
+
                             <td>
                                 <form asp-action="DeleteAppointment" method="post" onsubmit="return confirm('Delete this appointment?');">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />
