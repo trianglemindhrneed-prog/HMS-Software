@@ -117,8 +117,11 @@
                             <td>@item.PatientName</td>
                             <td>@item.Phone</td>
                             <td>@item.Email</td>
-                            <td>@item.AppointmentDate.ToString("dd-MM-yyyy")</td>
-                            <td>@item.AppointmentTime.ToString(@"hh\:mm")</td>
+                            <td>@(item.AppointmentDate?.ToString("dd-MM-yyyy") ?? "")</td>
+                            <td>@(item.AppointmentTime.HasValue? DateTime.Today.Add(item.AppointmentTime.Value).ToString("hh:mm tt") : "")</td>
+
+
+
                             <td>
                                 <form asp-action="ToggleTodayAppointmentStatus" method="post">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />

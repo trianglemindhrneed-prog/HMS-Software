@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Globalization;
 
 namespace HMSCore.Areas.Admin.Controllers
 {
@@ -758,58 +759,69 @@ namespace HMSCore.Areas.Admin.Controllers
                 .ToList();
         }
 
- 
-            [HttpGet]
-            public async Task<IActionResult> AppointmentReport(
-                string filterColumn,
-                string keyword,
-                DateTime? fromDate,
-                DateTime? toDate,
-                int pageNumber = 1,
-                int pageSize = 20)
-                {
-                var vm = new AppointmentReportVM
-                {
-                    FilterColumn = filterColumn,
-                    Keyword = keyword,
-                    FromDate = fromDate,
-                    ToDate = toDate,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
-                };
 
-                var dt = await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
-                {
-                new SqlParameter("@Action","GetPaged"),
-                new SqlParameter("@FilterColumn",(object?)filterColumn ?? DBNull.Value),
-                new SqlParameter("@FilterValue",(object?)keyword ?? DBNull.Value),
-                new SqlParameter("@FromDate",(object?)fromDate ?? DBNull.Value),
-                new SqlParameter("@ToDate",(object?)toDate ?? DBNull.Value),
-                new SqlParameter("@PageNumber",pageNumber),
-                new SqlParameter("@PageSize",pageSize)
-            });
+        [HttpGet]
+        public async Task<IActionResult> AppointmentReport(
+        string filterColumn,
+        string keyword,
+        DateTime? fromDate,
+        DateTime? toDate,
+        int pageNumber = 1,
+        int pageSize = 20)
+        {
+            var vm = new AppointmentReportVM
+            {
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = fromDate,
+                ToDate = toDate,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
 
-                if (dt.Rows.Count > 0)
-                    vm.TotalRecords = Convert.ToInt32(dt.Rows[0]["TotalRecords"]);
+            var dt = await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
+            {
+        new SqlParameter("@Action", "GetPaged"),
+        new SqlParameter("@FilterColumn", (object?)filterColumn ?? DBNull.Value),
+        new SqlParameter("@FilterValue", (object?)keyword ?? DBNull.Value),
+        new SqlParameter("@FromDate", (object?)fromDate ?? DBNull.Value),
+        new SqlParameter("@ToDate", (object?)toDate ?? DBNull.Value),
+        new SqlParameter("@PageNumber", pageNumber),
+        new SqlParameter("@PageSize", pageSize)
+    });
 
-                vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
-                {
-                    BookingId = Convert.ToInt32(r["BookingId"]),
-                    AppointmentId = Convert.ToInt32(r["AppointmentId"]),
-                    PatientName = r["PatientName"].ToString(),
-                    Phone = r["Phone"].ToString(),
-                    Email = r["Email"].ToString(),
-                    DoctorName = r["DoctorName"].ToString(),
-                    DepartmentName = r["DepartmentName"].ToString(),
-                    AppointmentDate = Convert.ToDateTime(r["AppointmentDate"]),
-                    AppointmentTime = (TimeSpan)r["AppointmentTime"],
-                    Status = r["Status"].ToString()
-                }).ToList();
+            if (dt.Rows.Count > 0)
+                vm.TotalRecords = Convert.ToInt32(dt.Rows[0]["TotalRecords"]);
+             
 
-                return View(vm);
-            }
+            // inside your controller
+            vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
+            {
+                BookingId = r["BookingId"]?.ToString() ?? string.Empty,
+                AppointmentId = r["AppointmentId"] != DBNull.Value ? Convert.ToInt32(r["AppointmentId"]) : 0,
+                PatientName = r["PatientName"]?.ToString() ?? string.Empty,
+                Phone = r["Phone"]?.ToString() ?? string.Empty,
+                Email = r["Email"]?.ToString() ?? string.Empty,
+                DoctorName = r["DoctorName"]?.ToString() ?? string.Empty,
+                DepartmentName = r["DepartmentName"]?.ToString() ?? string.Empty,
+                AppointmentDate = r["AppointmentDate"] != DBNull.Value ? Convert.ToDateTime(r["AppointmentDate"]) : (DateTime?)null,
+                AppointmentTime = DateTime.TryParseExact(
+                    r["AppointmentTime"]?.ToString(),
+                    "hh:mm tt",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var dtTime
+                ) ? dtTime.TimeOfDay : (TimeSpan?)null,
+                Status = r["Status"]?.ToString() ?? string.Empty
+            }).ToList();
 
-            [HttpPost]
+
+
+            return View(vm);
+        }
+
+
+        [HttpPost]
             public async Task<IActionResult> ToggleAppointmentStatus(int id)
             {
                 await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
@@ -902,15 +914,21 @@ namespace HMSCore.Areas.Admin.Controllers
 
             vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
             {
-                BookingId = Convert.ToInt32(r["BookingId"]),
+                BookingId = r["BookingId"].ToString(),
                 AppointmentId = Convert.ToInt32(r["AppointmentId"]),
                 PatientName = r["PatientName"].ToString(),
                 Phone = r["Phone"].ToString(),
                 Email = r["Email"].ToString(),
                 DoctorName = r["DoctorName"].ToString(),
                 DepartmentName = r["DepartmentName"].ToString(),
-                AppointmentDate = Convert.ToDateTime(r["AppointmentDate"]),
-                AppointmentTime = (TimeSpan)r["AppointmentTime"],
+                AppointmentDate = r["AppointmentDate"] != DBNull.Value ? Convert.ToDateTime(r["AppointmentDate"]) : (DateTime?)null,
+                AppointmentTime = DateTime.TryParseExact(
+                    r["AppointmentTime"]?.ToString(),
+                    "hh:mm tt",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var dtTime
+                ) ? dtTime.TimeOfDay : (TimeSpan?)null,
                 Status = r["Status"].ToString()
             }).ToList();
 

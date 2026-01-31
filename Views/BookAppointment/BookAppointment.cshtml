@@ -231,12 +231,19 @@
                     contentType: 'application/json',
                     data: JSON.stringify(model),
                     success: function(res){
-                        if(res.success){
-                            alert("Your appointment is booked successfully!\nBooking ID: " + res.bookingId + "\nPlease check your email for details.");
-                            setTimeout(function(){ location.reload(); }, 100); // reload after alert
-                        } else {
-                            $("#bookingMessage").html('<span class="text-danger">'+res.message+'</span>');
-                        }
+                              if(res.success){ 
+            var msg = "✅ Your appointment is booked successfully!\n\n" +
+                      "Booking ID: " + res.bookingId + "\n" +
+                      "Date: " + selectedDate + "\n" +
+                      "Slot: " + selectedSlot + "\n\n" +
+                      "Please check your email for details.";
+
+            alert(msg); 
+            location.reload();
+        } else {
+            $("#bookingMessage").html('<span class="text-danger">⚠ ' + res.message + '</span>');
+        }
+
                     },
                     error: function(xhr){
                         $("#bookingMessage").html('<span class="text-danger">Error occurred: '+xhr.statusText+'</span>');
