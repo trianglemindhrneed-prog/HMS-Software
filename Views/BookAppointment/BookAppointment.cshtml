@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Book Appointment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <head>
@@ -37,40 +38,45 @@
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-6">
-            <label>Select Date</label>
+        <div class="col-md-6"> 
             <div id="calendar"></div>
         </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-12">
+        <div class="col-md-6">
             <div id="slotsContainer" class="d-flex flex-wrap gap-2"></div>
         </div>
-    </div>
+        </div> 
 </div>
-
-<div id="bookingFormContainer" class="mt-4" style="display:none;">
-    <h4>Booking Details</h4>
-
+<div class="card third-row">
+<div id="bookingFormContainer" class="mt-4 row" style="display:none;">
+    <h4>Booking Details</h4> 
     <!-- Hidden fields -->
     <input type="hidden" id="hdnSlotTime" />
     <input type="hidden" id="hdnBookingId" />
-
+        <div class="col-sm-12">
     <input type="text" id="txtName" class="form-control mb-2" placeholder="Name" />
+    </div>
+        <div class="col-sm-12">
     <input type="text" id="txtPhone" class="form-control mb-2" placeholder="Phone" />
+        </div>
+            <div class="col-sm-12">
     <input type="text" id="txtEmail" class="form-control mb-2" placeholder="Email" />
+            </div>
+                <div class="col-sm-12">
     <textarea id="txtMessage" class="form-control mb-2" placeholder="Message"></textarea>
+                </div>
+                    <div class="col-sm-12">
 
     <select id="ddlPayment" class="form-select mb-2">
         <option value="Offline">Offline</option>
         <option value="Online">Online</option>
     </select>
-
+                        <div class="col-sm-12">
     <button id="btnBook" class="btn btn-primary">Book Appointment</button>
-    <div id="bookingMessage" class="mt-2"></div>
+                            <div id="bookingMessage" class="mt-2"></div>
+                        </div>
 </div>
-
+</div>
+</div>
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
@@ -106,18 +112,39 @@
 
             $("#ddlDoctors").change(loadSlots);
 
-            // Parse time for sorting
-            function parseTime(t) {
-                var parts = t.match(/(\d+):(\d+) (\wM)/);
-                var hours = parseInt(parts[1], 10);
-                var minutes = parseInt(parts[2], 10);
-                var meridian = parts[3];
-                if (meridian === 'PM' && hours !== 12) hours += 12;
-                if (meridian === 'AM' && hours === 12) hours = 0;
+            // Convert any time to minutes (12-hour or 24-hour)
+            function parseTimeToMinutes(t) {
+                if (!t) return 0;
+                var hours, minutes;
+                t = t.trim();
+                if (t.toUpperCase().includes("AM") || t.toUpperCase().includes("PM")) {
+                    var parts = t.match(/(\d+):(\d+) (\wM)/);
+                    if (!parts) return 0;
+                    hours = parseInt(parts[1], 10);
+                    minutes = parseInt(parts[2], 10);
+                    var meridian = parts[3].toUpperCase();
+                    if (meridian === 'PM' && hours !== 12) hours += 12;
+                    if (meridian === 'AM' && hours === 12) hours = 0;
+                } else {
+                    var parts24 = t.split(":");
+                    hours = parseInt(parts24[0], 10);
+                    minutes = parseInt(parts24[1], 10);
+                }
                 return hours * 60 + minutes;
             }
 
-            // Load slots
+            // Convert 24-hour time to 12-hour display
+            function to12HourFormat(t) {
+                if (t.toUpperCase().includes("AM") || t.toUpperCase().includes("PM")) return t;
+                var parts = t.split(":");
+                var hh = parseInt(parts[0], 10);
+                var mm = parts[1];
+                var ampm = hh >= 12 ? 'PM' : 'AM';
+                hh = hh % 12;
+                if(hh === 0) hh = 12;
+                return hh.toString().padStart(2,'0') + ':' + mm + ' ' + ampm;
+            }
+
             function loadSlots() {
                 var docId = $("#ddlDoctors").val();
                 if (!docId) {
@@ -129,34 +156,54 @@
                 $.getJSON('/BookAppointment/GetSchedules', { doctorId: docId, date: selectedDate }, function (data) {
                     $("#slotsContainer").empty();
                     $("#bookingFormContainer").hide();
+                    selectedSlot = null;
 
-                    var allSlots = [];
+                    if (data.error) { alert('Error loading slots: ' + data.message); return; }
 
-                    $.each(data.available, function (i, s) { allSlots.push({ time: s, type: 'available' }); });
-                    $.each(data.booked, function (i, s) { allSlots.push({ time: s, type: 'booked' }); });
-                    $.each(data.timeout, function (i, s) { allSlots.push({ time: s, type: 'timeout' }); });
-                    $.each(data.blocked, function (i, s) { allSlots.push({ time: s, type: 'blocked' }); });
+                    // Use a map to prevent duplicates and mark priority
+                    var slotMap = {}; // key = 24-hour time, value = type
+                    $.each(data.available, function(i, s){ slotMap[parseTo24Hour(s)] = 'available'; });
+                    $.each(data.timeout, function(i, s){ slotMap[parseTo24Hour(s)] = 'timeout'; });
+                    $.each(data.blocked, function(i, s){ slotMap[parseTo24Hour(s)] = 'blocked'; });
+                    $.each(data.booked, function(i, s){ slotMap[parseTo24Hour(s)] = 'booked'; }); // booked overrides others
 
-                    // Sort by time
-                    allSlots.sort(function(a,b){ return parseTime(a.time) - parseTime(b.time); });
+                    // Convert map to sorted array
+                    var allSlots = Object.keys(slotMap)
+                        .sort(function(a,b){ return parseTimeToMinutes(a) - parseTimeToMinutes(b); })
+                        .map(function(t){ return { time: t, type: slotMap[t] }; });
 
-                    // Render slots
+                    // Render buttons
                     $.each(allSlots, function(i, slot){
+                        var displayTime = to12HourFormat(slot.time);
                         var btn = '';
-                        if (slot.type === 'available') btn = '<button class="btn slotBtn btn-success" data-slot="'+slot.time+'">'+slot.time+'</button>';
-                        if (slot.type === 'booked') btn = '<button class="btn btn-primary" disabled>'+slot.time+'</button>';
-                        if (slot.type === 'timeout') btn = '<button class="btn btn-pink" disabled>'+slot.time+'</button>';
-                        if (slot.type === 'blocked') btn = '<button class="btn btn-danger" disabled>'+slot.time+'</button>';
+                        if(slot.type === 'available') btn = '<button class="btn slotBtn btn-success" data-slot="'+displayTime+'">'+displayTime+'</button>';
+                        if(slot.type === 'booked') btn = '<button class="btn btn-primary" disabled>'+displayTime+'</button>';
+                        if(slot.type === 'timeout') btn = '<button class="btn btn-pink" disabled>'+displayTime+'</button>';
+                        if(slot.type === 'blocked') btn = '<button class="btn btn-danger" disabled>'+displayTime+'</button>';
                         $("#slotsContainer").append(btn);
                     });
                 });
+            }
+
+            function parseTo24Hour(t) {
+                if (!t) return '';
+                t = t.trim();
+                if (t.toUpperCase().includes("AM") || t.toUpperCase().includes("PM")) {
+                    var parts = t.match(/(\d+):(\d+) (\wM)/);
+                    if (!parts) return '';
+                    var hh = parseInt(parts[1], 10);
+                    var mm = parts[2];
+                    var meridian = parts[3].toUpperCase();
+                    if (meridian === 'PM' && hh !== 12) hh += 12;
+                    if (meridian === 'AM' && hh === 12) hh = 0;
+                    return hh.toString().padStart(2,'0') + ':' + mm;
+                } else return t;
             }
 
             // Slot click
             $(document).on('click', '.slotBtn.btn-success', function () {
                 $(".slotBtn").removeClass('btn-outline-success').addClass('btn-success');
                 $(this).removeClass('btn-success').addClass('btn-outline-success');
-
                 selectedSlot = $(this).data('slot');
                 $("#hdnSlotTime").val(selectedSlot);
                 $("#bookingFormContainer").slideDown();
@@ -185,13 +232,14 @@
                     data: JSON.stringify(model),
                     success: function(res){
                         if(res.success){
-                            $("#hdnBookingId").val(res.bookingId);
-                            $("#bookingMessage").html('<span class="text-success">Booked! Booking ID: '+res.bookingId+'</span>');
-                            $("#bookingFormContainer").hide();
-                            loadSlots();
+                            alert("Your appointment is booked successfully!\nBooking ID: " + res.bookingId + "\nPlease check your email for details.");
+                            setTimeout(function(){ location.reload(); }, 100); // reload after alert
                         } else {
                             $("#bookingMessage").html('<span class="text-danger">'+res.message+'</span>');
                         }
+                    },
+                    error: function(xhr){
+                        $("#bookingMessage").html('<span class="text-danger">Error occurred: '+xhr.statusText+'</span>');
                     }
                 });
             });
@@ -208,3 +256,5 @@
         });
     </script>
 }
+
+

@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Net.Mail;
 using System.Threading.Tasks;
 
 namespace HMSCore.Controllers
@@ -210,24 +211,37 @@ namespace HMSCore.Controllers
 
             try
             {
-                var outputParam = new SqlParameter("@BookingID", SqlDbType.NVarChar, 50) { Direction = ParameterDirection.Output };
-
-                SqlParameter[] parameters = new SqlParameter[]
+                // Output parameter for Booking ID
+                var outputParam = new SqlParameter("@BookingID", SqlDbType.NVarChar, 50)
                 {
-                    new SqlParameter("@Mode", "BookAppointment"),
-                    new SqlParameter("@DoctorId", model.SelectedDoctorId ?? 0),
-                    new SqlParameter("@ScheduleDate", model.SelectedDate ?? DateTime.Today),
-                    new SqlParameter("@AppointmentTime", model.SelectedSlot ?? ""),
-                    new SqlParameter("@PatientName", model.PatientName ?? ""),
-                    new SqlParameter("@Phone", model.Phone ?? ""),
-                    new SqlParameter("@Email", model.Email ?? ""),
-                    new SqlParameter("@Message", model.Message ?? ""),
-                    outputParam
+                    Direction = ParameterDirection.Output
                 };
 
+                // SP parameters
+                SqlParameter[] parameters = new SqlParameter[]
+                {
+            new SqlParameter("@Mode", "BookAppointment"),
+            new SqlParameter("@DoctorId", model.SelectedDoctorId ?? 0),
+            new SqlParameter("@ScheduleDate", model.SelectedDate ?? DateTime.Today),
+            new SqlParameter("@AppointmentTime", model.SelectedSlot ?? ""),
+            new SqlParameter("@PatientName", model.PatientName ?? ""),
+            new SqlParameter("@Phone", model.Phone ?? ""),
+            new SqlParameter("@Email", model.Email ?? ""),
+            new SqlParameter("@Message", model.Message ?? ""),
+            outputParam
+                };
+
+                // Execute stored procedure
                 await _dbLayer.ExecuteSPAsync("sp_ManageAppointments", parameters);
 
+                // Get generated Booking ID
                 string bookingId = Convert.ToString(outputParam.Value);
+
+                // Send booking confirmation email
+                if (!string.IsNullOrEmpty(model.Email))
+                {
+                    SendBookingConfirmationEmail(model.Email, model.PatientName, bookingId, model.SelectedDate ?? DateTime.Today, model.SelectedSlot ?? "");
+                }
 
                 return Json(new { success = true, bookingId });
             }
@@ -236,5 +250,57 @@ namespace HMSCore.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        // === Helper method for sending email ===
+        private static void SendBookingConfirmationEmail(string toEmail, string patientName, string bookingId, DateTime apptDate, string slotTime)
+        {
+            try
+            {
+                MailMessage mail = new MailMessage();
+                mail.To.Add(toEmail);
+                mail.From = new MailAddress("trianglemind14@gmail.com");
+                mail.Subject = "Appointment Confirmation - TriangleMind";
+
+                string body = string.Format(@"
+<html>
+  <body style='font-family: Arial, sans-serif; font-size: 14px; color: black;'>
+    <div style='text-align: center; margin-bottom: 20px;'>
+      <img src='https://www.trianglemind.in/assets/TMT_img/logo.png' alt='Logo' style='height: 80px;' />
+    </div>
+    <p>Dear {0},</p>
+    <p>Thank you for booking your appointment with <strong>Triangle Mind</strong>.</p>
+
+    <p><b>Booking Details:</b></p>
+    <table style='border-collapse: collapse;'>
+      <tr><td><b>Booking ID:</b></td><td>{1}</td></tr>
+      <tr><td><b>Date:</b></td><td>{2:dddd, dd MMM yyyy}</td></tr>
+      <tr><td><b>Appointment Time:</b></td><td>{3}</td></tr>
+    </table>
+
+    <p>We look forward to seeing you.</p>
+    <p style='color:gray; font-size:12px;'>This is an automated email, please do not reply.</p>
+  </body>
+</html>", patientName, bookingId, apptDate, slotTime);
+
+                mail.Body = body;
+                mail.IsBodyHtml = true;
+
+                SmtpClient smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    Credentials = new System.Net.NetworkCredential("trianglemind14@gmail.com", "mgae pptn cmej axlp"),
+                    EnableSsl = true
+                };
+
+                smtp.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                // Optional: log error
+                Console.WriteLine("Email sending error: " + ex.Message);
+            }
+        }
+
     }
 }
