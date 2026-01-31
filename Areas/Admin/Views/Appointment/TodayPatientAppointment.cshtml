@@ -1,5 +1,179 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model HMSCore.Areas.Admin.Models.AppointmentReportVM
 @{
+    ViewData["Title"] = "Today Appointment Report";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+@{
+    var filterOptions = new List<SelectListItem>
+    {
+        new SelectListItem{ Value="", Text="-- Select --" },
+        new SelectListItem{ Value="DepartmentName", Text="Department Name" },
+        new SelectListItem{ Value="DoctorName", Text="Doctor Name" },
+        new SelectListItem{ Value="PatientName", Text="Patient Name" },
+        new SelectListItem{ Value="Phone", Text="Phone" },
+        new SelectListItem{ Value="Email", Text="Email" },
+        new SelectListItem{ Value="AppointmentDate", Text="Appointment Date" }
+    };
+}
+
+<style>
+    .btn-secondary {
+        background: #18d118bf;
+        font-weight: bold;
+        color: aliceblue;
+    }
+    .btn-secondary:hover {
+        color: aliceblue;
+    }
+</style>
+
+<section class="content-header">
+    <h1>Today Appointment Report</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Today Appointment Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <!-- DELETE SELECTED -->
+                <form method="post" asp-action="DeleteSelectedTodayAppointment" style="display:inline-block;" id="deleteSelectedForm">
+                    <input type="hidden" name="selectedIds" id="selectedIds" />
+                    <button type="submit" class="btn btn-primary btn-flat">
+                        Delete Selected
+                    </button>
+                </form>
+
+                <!-- PRINT BUTTON -->
+                <button type="button" onclick="printGrid()" class="btn btn-primary btn-flat">
+                    Print
+                </button>
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+
+                    <select class="form-control input-sm" asp-for="FilterColumn" asp-items="filterOptions"></select>
+
+                    <input type="text" class="form-control input-sm" placeholder="Search" name="keyword" value="@Model.Keyword" />
+                    <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                    <a href="/Admin/Appointment/TodayPatientAppointment" class="btn btn-default btn-flat">Show All</a>
+                </form>
+            </div>
+        </div>
+
+        <!-- DATE FILTER -->
+        <div class="row mt-3" style="margin-left:3px!important;">
+            <div class="col-sm-3">
+                <label>From Date:</label>
+                <input type="date" name="fromDate" class="form-control input-sm" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-sm-3">
+                <label>To Date:</label>
+                <input type="date" name="toDate" class="form-control input-sm" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-sm-2" style="margin-top:22px;">
+                <button type="submit" class="btn btn-primary btn-flat">Search</button>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover mt-2" id="appointmentTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th>BookingId</th>
+                        <th>Department</th>
+                        <th>Doctor</th>
+                        <th>Patient</th>
+                        <th>Mobile</th>
+                        <th>Email</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Print</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Appointments)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="chkSelect" value="@item.AppointmentId" /></td>
+                            <td>@item.BookingId</td>
+                            <td>@item.DepartmentName</td>
+                            <td>@item.DoctorName</td>
+                            <td>@item.PatientName</td>
+                            <td>@item.Phone</td>
+                            <td>@item.Email</td>
+                            <td>@item.AppointmentDate.ToString("dd-MM-yyyy")</td>
+                            <td>@item.AppointmentTime.ToString(@"hh\:mm")</td>
+                            <td>
+                                <form asp-action="ToggleTodayAppointmentStatus" method="post">
+                                    <input type="hidden" name="id" value="@item.AppointmentId" />
+                                    <button class="btn btn-link">@item.Status</button>
+                                </form>
+                            </td>
+                            <!-- PRINT BUTTON -->
+                            <td>
+                                <a class="btn btn-secondary btn-sm"
+                                   target="_blank"
+                                   href="@Url.Action("PrintAppointment", "Appointment", new { appointmentId = item.AppointmentId })">
+                                    Print
+                                </a>
+                            </td>
+                            <td>
+                                <form asp-action="DeleteTodayAppointment" method="post" onsubmit="return confirm('Delete this appointment?');">
+                                    <input type="hidden" name="id" value="@item.AppointmentId" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Toggle All checkboxes
+        function toggleAll(chkAll) {
+            var checkboxes = document.querySelectorAll('.chkSelect');
+            checkboxes.forEach(c => c.checked = chkAll.checked);
+        }
+
+        // Delete selected IDs
+        document.getElementById('deleteSelectedForm').onsubmit = function() {
+            var selected = Array.from(document.querySelectorAll('.chkSelect:checked')).map(c => c.value);
+            if (selected.length === 0) {
+                alert('Please select at least one appointment.');
+                return false;
+            }
+            document.getElementById('selectedIds').value = selected.join(',');
+        }
+
+        // Print function
+        function printGrid() {
+            var grid = document.getElementById("appointmentTable");
+            var w = window.open('');
+            w.document.write('<html><head><title>Print</title></head><body>');
+            w.document.write(grid.outerHTML);
+            w.document.write('</body></html>');
+            w.document.close();
+            w.print();
+        }
+    </script>
 }

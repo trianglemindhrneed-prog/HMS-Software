@@ -19,11 +19,11 @@ namespace HMSCore.Areas.Admin.Controllers
 
         [HttpGet]
         public async Task<IActionResult> DoctorSlot(
-           string filterColumn = null,
-           string keyword = null,
-           string fromDate = null,
-           string toDate = null,
-           int pageSize = 20)
+          string filterColumn = null,
+          string keyword = null,
+          string fromDate = null,
+          string toDate = null,
+          int pageSize = 20)
         {
             // Prepare parameters for your stored procedure
             SqlParameter[] parameters = new SqlParameter[]
@@ -66,48 +66,61 @@ namespace HMSCore.Areas.Admin.Controllers
             return View(vm);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ToggleBlock(int id)
+        {
+            await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
+            {
+        new SqlParameter("@Action", "ToggleBlock"),
+        new SqlParameter("@ScheduleId", id)
+    });
+
+            TempData["Message"] = "Slot status updated successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("DoctorSlot");
+        }
 
         [HttpPost]
-            public async Task<IActionResult> ToggleBlock(int id)
+        public async Task<IActionResult> DeleteSlot(int id)
+        {
+            await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
             {
-                await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
-                {
-                new SqlParameter("@Action", "ToggleBlock"),
-                new SqlParameter("@ScheduleId", id)
-            });
+        new SqlParameter("@Action", "DeleteSlot"),
+        new SqlParameter("@ScheduleId", id)
+    });
 
-                return RedirectToAction("DoctorSlot");
-            }
+            TempData["Message"] = "Slot deleted successfully";
+            TempData["MessageType"] = "success";
 
-            [HttpPost]
-            public async Task<IActionResult> DeleteSlot(int id)
+            return RedirectToAction("DoctorSlot");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelected(int[] selectedIds)
+        {
+            if (selectedIds != null && selectedIds.Length > 0)
             {
-                await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
+                foreach (var id in selectedIds)
                 {
+                    await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
+                    {
                 new SqlParameter("@Action", "DeleteSlot"),
                 new SqlParameter("@ScheduleId", id)
             });
-
-                return RedirectToAction("DoctorSlot");
-            }
-
-            [HttpPost]
-            public async Task<IActionResult> DeleteSelected(int[] selectedIds)
-            {
-                if (selectedIds != null && selectedIds.Length > 0)
-                {
-                    foreach (var id in selectedIds)
-                    {
-                        await _dbLayer.ExecuteSPAsync("sp_ManageDoctorSlots", new[]
-                        {
-                        new SqlParameter("@Action", "DeleteSlot"),
-                        new SqlParameter("@ScheduleId", id)
-                    });
-                    }
                 }
-                return RedirectToAction("DoctorSlot");
+
+                TempData["Message"] = "Selected slots deleted successfully";
+                TempData["MessageType"] = "success";
+            }
+            else
+            {
+                TempData["Message"] = "No slots selected";
+                TempData["MessageType"] = "error";
             }
 
+            return RedirectToAction("DoctorSlot");
+        }
 
 
         [HttpGet]
@@ -420,14 +433,218 @@ namespace HMSCore.Areas.Admin.Controllers
                 .ToList();
         }
 
+ 
+            [HttpGet]
+            public async Task<IActionResult> AppointmentReport(
+                string filterColumn,
+                string keyword,
+                DateTime? fromDate,
+                DateTime? toDate,
+                int pageNumber = 1,
+                int pageSize = 20)
+                {
+                var vm = new AppointmentReportVM
+                {
+                    FilterColumn = filterColumn,
+                    Keyword = keyword,
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                };
 
-        public IActionResult AppointmentReport()
+                var dt = await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
+                {
+                new SqlParameter("@Action","GetPaged"),
+                new SqlParameter("@FilterColumn",(object?)filterColumn ?? DBNull.Value),
+                new SqlParameter("@FilterValue",(object?)keyword ?? DBNull.Value),
+                new SqlParameter("@FromDate",(object?)fromDate ?? DBNull.Value),
+                new SqlParameter("@ToDate",(object?)toDate ?? DBNull.Value),
+                new SqlParameter("@PageNumber",pageNumber),
+                new SqlParameter("@PageSize",pageSize)
+            });
+
+                if (dt.Rows.Count > 0)
+                    vm.TotalRecords = Convert.ToInt32(dt.Rows[0]["TotalRecords"]);
+
+                vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
+                {
+                    BookingId = Convert.ToInt32(r["BookingId"]),
+                    AppointmentId = Convert.ToInt32(r["AppointmentId"]),
+                    PatientName = r["PatientName"].ToString(),
+                    Phone = r["Phone"].ToString(),
+                    Email = r["Email"].ToString(),
+                    DoctorName = r["DoctorName"].ToString(),
+                    DepartmentName = r["DepartmentName"].ToString(),
+                    AppointmentDate = Convert.ToDateTime(r["AppointmentDate"]),
+                    AppointmentTime = (TimeSpan)r["AppointmentTime"],
+                    Status = r["Status"].ToString()
+                }).ToList();
+
+                return View(vm);
+            }
+
+            [HttpPost]
+            public async Task<IActionResult> ToggleAppointmentStatus(int id)
+            {
+                await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
+                {
+                new SqlParameter("@Action","ToggleStatus"),
+                new SqlParameter("@AppointmentId", id)
+            });
+
+                TempData["Message"] = "Status updated successfully";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("AppointmentReport");
+            }
+
+            [HttpPost]
+            public async Task<IActionResult> DeleteAppointment(int id)
+            {
+                await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
+                {
+                new SqlParameter("@Action","Delete"),
+                new SqlParameter("@AppointmentId", id)
+            });
+
+                TempData["Message"] = "Appointment deleted successfully";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("AppointmentReport");
+            }
+
+            // DELETE SELECTED APPOINTMENTS
+            [HttpPost]
+            public async Task<IActionResult> DeleteSelectedAppointment(string selectedIds)
+            {
+                if (!string.IsNullOrWhiteSpace(selectedIds))
+                {
+                    var ids = selectedIds.Split(',').Select(id => new SqlParameter("@AppointmentId", int.Parse(id))).ToArray();
+                    foreach (var param in ids)
+                    {
+                        await _dbLayer.ExecuteSPAsync("sp_AppointmentReport", new[]
+                        {
+                        new SqlParameter("@Action","Delete"),
+                        param
+                    });
+                    }
+                    TempData["Message"] = "Selected appointments deleted successfully";
+                TempData["MessageType"] = "success";
+            }
+                else
+                {
+                TempData["Message"] = "No appointments selected";
+                TempData["MessageType"] = "error";
+                 
+                }
+
+                return RedirectToAction("AppointmentReport");
+            }
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> TodayPatientAppointment(
+          string filterColumn,
+          string keyword,
+          DateTime? fromDate,
+          DateTime? toDate,
+          int pageNumber = 1,
+          int pageSize = 20)
         {
-            return View();
+            var vm = new AppointmentReportVM
+            {
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = fromDate,
+                ToDate = toDate,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            var dt = await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
+            {
+        new SqlParameter("@Action","GetPaged"),
+        new SqlParameter("@FilterColumn",(object?)filterColumn ?? DBNull.Value),
+        new SqlParameter("@FilterValue",(object?)keyword ?? DBNull.Value),
+        new SqlParameter("@FromDate",(object?)fromDate ?? DBNull.Value),
+        new SqlParameter("@ToDate",(object?)toDate ?? DBNull.Value),
+        new SqlParameter("@PageNumber",pageNumber),
+        new SqlParameter("@PageSize",pageSize)
+    });
+
+            if (dt.Rows.Count > 0)
+                vm.TotalRecords = Convert.ToInt32(dt.Rows[0]["TotalRecords"]);
+
+            vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
+            {
+                BookingId = Convert.ToInt32(r["BookingId"]),
+                AppointmentId = Convert.ToInt32(r["AppointmentId"]),
+                PatientName = r["PatientName"].ToString(),
+                Phone = r["Phone"].ToString(),
+                Email = r["Email"].ToString(),
+                DoctorName = r["DoctorName"].ToString(),
+                DepartmentName = r["DepartmentName"].ToString(),
+                AppointmentDate = Convert.ToDateTime(r["AppointmentDate"]),
+                AppointmentTime = (TimeSpan)r["AppointmentTime"],
+                Status = r["Status"].ToString()
+            }).ToList();
+
+            return View(vm);
         }
-        public IActionResult TodayPatientAppointment()
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleTodayAppointmentStatus(int id)
         {
-            return View();
+            await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
+            {
+        new SqlParameter("@Action","ToggleStatus"),
+        new SqlParameter("@AppointmentId", id)
+    });
+
+            TempData["Message"] = "Status updated successfully";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("TodayPatientAppointment");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTodayAppointment(int id)
+        {
+            await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
+            {
+        new SqlParameter("@Action","Delete"),
+        new SqlParameter("@AppointmentId", id)
+    });
+
+            TempData["Message"] = "Appointment deleted successfully";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("TodayPatientAppointment");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedTodayAppointment(string selectedIds)
+        {
+            if (!string.IsNullOrWhiteSpace(selectedIds))
+            {
+                var ids = selectedIds.Split(',').Select(id => new SqlParameter("@AppointmentId", int.Parse(id))).ToArray();
+                foreach (var param in ids)
+                {
+                    await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
+                    {
+                new SqlParameter("@Action","Delete"),
+                param
+            });
+                }
+                TempData["Message"] = "Selected appointments deleted successfully";
+                TempData["MessageType"] = "success";
+            }
+            else
+            {
+                TempData["Message"] = "No appointments selected";
+                TempData["MessageType"] = "error";
+            }
+
+            return RedirectToAction("TodayPatientAppointment");
+        }
+
     }
 }
