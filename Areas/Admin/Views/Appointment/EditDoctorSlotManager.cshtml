@@ -1,0 +1,126 @@
+﻿@model HMSCore.Areas.Admin.Models.DoctorSlotViewModel
+@{
+    ViewData["Title"] = "Doctor Slots Manager";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>Doctor Slots Manager</h1>
+    <ol class="breadcrumb">
+        <li><a href="@Url.Action("Index", "Dashboard")"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Doctor Slots Manager</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+                    <div class="panel panel-default form-horizontal">
+                        <div class="panel-body">
+                            <form action="@Url.Action("EditDoctorSlotManager", "Appointment")" method="post">
+                                <!-- Department Dropdown -->
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Select Department *</label>
+                                    <div class="col-md-4">
+                                        <select required="" asp-for="SelectedDepartmentId" asp-items="Model.DepartmentList" class="form-control" id="SelectedDepartmentId">
+                                            <option value="">--Select Department--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Doctor Dropdown -->
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Select Doctor *</label>
+                                    <div class="col-md-4">
+                                        <select required="" asp-for="SelectedDoctorId" asp-items="Model.DoctorList" class="form-control" id="SelectedDoctorId">
+                                            <option value="">--Select Doctor--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- From Date -->
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">From Date *</label>
+                                    <div class="col-md-4">
+                                        <input required="" name="FromDate" type="date" class="form-control" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" />
+                                    </div>
+                                </div>
+
+                                <!-- To Date -->
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">To Date *</label>
+                                    <div class="col-md-4">
+                                        <input required="" name="ToDate" type="date" class="form-control" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" />
+                                    </div>
+                                </div>
+
+                                @for (int i = 0; i < Model.Sessions.Count; i++)
+                                {
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">@Model.Sessions[i].Name Session</label>
+
+                                        <input type="hidden" name="Sessions[@i].Name" value="@Model.Sessions[i].Name" />
+
+                                        @* <div class="row"> *@
+                                        <div class="col-md-2">
+                                            <input type="time" name="Sessions[@i].Start"
+                                                   value="@(Model.Sessions[i].Start?.ToString(@"hh\:mm"))"
+                                                   class="form-control" placeholder="Start Time" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="time" name="Sessions[@i].End"
+                                                   value="@(Model.Sessions[i].End?.ToString(@"hh\:mm"))"
+                                                   class="form-control" placeholder="End Time" />
+                                        </div>
+                                    </div>
+                                    @*  </div> *@
+                                }
+
+
+                                <!-- Slot Duration -->
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label">Slot Duration (Minutes) *</label>
+                                    <div class="col-md-4">
+                                        <input required="" name="SlotDuration" type="number" class="form-control" value="@Model.SlotDuration" />
+                                    </div>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="form-group">
+                                    <div class="col-md-offset-2 col-md-9">
+                                        <button type="submit" class="btn btn-success btn-flat">Update Slot</button>
+                                        <a href="@Url.Action("DoctorSlotManager", "Appointment")" class="btn btn-primary btn-flat">Reset</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function() {
+            $('#SelectedDepartmentId').change(function() {
+                var deptId = $(this).val();
+                var $doctor = $('#SelectedDoctorId');
+                $doctor.empty().append('<option value="">--Select Doctor--</option>');
+
+                if (deptId) {
+                    $.getJSON('@Url.Action("GetDoctorsByDepartment")', { deptId: deptId }, function(data) {
+                        $.each(data, function(i, doc) {
+                            $doctor.append('<option value="' + doc.doctorId + '">' + doc.fullName + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}
+

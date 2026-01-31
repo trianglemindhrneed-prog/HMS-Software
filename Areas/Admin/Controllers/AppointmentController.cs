@@ -1,6 +1,7 @@
 ﻿using HMSCore.Areas.Admin.Models;
 using HMSCore.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -18,6 +19,330 @@ namespace HMSCore.Areas.Admin.Controllers
             }
 
         [HttpGet]
+        public async Task<IActionResult> EditDoctorSlotManager(int? scheduleId)
+        {
+            var model = new DoctorSlotViewModel();
+
+            // Load Departments
+            var dtDept = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                new[] { new SqlParameter("@Action", "GetDepartments") });
+            model.Departments = dtDept.AsEnumerable()
+                .Select(r => new Department
+                {
+                    DepartmentId = r.Field<int>("DepartmentId"),
+                    DepartmentName = r.Field<string>("DepartmentName")
+                }).ToList();
+            model.DepartmentList = new SelectList(model.Departments, "DepartmentId", "DepartmentName", model.SelectedDepartmentId);
+
+            // Default empty doctors
+            model.Doctors = new List<Doctor>();
+            model.DoctorList = new SelectList(model.Doctors, "DoctorId", "FullName", model.SelectedDoctorId);
+
+            // If editing
+            if (scheduleId.HasValue)
+            {
+                var dtSchedule = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                    new[]
+                    {
+                new SqlParameter("@Action", "GetScheduleById"),
+                new SqlParameter("@ScheduleId", scheduleId.Value)
+                    });
+
+                if (dtSchedule.Rows.Count > 0)
+                {
+                    var row = dtSchedule.Rows[0];
+                    model.SelectedDepartmentId = row.Field<int>("DepartmentId");
+                    model.SelectedDoctorId = row.Field<int>("DoctorId");
+                    model.FromDate = row.Field<DateTime>("ScheduleDate");
+                    model.ToDate = row.Field<DateTime>("ScheduleDate");
+
+                    // Load slot duration from DB (assuming column exists in SP result)
+                    if (dtSchedule.Columns.Contains("SlotDuration"))
+                    {
+                        model.SlotDuration = row.Field<int?>("SlotDuration") ?? 0;
+                    }
+
+                    // Load doctors for selected department
+                    model.Doctors = await GetDoctors(model.SelectedDepartmentId.Value);
+                    model.DoctorList = new SelectList(model.Doctors, "DoctorId", "FullName", model.SelectedDoctorId);
+                }
+            }
+
+            // Load sessions if doctor selected
+            if (model.SelectedDoctorId.HasValue && model.FromDate.HasValue)
+            {
+                var dtSessions = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                    new[]
+                    {
+                new SqlParameter("@Action", "GetSessions"),
+                new SqlParameter("@DoctorId", model.SelectedDoctorId.Value),
+                new SqlParameter("@ScheduleDate", model.FromDate.Value)
+                    });
+                model.Sessions = dtSessions.AsEnumerable()
+                    .Select(r => new SessionModel
+                    {
+                        Name = r.Field<string>("SessionType"),
+                        Start = r.Field<TimeSpan?>("StartTime"),
+                        End = r.Field<TimeSpan?>("EndTime")
+                    }).ToList();
+            }
+
+            // Default sessions if none exist
+            if (model.Sessions == null || !model.Sessions.Any())
+            {
+                model.Sessions = new List<SessionModel>
+        {
+            new SessionModel { Name = "Morning" },
+            new SessionModel { Name = "Afternoon" },
+            new SessionModel { Name = "Evening" }
+        };
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditDoctorSlotManager(DoctorSlotViewModel model)
+        {
+            // Remove fields not bound in form
+            ModelState.Remove("DepartmentList");
+            ModelState.Remove("DoctorList");
+            ModelState.Remove("Keyword");
+            ModelState.Remove("FilterColumn");
+
+            // Validate required fields
+            if (!ModelState.IsValid || !model.FromDate.HasValue || !model.ToDate.HasValue || !model.SelectedDoctorId.HasValue || !model.SelectedDepartmentId.HasValue)
+            {
+                TempData["Message"] = "Please fill all required fields and select valid dates!";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("EditDoctorSlotManager", new { scheduleId = model.ScheduleId });
+            }
+
+            var startDate = model.FromDate.Value.Date;
+            var endDate = model.ToDate.Value.Date;
+
+            if (endDate < startDate)
+            {
+                TempData["Message"] = "To Date cannot be earlier than From Date!";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("EditDoctorSlotManager", new { scheduleId = model.ScheduleId });
+            }
+
+            // Define allowed sessions (matches your DB CHECK constraint)
+            var allowedSessions = new[] { "Morning", "Afternoon", "Evening" };
+
+            // Loop through all dates
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                foreach (var session in model.Sessions)
+                {
+                    // Only insert if times are provided
+                    if (session.Start.HasValue && session.End.HasValue)
+                    {
+                        // Validate session name against allowed DB values
+                        if (!allowedSessions.Contains(session.Name))
+                        {
+                            TempData["Message"] = $"Invalid session: {session.Name}. Allowed: Morning, Afternoon, Evening.";
+                            TempData["MessageType"] = "error";
+                            return RedirectToAction("EditDoctorSlotManager", new { scheduleId = model.ScheduleId });
+                        }
+
+                        // Insert/update slot in DB
+                        await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager", new[]
+                        {
+                    new SqlParameter("@Action", "InsertOrUpdate"),
+                    new SqlParameter("@DeptId", model.SelectedDepartmentId),
+                    new SqlParameter("@DoctorId", model.SelectedDoctorId),
+                    new SqlParameter("@ScheduleDate", date),
+                    new SqlParameter("@SessionType", session.Name),
+                    new SqlParameter("@StartTime", session.Start.Value),
+                    new SqlParameter("@EndTime", session.End.Value),
+                    new SqlParameter("@SlotDuration", model.SlotDuration)
+                });
+                    }
+                }
+            }
+
+            TempData["Message"] = $"Doctor slots saved/updated successfully from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}.";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("DoctorSlot");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult>  DoctorSlotManager(int? scheduleId = null)
+        {
+            var model = new DoctorSlotViewModel();
+
+            // Load Departments
+            var dtDept = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                new[] { new SqlParameter("@Action", "GetDepartments") });
+            model.Departments = dtDept.AsEnumerable()
+                .Select(r => new Department
+                {
+                    DepartmentId = r.Field<int>("DepartmentId"),
+                    DepartmentName = r.Field<string>("DepartmentName")
+                }).ToList();
+            model.DepartmentList = new SelectList(model.Departments, "DepartmentId", "DepartmentName", model.SelectedDepartmentId);
+
+            // Default empty doctors
+            model.Doctors = new List<Doctor>();
+            model.DoctorList = new SelectList(model.Doctors, "DoctorId", "FullName", model.SelectedDoctorId);
+
+            // If editing
+            if (scheduleId.HasValue)
+            {
+                var dtSchedule = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                    new[]
+                    {
+                    new SqlParameter("@Action", "GetScheduleById"),
+                    new SqlParameter("@ScheduleId", scheduleId.Value)
+                    });
+
+                if (dtSchedule.Rows.Count > 0)
+                {
+                    var row = dtSchedule.Rows[0];
+                    model.SelectedDepartmentId = row.Field<int>("DepartmentId");
+                    model.SelectedDoctorId = row.Field<int>("DoctorId");
+                    model.FromDate = row.Field<DateTime>("ScheduleDate");
+                    model.ToDate = row.Field<DateTime>("ScheduleDate");
+
+                    // Load doctors for selected department
+                    model.Doctors = await GetDoctors(model.SelectedDepartmentId.Value);
+                    model.DoctorList = new SelectList(model.Doctors, "DoctorId", "FullName", model.SelectedDoctorId);
+                }
+            }
+
+            // Load sessions if doctor selected
+            if (model.SelectedDoctorId.HasValue && model.FromDate.HasValue)
+            {
+                var dtSessions = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                    new[]
+                    {
+                    new SqlParameter("@Action", "GetSessions"),
+                    new SqlParameter("@DoctorId", model.SelectedDoctorId.Value),
+                    new SqlParameter("@ScheduleDate", model.FromDate.Value)
+                    });
+                model.Sessions = dtSessions.AsEnumerable()
+                    .Select(r => new SessionModel
+                    {
+                        Name = r.Field<string>("SessionType"),
+                        Start = r.Field<TimeSpan?>("StartTime"),
+                        End = r.Field<TimeSpan?>("EndTime")
+                    }).ToList();
+            }
+
+            // Default sessions if none exist
+            if (model.Sessions == null || !model.Sessions.Any())
+            {
+                model.Sessions = new List<SessionModel>
+            {
+                new SessionModel { Name = "Morning" },
+                new SessionModel { Name = "Afternoon" },
+                new SessionModel { Name = "Evening" }
+            };
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DoctorSlotManager(DoctorSlotViewModel model)
+        {
+            ModelState.Remove("DepartmentList");
+            ModelState.Remove("DoctorList");
+            ModelState.Remove("Keyword");
+            ModelState.Remove("FilterColumn");
+
+            if (!ModelState.IsValid || !model.FromDate.HasValue || !model.ToDate.HasValue)
+            {
+                TempData["Message"] = "Please fill required fields and date range!";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("DoctorSlotManager");
+            }
+
+            // Calculate all dates in range
+            var startDate = model.FromDate.Value.Date;
+            var endDate = model.ToDate.Value.Date;
+
+            if (endDate < startDate)
+            {
+                TempData["Message"] = "To Date cannot be earlier than From Date!";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("DoctorSlotManager");
+            }
+
+            var totalDays = (endDate - startDate).Days + 1; // inclusive
+
+            var allowedSessions = new[] { "Morning", "Afternoon", "Evening" }; // DB constraint
+
+            for (int i = 0; i < totalDays; i++)
+            {
+                var currentDate = startDate.AddDays(i);
+
+                foreach (var session in model.Sessions)
+                {
+                    // Only insert if times are provided
+                    if (session.Start.HasValue && session.End.HasValue)
+                    {
+                        // Validate session name
+                        if (!allowedSessions.Contains(session.Name))
+                        {
+                            TempData["Message"] = $"Invalid session: {session.Name}";
+                            TempData["MessageType"] = "error";
+                            return RedirectToAction("DoctorSlotManager");
+                        }
+
+                        await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager", new[]
+                        {
+                    new SqlParameter("@Action", "InsertOrUpdate"),
+                    new SqlParameter("@DeptId", model.SelectedDepartmentId),
+                    new SqlParameter("@DoctorId", model.SelectedDoctorId),
+                    new SqlParameter("@ScheduleDate", currentDate),
+                    new SqlParameter("@SessionType", session.Name),
+                    new SqlParameter("@StartTime", session.Start.Value),
+                    new SqlParameter("@EndTime", session.End.Value),
+                    new SqlParameter("@SlotDuration", model.SlotDuration)
+                });
+                    }
+                }
+            }
+
+            TempData["Message"] = "Doctor slots saved/updated successfully for all selected dates!";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("DoctorSlotManager");
+        }
+
+        // AJAX: Get doctors by department
+        [HttpGet]
+        public async Task<JsonResult> GetDoctorsByDepartment(int deptId)
+        {
+            var doctors = await GetDoctors(deptId);
+            return Json(doctors.Select(d => new { doctorId = d.DoctorId, fullName = d.FullName }));
+        }
+
+        private async Task<List<Doctor>> GetDoctors(int deptId)
+        {
+            var dtDoc = await _dbLayer.ExecuteSPAsync("sp_DoctorSlotManager",
+                new[]
+                {
+                new SqlParameter("@Action", "GetDoctors"),
+                new SqlParameter("@DeptId", deptId)
+                });
+            return dtDoc.AsEnumerable()
+                .Select(r => new Doctor
+                {
+                    DoctorId = r.Field<int>("DoctorId"),
+                    FullName = r.Field<string>("FullName")
+                }).ToList();
+        }
+ 
+
+
+
+
+    [HttpGet]
         public async Task<IActionResult> DoctorSlot(
           string filterColumn = null,
           string keyword = null,

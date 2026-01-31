@@ -1,4 +1,7 @@
-﻿namespace HMSCore.Areas.Admin.Models
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using NuGet.Protocol.Core.Types;
+
+namespace HMSCore.Areas.Admin.Models
 {
   
     public class DoctorSlotViewModel
@@ -24,6 +27,7 @@
 
         public int? DepartmentId { get; set; }
         public int? DoctorId { get; set; }
+        public int? ScheduleId { get; set; }
 
         // CHANGE: string instead of bool
         public string ShowMorning { get; set; } = "true";
@@ -33,11 +37,14 @@
         // Helper properties to read as bool in code
         public bool IsMorning => ShowMorning == "true";
         public bool IsAfternoon => ShowAfternoon == "true";
-        public bool IsEvening => ShowEvening == "true";
-
+        public bool IsEvening => ShowEvening == "true"; 
+        public int? SlotDuration { get; set; }
+        public List<SessionModel> Sessions { get; set; } = new List<SessionModel>();
         public List<DoctorSlot> Slots { get; set; } = new List<DoctorSlot>();
         public List<Department> Departments { get; set; } = new List<Department>();
         public List<Doctor> Doctors { get; set; } = new List<Doctor>();
+        public SelectList DepartmentList { get; set; }
+        public SelectList DoctorList { get; set; }
         public void SetSessionFilters(string morning, string afternoon, string evening)
         {
             ShowMorning = morning;      // existing private string property

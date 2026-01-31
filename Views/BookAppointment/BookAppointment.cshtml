@@ -1,0 +1,210 @@
+﻿@model HMSCore.Models.AppointmentViewModel
+
+@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<head>
+    <link href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" rel="stylesheet" />
+    <style>
+        .btn-pink {
+            background-color: #e83e8c !important;
+            color: aliceblue !important;
+        }
+    </style>
+</head>
+
+<div class="container mt-5">
+    <h2>Book Appointment</h2>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label>Department</label>
+            <select id="ddlDepartments" class="form-select">
+                <option value="">Select Department</option>
+                @foreach (var dep in Model.Departments)
+                {
+                    <option value="@dep.DepartmentId">@dep.DepartmentName</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label>Doctor</label>
+            <select id="ddlDoctors" class="form-select">
+                <option value="">Select Doctor</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label>Select Date</label>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div id="slotsContainer" class="d-flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+</div>
+
+<div id="bookingFormContainer" class="mt-4" style="display:none;">
+    <h4>Booking Details</h4>
+
+    <!-- Hidden fields -->
+    <input type="hidden" id="hdnSlotTime" />
+    <input type="hidden" id="hdnBookingId" />
+
+    <input type="text" id="txtName" class="form-control mb-2" placeholder="Name" />
+    <input type="text" id="txtPhone" class="form-control mb-2" placeholder="Phone" />
+    <input type="text" id="txtEmail" class="form-control mb-2" placeholder="Email" />
+    <textarea id="txtMessage" class="form-control mb-2" placeholder="Message"></textarea>
+
+    <select id="ddlPayment" class="form-select mb-2">
+        <option value="Offline">Offline</option>
+        <option value="Online">Online</option>
+    </select>
+
+    <button id="btnBook" class="btn btn-primary">Book Appointment</button>
+    <div id="bookingMessage" class="mt-2"></div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+
+    <script>
+        $(function () {
+            var selectedSlot = null;
+            var selectedDate = getToday();
+
+            // Initialize calendar
+            $("#calendar").datepicker({
+                minDate: 0,
+                dateFormat: 'yy-mm-dd',
+                defaultDate: selectedDate,
+                onSelect: function(dateText) {
+                    selectedDate = dateText;
+                    loadSlots();
+                }
+            }).datepicker("setDate", selectedDate);
+
+            // Department → Doctor dropdown
+            $("#ddlDepartments").change(function () {
+                var depId = $(this).val();
+                $("#ddlDoctors").html('<option value="">Select Doctor</option>');
+                if (depId) {
+                    $.getJSON('/BookAppointment/GetDoctors?departmentId=' + depId, function (data) {
+                        $.each(data, function (i, d) {
+                            $("#ddlDoctors").append('<option value="' + d.doctorId + '">' + d.fullName + '</option>');
+                        });
+                    });
+                }
+            });
+
+            $("#ddlDoctors").change(loadSlots);
+
+            // Parse time for sorting
+            function parseTime(t) {
+                var parts = t.match(/(\d+):(\d+) (\wM)/);
+                var hours = parseInt(parts[1], 10);
+                var minutes = parseInt(parts[2], 10);
+                var meridian = parts[3];
+                if (meridian === 'PM' && hours !== 12) hours += 12;
+                if (meridian === 'AM' && hours === 12) hours = 0;
+                return hours * 60 + minutes;
+            }
+
+            // Load slots
+            function loadSlots() {
+                var docId = $("#ddlDoctors").val();
+                if (!docId) {
+                    $("#slotsContainer").empty();
+                    $("#bookingFormContainer").hide();
+                    return;
+                }
+
+                $.getJSON('/BookAppointment/GetSchedules', { doctorId: docId, date: selectedDate }, function (data) {
+                    $("#slotsContainer").empty();
+                    $("#bookingFormContainer").hide();
+
+                    var allSlots = [];
+
+                    $.each(data.available, function (i, s) { allSlots.push({ time: s, type: 'available' }); });
+                    $.each(data.booked, function (i, s) { allSlots.push({ time: s, type: 'booked' }); });
+                    $.each(data.timeout, function (i, s) { allSlots.push({ time: s, type: 'timeout' }); });
+                    $.each(data.blocked, function (i, s) { allSlots.push({ time: s, type: 'blocked' }); });
+
+                    // Sort by time
+                    allSlots.sort(function(a,b){ return parseTime(a.time) - parseTime(b.time); });
+
+                    // Render slots
+                    $.each(allSlots, function(i, slot){
+                        var btn = '';
+                        if (slot.type === 'available') btn = '<button class="btn slotBtn btn-success" data-slot="'+slot.time+'">'+slot.time+'</button>';
+                        if (slot.type === 'booked') btn = '<button class="btn btn-primary" disabled>'+slot.time+'</button>';
+                        if (slot.type === 'timeout') btn = '<button class="btn btn-pink" disabled>'+slot.time+'</button>';
+                        if (slot.type === 'blocked') btn = '<button class="btn btn-danger" disabled>'+slot.time+'</button>';
+                        $("#slotsContainer").append(btn);
+                    });
+                });
+            }
+
+            // Slot click
+            $(document).on('click', '.slotBtn.btn-success', function () {
+                $(".slotBtn").removeClass('btn-outline-success').addClass('btn-success');
+                $(this).removeClass('btn-success').addClass('btn-outline-success');
+
+                selectedSlot = $(this).data('slot');
+                $("#hdnSlotTime").val(selectedSlot);
+                $("#bookingFormContainer").slideDown();
+            });
+
+            // Book appointment
+            $("#btnBook").click(function() {
+                if (!selectedSlot) { alert("Please select a slot!"); return; }
+
+                var model = {
+                    SelectedDepartmentId: $("#ddlDepartments").val(),
+                    SelectedDoctorId: $("#ddlDoctors").val(),
+                    SelectedDate: selectedDate,
+                    SelectedSlot: selectedSlot,
+                    PatientName: $("#txtName").val(),
+                    Phone: $("#txtPhone").val(),
+                    Email: $("#txtEmail").val(),
+                    Message: $("#txtMessage").val(),
+                    PaymentMode: $("#ddlPayment").val()
+                };
+
+                $.ajax({
+                    url: '/BookAppointment/BookAppointment',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(model),
+                    success: function(res){
+                        if(res.success){
+                            $("#hdnBookingId").val(res.bookingId);
+                            $("#bookingMessage").html('<span class="text-success">Booked! Booking ID: '+res.bookingId+'</span>');
+                            $("#bookingFormContainer").hide();
+                            loadSlots();
+                        } else {
+                            $("#bookingMessage").html('<span class="text-danger">'+res.message+'</span>');
+                        }
+                    }
+                });
+            });
+
+            function getToday() {
+                var today = new Date();
+                var yyyy = today.getFullYear();
+                var mm = today.getMonth() + 1;
+                var dd = today.getDate();
+                if (mm < 10) mm = '0' + mm;
+                if (dd < 10) dd = '0' + dd;
+                return yyyy + '-' + mm + '-' + dd;
+            }
+        });
+    </script>
+}
