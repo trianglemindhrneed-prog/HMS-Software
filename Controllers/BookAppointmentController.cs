@@ -84,7 +84,6 @@ namespace HMSCore.Controllers
         {
             try
             {
-                // 1️⃣ Get doctor schedule
                 DataTable dtSchedules = await _dbLayer.ExecuteSPAsync(
                     "sp_ManageAppointments",
                     new[]
@@ -94,7 +93,6 @@ namespace HMSCore.Controllers
                 new SqlParameter("@ScheduleDate", date.Date)
                     });
 
-                // 2️⃣ Get blocked slots
                 DataTable dtBlocked = await _dbLayer.ExecuteSPAsync(
                     "sp_ManageAppointments",
                     new[]
@@ -104,7 +102,6 @@ namespace HMSCore.Controllers
                 new SqlParameter("@ScheduleDate", date.Date)
                     });
 
-                // 3️⃣ Get booked appointments
                 DataTable dtBooked = await _dbLayer.ExecuteSPAsync(
                     "sp_ManageAppointments",
                     new[]
@@ -114,25 +111,50 @@ namespace HMSCore.Controllers
                 new SqlParameter("@ScheduleDate", date.Date)
                     });
 
-                // 4️⃣ Prepare slot collections
+                /* =========================
+                   BLOCKED SLOTS (SAFE)
+                ========================== */
                 HashSet<string> blockedSlots = new();
                 foreach (DataRow row in dtBlocked.Rows)
                 {
-                    if (row["SlotTime"] != DBNull.Value)
-                        blockedSlots.Add(Convert.ToDateTime(row["SlotTime"]).ToString("HH:mm"));
+                    if (row["SlotTime"] == DBNull.Value) continue;
+
+                    if (row["SlotTime"] is TimeSpan ts)
+                    {
+                        blockedSlots.Add(ts.ToString(@"hh\:mm"));
+                    }
+                    else
+                    {
+                        if (TimeSpan.TryParse(row["SlotTime"].ToString(), out TimeSpan parsed))
+                            blockedSlots.Add(parsed.ToString(@"hh\:mm"));
+                    }
                 }
 
+                /* =========================
+                   BOOKED SLOTS (SAFE)
+                ========================== */
                 HashSet<string> bookedSlots = new();
                 foreach (DataRow row in dtBooked.Rows)
                 {
-                    if (row["AppointmentTime"] != DBNull.Value)
-                        bookedSlots.Add(Convert.ToDateTime(row["AppointmentTime"]).ToString("HH:mm"));
+                    if (row["AppointmentTime"] == DBNull.Value) continue;
+
+                    if (row["AppointmentTime"] is TimeSpan ts)
+                    {
+                        bookedSlots.Add(ts.ToString(@"hh\:mm"));
+                    }
+                    else
+                    {
+                        if (TimeSpan.TryParse(row["AppointmentTime"].ToString(), out TimeSpan parsed))
+                            bookedSlots.Add(parsed.ToString(@"hh\:mm"));
+                    }
                 }
 
                 List<string> available = new();
                 List<string> timeout = new();
 
-                // 5️⃣ If no schedule found
+                /* =========================
+                   NO SCHEDULE
+                ========================== */
                 if (dtSchedules == null || dtSchedules.Rows.Count == 0)
                 {
                     return Json(new
@@ -144,7 +166,9 @@ namespace HMSCore.Controllers
                     });
                 }
 
-                // 6️⃣ Generate slots safely
+                /* =========================
+                   GENERATE SLOTS
+                ========================== */
                 foreach (DataRow row in dtSchedules.Rows)
                 {
                     if (row["StartTime"] == DBNull.Value ||
@@ -152,7 +176,6 @@ namespace HMSCore.Controllers
                         row["SlotDuration"] == DBNull.Value)
                         continue;
 
-                    // TIME column → TimeSpan
                     TimeSpan startTs = (TimeSpan)row["StartTime"];
                     TimeSpan endTs = (TimeSpan)row["EndTime"];
 
@@ -161,14 +184,15 @@ namespace HMSCore.Controllers
 
                     int slotDuration = Convert.ToInt32(row["SlotDuration"]);
 
-                    bool isBlocked = row["IsBlocked"] != DBNull.Value &&
-                                     Convert.ToInt32(row["IsBlocked"]) == 1;
+                    bool isBlockedSchedule =
+                        row["IsBlocked"] != DBNull.Value &&
+                        Convert.ToInt32(row["IsBlocked"]) == 1;
 
                     for (DateTime t = startTime; t < endTime; t = t.AddMinutes(slotDuration))
                     {
-                        string slotStr = t.ToString("hh:mm tt"); // ✅ 12-hour format
+                        string slotStr = t.ToString("HH:mm"); // frontend-safe
 
-                        if (isBlocked || blockedSlots.Contains(slotStr))
+                        if (isBlockedSchedule || blockedSlots.Contains(slotStr))
                             continue;
 
                         if (bookedSlots.Contains(slotStr))
@@ -179,11 +203,11 @@ namespace HMSCore.Controllers
                         else
                             available.Add(slotStr);
                     }
-
                 }
 
-
-                // 7️⃣ Final response
+                /* =========================
+                   FINAL RESPONSE
+                ========================== */
                 return Json(new
                 {
                     available,
@@ -194,7 +218,6 @@ namespace HMSCore.Controllers
             }
             catch (Exception ex)
             {
-                // 8️⃣ Error handling (debug friendly)
                 return Json(new
                 {
                     error = true,
