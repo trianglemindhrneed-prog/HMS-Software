@@ -13,11 +13,12 @@ namespace HMSCore.Areas.Admin.Controllers
     {
     
             private readonly IDbLayer _dbLayer;
-
-            public AppointmentController(IDbLayer dbLayer)
+        private readonly IConfiguration _configuration; 
+        public AppointmentController(IDbLayer dbLayer, IConfiguration configuration)
             {
                 _dbLayer = dbLayer;
-            }
+            _configuration = configuration;
+        }
 
         [HttpGet]
         public async Task<IActionResult> EditDoctorSlotManager(int? scheduleId)
@@ -805,13 +806,9 @@ namespace HMSCore.Areas.Admin.Controllers
                 DoctorName = r["DoctorName"]?.ToString() ?? string.Empty,
                 DepartmentName = r["DepartmentName"]?.ToString() ?? string.Empty,
                 AppointmentDate = r["AppointmentDate"] != DBNull.Value ? Convert.ToDateTime(r["AppointmentDate"]) : (DateTime?)null,
-                AppointmentTime = DateTime.TryParseExact(
-                    r["AppointmentTime"]?.ToString(),
-                    "hh:mm tt",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var dtTime
-                ) ? dtTime.TimeOfDay : (TimeSpan?)null,
+                AppointmentTime = r["AppointmentTime"] != DBNull.Value
+                        ? TimeSpan.Parse(r["AppointmentTime"].ToString())
+                        : (TimeSpan?)null,
                 Status = r["Status"]?.ToString() ?? string.Empty
             }).ToList();
 
@@ -922,13 +919,10 @@ namespace HMSCore.Areas.Admin.Controllers
                 DoctorName = r["DoctorName"].ToString(),
                 DepartmentName = r["DepartmentName"].ToString(),
                 AppointmentDate = r["AppointmentDate"] != DBNull.Value ? Convert.ToDateTime(r["AppointmentDate"]) : (DateTime?)null,
-                AppointmentTime = DateTime.TryParseExact(
-                    r["AppointmentTime"]?.ToString(),
-                    "hh:mm tt",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None,
-                    out var dtTime
-                ) ? dtTime.TimeOfDay : (TimeSpan?)null,
+                AppointmentTime = r["AppointmentTime"] != DBNull.Value
+                        ? TimeSpan.Parse(r["AppointmentTime"].ToString())
+                        : (TimeSpan?)null,
+
                 Status = r["Status"].ToString()
             }).ToList();
 
@@ -963,31 +957,50 @@ namespace HMSCore.Areas.Admin.Controllers
             return RedirectToAction("TodayPatientAppointment");
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteSelectedTodayAppointment(string selectedIds)
-        {
-            if (!string.IsNullOrWhiteSpace(selectedIds))
-            {
-                var ids = selectedIds.Split(',').Select(id => new SqlParameter("@AppointmentId", int.Parse(id))).ToArray();
-                foreach (var param in ids)
-                {
-                    await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
-                    {
-                new SqlParameter("@Action","Delete"),
-                param
-            });
-                }
-                TempData["Message"] = "Selected appointments deleted successfully";
-                TempData["MessageType"] = "success";
-            }
-            else
-            {
-                TempData["Message"] = "No appointments selected";
-                TempData["MessageType"] = "error";
-            }
+        //[HttpGet]
+        //public async Task<IActionResult> PrintAppointment(int appointmentId)
+        //{
+        //    var handler = new HttpClientHandler
+        //    {
+        //        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        //    };
 
-            return RedirectToAction("TodayPatientAppointment");
+        //    using var client = new HttpClient(handler);
+
+        //    var pdfBytes = await client.GetByteArrayAsync(
+        //        $"http://localhost:64385/Admin/Appointment_Print.aspx?AppointmentId={appointmentId}");
+
+
+        //    Response.Headers.Add("Content-Disposition", "inline; filename=Appointment.pdf");
+
+        //    return File(pdfBytes, "application/pdf");
+        //}
+
+
+      
+
+        [HttpGet]
+        public async Task<IActionResult> PrintAppointment(string pageName, int id)
+        {
+            var handler = new HttpClientHandler
+            { 
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+
+            using var client = new HttpClient(handler);
+             
+            var baseUrl = _configuration["WebFormBaseUrl"];
+             
+            var url = $"{baseUrl}/{pageName}.aspx?AppointmentId={id}";
+
+            var pdfBytes = await client.GetByteArrayAsync(url);
+
+            // Browser me PDF open karne ke liye inline
+            Response.Headers.Add("Content-Disposition", "inline; filename=Appointment.pdf");
+
+            return File(pdfBytes, "application/pdf");
         }
+
 
     }
 }

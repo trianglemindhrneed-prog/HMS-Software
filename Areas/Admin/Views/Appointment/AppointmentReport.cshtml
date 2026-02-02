@@ -121,8 +121,15 @@
                             <td>@item.Phone</td>
                             <td>@item.Email</td>
                             <td>@(item.AppointmentDate?.ToString("dd-MM-yyyy") ?? "")</td>
-                            <td>@(item.AppointmentTime.HasValue? DateTime.Today.Add(item.AppointmentTime.Value).ToString("hh:mm tt") : "")</td>
-
+                            @{
+                                var time = item.AppointmentTime;
+                                string formatted = "";
+                                if (time.HasValue)
+                                {
+                                    formatted = DateTime.Today.Add(time.Value).ToString("hh:mm tt");
+                                }
+                            }
+                            <td>@formatted</td>
 
 
                             <td>

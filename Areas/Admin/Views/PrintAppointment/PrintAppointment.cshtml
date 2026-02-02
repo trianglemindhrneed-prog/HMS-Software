@@ -1,0 +1,58 @@
+﻿@model HMSCore.Areas.Admin.Models.AppointmentPrint
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            font-family: Arial;
+            font-size: 10pt;
+            margin: 10px;
+        }
+
+        .header-logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+            .data-table td {
+                padding: 5px;
+            }
+
+        .title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-logo">
+        <img src="~/admin/img/a3.png" style="width:180px;" />
+    </div>
+
+    <table class="data-table">
+        <tr><td class="title">Appointment ID:</td><td>@Model.BookingId</td></tr>
+        <tr><td class="title">Date:</td><td>@DateTime.Now.ToString("dd/MM/yyyy")</td></tr>
+        <tr><td class="title">Patient Name:</td><td>@Model.PatientName</td></tr>
+        <tr><td class="title">Patient Phone:</td><td>@Model.PatientPhone</td></tr>
+        <tr><td class="title">Doctor Name:</td><td>@Model.DoctorName</td></tr>
+        <tr><td class="title">Doctor Phone:</td><td>@Model.DoctorPhone</td></tr>
+        <tr><td class="title">Visiting Address:</td><td>@Model.DoctorAddress</td></tr>
+        <tr><td class="title">Appointment Date:</td><td>@Model.AppointmentDate.ToString("dd/MM/yyyy")</td></tr>
+        <tr><td class="title">Appointment Time:</td><td>@Model.AppointmentTime</td></tr>
+    </table>
+
+    <div style="text-align:right; margin-top:20px;">
+        <img src="~/admin/img/authsig.png" style="width:100px;" />
+    </div>
+</body>
+</html>

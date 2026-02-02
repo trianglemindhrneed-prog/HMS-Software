@@ -1,0 +1,245 @@
+﻿@model HMSCore.Areas.Admin.Models.AddPatientViewModel
+@{
+    ViewData["Title"] = "Add Patient";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<head>
+    <style>
+        .btn-secondary {
+            background: green;
+            color: aliceblue;
+        }</style>
+</head>
+<section class="content-header">
+    <h1>Add Patient</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Add Patient</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="container-fluid" style="background-color: white;">
+        
+<form method="post" class="form-horizontal">
+            <div class="row">
+    <div class="form-group">
+        <label class="col-md-2 control-label">Patient Id *</label>
+        <div class="col-md-4">
+                        <input readonly asp-for="PatientId" class="form-control" placeholder="" />
+                        <span asp-validation-for="PatientId" class="text-danger"></span>
+        </div>
+    </div>
+                <div class="form-group">
+                    <label class="col-md-2 control-label">Patient Name *</label>
+                    <div class="col-md-4">
+                        <input asp-for="PatientName" class="form-control" placeholder="Enter Patient Name" />
+                        <span asp-validation-for="PatientName" class="text-danger"></span>
+                    </div>
+                </div>
+    <div class="form-group">
+        <label class="col-md-2 control-label">DOB *</label>
+        <div class="col-md-4">
+                        <input asp-for="DOB"
+                               id="txtDOB"
+                               type="date"
+                               class="form-control" />
+
+            <span asp-validation-for="DOB" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2 control-label">Age</label>
+        <div class="col-md-4">
+            <input asp-for="Age" id="txtAge" class="form-control" readonly />
+        </div>
+    </div>
+    </div>
+    <div class="form-group">
+        <label class="col-md-2 control-label">Gender *</label>
+        <div class="col-md-4">
+            <select asp-for="Gender" class="form-control">
+                <option value="">--Select--</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+            </select>
+            <span asp-validation-for="Gender" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="col-md-2 control-label">Contact No *</label>
+        <div class="col-md-4">
+            <input asp-for="ContactNo" class="form-control" placeholder="Enter Contact Number" />
+            <span asp-validation-for="ContactNo" class="text-danger"></span>
+        </div>
+    </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label">Consult Fees *</label>
+                <div class="col-md-4">
+                    <input asp-for="ConsultFee" type="number" class="form-control" placeholder="Enter Consult Fees" />
+                    <span asp-validation-for="ConsultFee" class="text-danger"></span>
+                </div>
+            </div>
+    <div class="form-group">
+        <label class="col-md-2 control-label">Address</label>
+        <div class="col-md-4">
+            <textarea asp-for="Address" class="form-control" placeholder="Enter Address"></textarea>
+        </div>
+    </div> 
+    <!-- Department Dropdown -->
+    <div class="form-group">
+        <label class="col-md-2 control-label">Select Department *</label>
+        <div class="col-md-4">
+                    <select asp-for="SelectedDepartmentId"
+                            asp-items="Model.DepartmentList"
+                            class="form-control"
+                            id="ddlDepartment">
+                        <option value="">--Select Department--</option>
+                    </select>
+            <span asp-validation-for="SelectedDepartmentId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <!-- Doctor Dropdown -->
+    <div class="form-group">
+        <label class="col-md-2 control-label">Select Doctor *</label>
+        <div class="col-md-4">
+                    <select asp-for="SelectedDoctorId"
+                            asp-items="Model.DoctorList"
+                            class="form-control"
+                            id="ddlDoctor">
+                        <option value="">--Select Doctor--</option>
+                    </select>
+            <span asp-validation-for="SelectedDoctorId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-4">
+                    @if (!Model.IsSaved)
+                    {
+                        <button type="submit" class="btn btn-primary">
+                            Save
+                        </button>
+                    }
+                    @if (Model.IsSaved)
+                    {
+                        <a class="btn btn-secondary"
+                           target="_blank"
+                           href="@Url.Action(
+                                           "PrintPreception",
+                                           "OPD",
+                                           new { pageName = "OPdPreception_Print", id = Model.PatientId })">
+                        Print
+                    </a>
+                                        }
+
+
+        </div>
+    </div>
+</form>
+</div>
+ 
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $("#ddlDepartment").change(function () {
+
+            var deptId = $(this).val();
+            var doctorDropdown = $("#ddlDoctor");
+
+            doctorDropdown.empty();
+            doctorDropdown.append('<option value="">--Select Doctor--</option>');
+
+            if (deptId === "") {
+                return;
+            }
+
+            $.ajax({
+                url: '/Admin/OPD/GetDoctorsByDepartment',
+                type: 'GET',
+                data: { departmentId: deptId },
+                success: function (data) {
+                    $.each(data, function (i, doctor) {
+                        doctorDropdown.append(
+                            $('<option></option>')
+                                .val(doctor.doctorId)
+                                .text(doctor.doctorName)
+                        );
+                    });
+                },
+                error: function () {
+                    alert("Unable to load doctors.");
+                }
+            });
+        });
+    </script>
+
+    <script>
+        function parseFlexibleDate(dateStr) {
+            if (!dateStr) return null;
+
+            dateStr = dateStr.trim();
+
+            // dd/MM/yyyy or dd-MM-yyyy
+            let match = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (match) {
+                let day = parseInt(match[1], 10);
+                let month = parseInt(match[2], 10) - 1;
+                let year = parseInt(match[3], 10);
+
+                let d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day)
+                    return d;
+            }
+
+            // yyyy-MM-dd (browser / HTML5)
+            let iso = new Date(dateStr);
+            if (!isNaN(iso)) return iso;
+
+            return null;
+        }
+
+        function calculateAgeFull(dob) {
+            let today = new Date();
+
+            let years = today.getFullYear() - dob.getFullYear();
+            let months = today.getMonth() - dob.getMonth();
+            let days = today.getDate() - dob.getDate();
+
+            if (days < 0) {
+                months--;
+                let prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            let age = [];
+            if (years > 0) age.push(years + " Year" + (years > 1 ? "s" : ""));
+            if (months > 0 || years > 0) age.push(months + " Month" + (months > 1 ? "s" : ""));
+            age.push(days + " Day" + (days > 1 ? "s" : ""));
+
+            return age.join(" ");
+        }
+
+        document.getElementById("txtDOB").addEventListener("change", function () {
+            let dob = parseFlexibleDate(this.value);
+
+            if (!dob || dob > new Date()) {
+                alert("Please fill correct DOB.");
+                this.value = "";
+                document.getElementById("txtAge").value = "";
+                return;
+            }
+
+            document.getElementById("txtAge").value = calculateAgeFull(dob);
+        });
+    </script>
+
+}

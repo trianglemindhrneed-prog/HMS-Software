@@ -16,6 +16,7 @@
     };
 }
 
+
 <style>
     .btn-secondary {
         background: #18d118bf;
@@ -118,25 +119,34 @@
                             <td>@item.Phone</td>
                             <td>@item.Email</td>
                             <td>@(item.AppointmentDate?.ToString("dd-MM-yyyy") ?? "")</td>
-                            <td>@(item.AppointmentTime.HasValue? DateTime.Today.Add(item.AppointmentTime.Value).ToString("hh:mm tt") : "")</td>
+                            @{
+                                var time = item.AppointmentTime;
+                                string formatted = "";
+                                if (time.HasValue)
+                                {
+                                    formatted = DateTime.Today.Add(time.Value).ToString("hh:mm tt");
+                                }
+                            }
+                            <td>@formatted</td>
+
 
 
 
                             <td>
-                                <form asp-action="ToggleAppointmentStatus" method="post" onsubmit="return confirm('Are you sure you want to change the status?');">
+                                <form asp-action="ToggleTodayAppointmentStatus" method="post" onsubmit="return confirm('Are you sure you want to change the status?');">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />
                                     <button type="submit" class="btn btn-link">@item.Status</button>
                                 </form>
                             </td>
 
-                            <!-- PRINT BUTTON -->
-                            <td>
+                          <td>
                                 <a class="btn btn-secondary btn-sm"
                                    target="_blank"
-                                   href="@Url.Action("PrintAppointment", "Appointment", new { appointmentId = item.AppointmentId })">
+                                   href="@Url.Action("PrintAppointment", "Appointment", new { pageName = "Appointment_Print", id = item.AppointmentId })">
                                     Print
                                 </a>
-                            </td>
+                                 </td>
+
                             <td>
                                 <form asp-action="DeleteTodayAppointment" method="post" onsubmit="return confirm('Delete this appointment?');">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />
