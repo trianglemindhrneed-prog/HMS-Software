@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Globalization;
 
 namespace HMSCore.Areas.Admin.Controllers
 {
@@ -16,39 +17,53 @@ namespace HMSCore.Areas.Admin.Controllers
         {
             _dbLayer = dbLayer;
             _configuration = configuration;
-        } 
-        public async Task<IActionResult> AddPatient()
+        }
+        [HttpGet]
+        public async Task<IActionResult> AddPatient(string patientId = null)
         {
             var model = new AddPatientViewModel();
 
-            // 🔥 Generate Patient ID
-            var dtPid = await _dbLayer.ExecuteSPAsync(
-                "sp_opdManagePatient",
-                new[] { new SqlParameter("@Action", "GetNewPatientId") }
-            );
+            if (!string.IsNullOrEmpty(patientId))
+            { 
+                    model.IsEdit = true;
+                 
 
-            model.PatientId = dtPid.Rows[0]["NewPatientId"].ToString();
+                // Load existing patient for edit
+                var dtPatient = await _dbLayer.ExecuteSPAsync(
+                    "sp_opdManagePatient",
+                    new[] {
+                new SqlParameter("@Action", "GetPatientById"),
+                new SqlParameter("@PatientID", patientId)
+                    }
+                );
 
-            // Load Departments
-            var dtDept = await _dbLayer.ExecuteSPAsync(
-                "sp_opdManagePatient",
-                new[] { new SqlParameter("@Action", "GetDepartments") }
-            );
-
-            model.Departments = dtDept.AsEnumerable()
-                .Select(r => new Department
+                if (dtPatient.Rows.Count > 0)
                 {
-                    DepartmentId = r.Field<int>("DepartmentId"),
-                    DepartmentName = r.Field<string>("DepartmentName")
-                }).ToList();
+                    var row = dtPatient.Rows[0];
+                    model.PatientId = row["PatientID"].ToString();
+                    model.PatientName = row["Name"].ToString();
+                    model.Gender = row["Gender"].ToString();
+                    model.DOB = DateTime.TryParse(row["DOB"]?.ToString(), out var dobVal) ? dobVal : (DateTime?)null; 
+                    model.Age = row["Age"].ToString();
+                    model.Address = row["Address1"].ToString();
+                    model.ConsultFee = row["ConsultFee"] == DBNull.Value ? null : row["ConsultFee"].ToString(); 
+                    model.ContactNo = row["ContactNo"].ToString();
+                    model.SelectedDepartmentId = row["DepartmentId"] == DBNull.Value ? null : (int?)row["DepartmentId"];
+                    model.SelectedDoctorId = row["DoctorId"] == DBNull.Value ? null : (int?)row["DoctorId"];
+                    model.IsSaved = false;
+                }
+            }
+            else
+            {
+                // 🔥 Generate new Patient ID
+                var dtPid = await _dbLayer.ExecuteSPAsync(
+                    "sp_opdManagePatient",
+                    new[] { new SqlParameter("@Action", "GetNewPatientId") }
+                );
+                model.PatientId = dtPid.Rows[0]["NewPatientId"].ToString();
+            }
 
-            model.DepartmentList =
-                new SelectList(model.Departments, "DepartmentId", "DepartmentName");
-
-            // Empty doctors initially
-            model.Doctors = new List<Doctor>();
-            model.DoctorList =
-                new SelectList(model.Doctors, "DoctorId", "DoctorName");
+            await LoadDropdowns(model);
 
             return View(model);
         }
@@ -62,9 +77,12 @@ namespace HMSCore.Areas.Admin.Controllers
                 return View(model);
             }
 
+            // Decide action: Insert or Update
+            string action = model.IsEdit ? "UpdatePatient" : "InsertPatient";
+
             var parameters = new[]
             {
-        new SqlParameter("@Action", "InsertPatient"),
+        new SqlParameter("@Action", action),
         new SqlParameter("@PatientID", model.PatientId),
         new SqlParameter("@Name", model.PatientName ?? (object)DBNull.Value),
         new SqlParameter("@Gender", model.Gender ?? (object)DBNull.Value),
@@ -78,14 +96,18 @@ namespace HMSCore.Areas.Admin.Controllers
     };
 
             await _dbLayer.ExecuteSPAsync("sp_opdManagePatient", parameters);
-             
-            model.IsSaved = true;
-            TempData["Message"] = $"Patient {model.PatientId} added successfully!";
-            TempData["MessageType"] = "success";
-            await LoadDropdowns(model); 
 
-            return View(model);  
-        } 
+            model.IsSaved = true;
+
+            // Show dynamic message based on action
+            string messageAction = model.IsEdit ? "updated" : "saved";
+            TempData["Message"] = $"Patient {model.PatientId} {messageAction} successfully!";
+            TempData["MessageType"] = "success";
+
+            await LoadDropdowns(model);
+            return View(model);
+        }
+
 
         [HttpGet]
         public async Task<IActionResult> PrintPreception(string pageName, string id) 
@@ -200,14 +222,16 @@ namespace HMSCore.Areas.Admin.Controllers
           string toDate = null,
           int pageSize = 20)
         {
-            // Parse date filters and handle full day for ToDate
+        
+
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
-                : DateTime.Parse(fromDate);
+                : DateTime.ParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
             object toDateValue = string.IsNullOrEmpty(toDate)
                 ? DBNull.Value
-                : DateTime.Parse(toDate).AddDays(1).AddTicks(-1); // Include full day
+                : DateTime.ParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture).AddDays(1);  
+
 
             // Prepare SQL parameters for the stored procedure
             SqlParameter[] parameters = new SqlParameter[]

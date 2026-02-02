@@ -68,14 +68,14 @@
         <div class="row mt-3" style="margin-left: 3px !important;">
             <div class="col-sm-3">
                 <label>From Date:</label>
-                <input type="date" asp-for="FromDate" class="form-control input-sm" />
+                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
             </div>
             <div class="col-sm-3">
                 <label>To Date:</label>
-                <input type="date" asp-for="ToDate" class="form-control input-sm" />
+                <input type="date" id="ToDate" asp-for="ToDate" class="form-control input-sm" />
             </div>
             <div class="col-sm-2" style="margin-top: 22px;">
-                <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
             </div>
 
         </div>
@@ -152,5 +152,42 @@
             }
             document.getElementById('selectedIds').value = selected.join(',');
         }
+    </script>
+    <script>
+        function submitSearchForm() {
+            // Find the existing form on the page (the one with method="get")
+            var form = document.querySelector('form[method="get"]');
+            if (!form) {
+                alert('Search form not found!');
+                return;
+            }
+
+            // Create hidden inputs for FromDate and ToDate if they don't exist
+            if (!document.getElementById('hiddenFromDate')) {
+                var fromInput = document.createElement('input');
+                fromInput.type = 'hidden';
+                fromInput.name = 'fromDate';
+                fromInput.id = 'hiddenFromDate';
+                form.appendChild(fromInput);
+
+                var toInput = document.createElement('input');
+                toInput.type = 'hidden';
+                toInput.name = 'toDate';
+                toInput.id = 'hiddenToDate';
+                form.appendChild(toInput);
+            }
+
+            // Copy values from visible inputs using 'name' selector
+            var visibleFrom = document.querySelector('input[name="FromDate"]');
+            var visibleTo = document.querySelector('input[name="ToDate"]');
+
+            document.getElementById('hiddenFromDate').value = visibleFrom ? visibleFrom.value : '';
+            document.getElementById('hiddenToDate').value = visibleTo ? visibleTo.value : '';
+
+            // Submit the form
+            form.submit();
+        }
+
+
     </script>
 }

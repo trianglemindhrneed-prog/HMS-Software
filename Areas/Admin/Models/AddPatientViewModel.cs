@@ -13,7 +13,8 @@ namespace HMSCore.Areas.Admin.Models
             DepartmentList = new SelectList(new List<SelectListItem>());
             DoctorList = new SelectList(new List<SelectListItem>());
         }
-        public bool IsSaved { get; set; } 
+        public bool IsSaved { get; set; }
+        public bool IsEdit { get; set; } = false;
 
         public string PatientId { get; set; }
         public string PatientName { get; set; }
