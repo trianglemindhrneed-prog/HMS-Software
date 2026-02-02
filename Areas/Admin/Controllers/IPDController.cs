@@ -205,4 +205,177 @@ public class IPDController : BaseController
 
         return list;
     }
+
+
+
+
+    //========= IPDCheckupHistory ====================
+    public async Task<IActionResult> IPDCheckupHistory(string pid)
+    {
+        if (string.IsNullOrEmpty(pid))
+            return RedirectToAction("IPDPatients");
+
+        IPDCheckupHistoryPageVM model = new();
+
+        /* ========= PATIENT PROFILE ========= */
+        SqlParameter[] profileParam =
+        {
+        new SqlParameter("@Action", "PATIENT_PROFILE"),
+        new SqlParameter("@PatientID", pid)   // ✅ FIXED
+    };
+
+        DataTable dtProfile =
+            await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", profileParam);
+
+        if (dtProfile.Rows.Count > 0)
+        {
+            var r = dtProfile.Rows[0];
+            model.Patient.PatientID = r["PatientID"].ToString();
+            model.Patient.Name = r["Name"].ToString();
+            model.Patient.Age = r["Age"] == DBNull.Value ? null : (int?)Convert.ToInt32(r["Age"]);
+            model.Patient.Gender = r["Gender"].ToString();
+            model.Patient.Number = r["Number"].ToString();
+            model.Patient.Address = r["Address"].ToString();
+            model.Patient.ProfilePath = r["ProfilePath"].ToString();
+        }
+
+        /* ========= CHECKUP HISTORY ========= */
+        SqlParameter[] chkParam =
+        {
+        new SqlParameter("@Action", "CHECKUP_HISTORY"),
+        new SqlParameter("@PatientID", pid)   // ✅ FIXED
+    };
+
+        DataTable dtCheckups =
+            await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", chkParam);
+
+        foreach (DataRow row in dtCheckups.Rows)
+        {
+            IPDCheckupVM chk = new()
+            {
+                CheckupId = Convert.ToInt32(row["CheckupId"]),
+                CheckupDate = row["CheckupDate"] == DBNull.Value
+                    ? null
+                    : (DateTime?)Convert.ToDateTime(row["CheckupDate"]),
+                DoctorName = row["DoctorName"].ToString(),
+                Symptoms = row["Symptoms"].ToString(),
+                Diagnosis = row["Diagnosis"].ToString(),
+                ExtraNotes = row["ExtraNotes"].ToString()
+            };
+
+            /* ===== PRESCRIPTION ===== */
+            SqlParameter[] preParam =
+            {
+            new SqlParameter("@Action", "PRESCRIPTION"),
+            new SqlParameter("@CheckupId", chk.CheckupId)
+        };
+
+            DataTable dtPre =
+                await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", preParam);
+
+            foreach (DataRow p in dtPre.Rows)
+            {
+                chk.Prescriptions.Add(new IPDPrescriptionVM
+                {
+                    MedicineName = p["MedicineName"].ToString(),
+                    NoOfDays = p["NoOfDays"].ToString(),
+                    WhenToTake = p["WhenToTake"].ToString(),
+                    IsBeforeMeal = Convert.ToBoolean(p["IsBeforeMeal"])
+                });
+            }
+
+            model.Checkups.Add(chk);
+        }
+
+        return View(model);
+    }
+    // ===============================
+    // DELETE CHECKUP (AJAX)
+    // ===============================
+    [HttpPost]
+    public async Task<IActionResult> DeleteCheckup(int checkupId)
+    {
+        SqlParameter[] param =
+        {
+                        new SqlParameter("@Action","DELETE_CHECKUP"),
+                        new SqlParameter("@CheckupId",checkupId)
+                    };
+
+        await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", param);
+        return Json(new { success = true });
+    }
 }
+
+    //public async Task<IActionResult> IPDCheckupHistory(string pid)
+    //{
+    //    if (string.IsNullOrEmpty(pid))
+    //        return RedirectToAction("IPDPatients");
+
+    //    IPDCheckupHistoryPageVM model = new();
+
+    //    // ===== PATIENT PROFILE =====
+    //    var profileParam = new SqlParameter[]
+    //    {
+    //            new SqlParameter("@Action","GETBY_PATIENTID"),
+    //            new SqlParameter("@PatientID", pid)
+    //    };
+    //    DataTable dtProfile = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", profileParam);
+
+    //    if (dtProfile.Rows.Count > 0)
+    //    {
+    //        var r = dtProfile.Rows[0];
+    //        model.Patient.PatientID = r["PatientID"].ToString();
+    //        model.Patient.Name = r["Name"].ToString();
+    //        model.Patient.Age = r["Age"] == DBNull.Value ? null : (int?)Convert.ToInt32(r["Age"]);
+    //        model.Patient.Gender = r["Gender"].ToString();
+    //        model.Patient.Number = r["Number"].ToString();
+    //        model.Patient.Address = r["Address"].ToString();
+    //        model.Patient.ProfilePath = r["ProfilePath"].ToString();
+    //    }
+
+    //    // ===== CHECKUP HISTORY =====
+    //    var chkParam = new SqlParameter[]
+    //    {
+    //            new SqlParameter("@Action","CHECKUP_HISTORY"),
+    //            new SqlParameter("@AdmissionID", dtProfile.Rows[0]["AdmissionID"])
+    //    };
+    //    DataTable dtCheckups = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", chkParam);
+
+    //    foreach (DataRow row in dtCheckups.Rows)
+    //    {
+    //        IPDCheckupHistoryPageVM.IPDCheckupVM chk = new()
+    //        {
+    //            CheckupId = Convert.ToInt32(row["CheckupId"]),
+    //            CheckupDate = row["CheckupDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(row["CheckupDate"]),
+    //            DoctorName = row["DoctorName"].ToString(),
+    //            Symptoms = row["Symptoms"].ToString(),
+    //            Diagnosis = row["Diagnosis"].ToString(),
+    //            ExtraNotes = row["ExtraNotes"].ToString()
+    //        };
+
+    //        // ===== PRESCRIPTIONS =====
+    //        var preParam = new SqlParameter[]
+    //        {
+    //                new SqlParameter("@Action","PRESCRIPTION"),
+    //                new SqlParameter("@CheckupId", chk.CheckupId)
+    //        };
+    //        DataTable dtPre = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", preParam);
+
+    //        foreach (DataRow p in dtPre.Rows)
+    //        {
+    //            chk.Prescriptions.Add(new IPDCheckupHistoryPageVM.IPDPrescriptionVM
+    //            {
+    //                MedicineName = p["MedicineName"].ToString(),
+    //                NoOfDays = p["NoOfDays"].ToString(),
+    //                WhenToTake = p["WhenToTake"].ToString(),
+    //                IsBeforeMeal = Convert.ToBoolean(p["IsBeforeMeal"])
+    //            });
+    //        }
+
+    //        model.Checkups.Add(chk);
+    //    }
+
+    //    return View(model);
+    //}
+
+
