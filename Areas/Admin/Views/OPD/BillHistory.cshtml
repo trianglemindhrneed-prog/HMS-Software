@@ -1,9 +1,10 @@
-﻿@model HMSCore.Areas.Admin.Models.PatientsDetailsViewModel
+﻿@model HMSCore.Areas.Admin.Models.PatientBillViewModel
+
 @{
-    ViewData["Title"] = "Patients Details";
+    ViewData["Title"] = "Patients Bill";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
- 
+
 <head>
     <style>
         .btn-secondary {
@@ -18,10 +19,10 @@
     </style>
 </head>
 <section class="content-header">
-    <h1>Patients Details</h1>
+    <h1>Patients Bill</h1>
     <ol class="breadcrumb">
         <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
-        <li class="active">Patients Details</li>
+        <li class="active">Patients Bill</li>
     </ol>
 </section>
 
@@ -31,12 +32,7 @@
             <div class="pull-left">
                 <a href="/Admin/OPD/AddPatient" class="btn btn-danger btn-flat">
                     <i class="fa fa-plus"></i> Add New
-                </a>
-
-                <form method="post" asp-action="DeleteSelected" style="display:inline-block;">
-                    <input type="hidden" name="selectedIds" id="selectedIds" />
-                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
-                </form>
+                </a> 
             </div>
 
             <div class="pull-right">
@@ -55,13 +51,11 @@
                         <option value="">-- Select --</option>
                         <option value="PatientName">Patient Name</option>
                         <option value="Contact">Contact</option>
-                        <option value="DepartmentName">Department Name</option>
-                        <option value="DoctorName">Doctor Name</option> 
                     </select>
 
                     <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" />
                     <button type="submit" class="btn btn-primary btn-flat">Search</button>
-                    <a href="/Admin/OPd/PatientsDetails" class="btn btn-default btn-flat">Show All</a>
+                    <a href="/Admin/OPd/PatientsBill" class="btn btn-default btn-flat">Show All</a>
                 </form>
             </div>
         </div>
@@ -69,15 +63,15 @@
         <div class="row mt-3" style="margin-left: 3px !important;">
             <div class="col-sm-3">
                 <label>From Date:</label>
-                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" /> 
+                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
 
             </div>
             <div class="col-sm-3">
                 <label>To Date:</label>
                 <input type="date" id="ToDate" asp-for="ToDate" class="form-control input-sm" />
             </div>
-            <div class="col-sm-2" style="margin-top: 22px;"> 
-                    <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button> 
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
             </div>
 
         </div>
@@ -86,53 +80,40 @@
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th>Bill No</th>
                         <th>Patient Id</th>
                         <th>Patient Name</th>
                         <th>Age</th>
-                        <th>Contact No</th>
-                        <th>Address</th>
-                        <th>Department</th>
-                        <th>Doctor</th>
-                        <th>Doctor Contact</th>
-                        <th>Consult Fee</th>
-                        <th>Details</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
+                        <th>Gender</th>
+                        <th>Date</th> 
+                        <th>Consult Fee</th> 
+                        <th>Grand Total</th>
+                        <th>Bill History</th>
+
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var patient in Model.Patients)
+                    @foreach (var bill in Model.Bills)
                     {
                         <tr>
-                            <td><input type="checkbox" class="chkSelect" value="@patient.PatientId" /></td>
-                            <td>@patient.PatientId</td>
-                            <td>@patient.PatientName</td>
-                            <td>@patient.Age</td>
-                            <td>@patient.ContactNo</td>
-                            <td>@patient.Address1</td>
-                            <td>@patient.DepartmentName</td>
-                            <td>@patient.DoctorName</td>
-                            <td>@patient.DoctorNumber</td>
-                            <td>@patient.ConsultFee</td>
+                            <td><input type="checkbox" class="chkSelect" value="@bill.BillNo" /></td>
+                            <td>@bill.BillNo</td> 
+                            <td>@bill.PatientNo</td>
+                            <td>@bill.Name</td>
+                            <td>@bill.Age</td>
+                            <td>@bill.Gender</td> 
+                            <td>@bill.BillDate?.ToString("dd/MM/yyyy")</td> 
+                            <td>@bill.ConsultFee?.ToString("0.00")</td>
+                            <td>@bill.GrandTotal?.ToString("0.00")</td>
                             <td>
-                                <a href="/Admin/OPD/CheckupHistory?pid=@patient.PatientId" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-bars"></i>
+                                <a href="/Admin/OPD/ViewBill?billNo=@bill.BillNo" class="btn btn-sm btn-warning">
+                                    <i class="fa fa-eye"></i> View
                                 </a>
-                            </td>
-                            <td>
-                                <a href="/Admin/OPD/AddPatient?patientId=@patient.PatientId" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <form method="post" asp-action="DeletePatients" onsubmit="return confirm('Are you sure to delete this patient?');">
-                                    <input type="hidden" name="id" value="@patient.PatientId" />
-                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                                </form>
                             </td>
                         </tr>
                     }
                 </tbody>
+
             </table>
 
             <div id="pagination" class="mt-2"></div>

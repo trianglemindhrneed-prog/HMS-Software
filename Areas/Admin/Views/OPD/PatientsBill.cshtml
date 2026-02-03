@@ -1,9 +1,9 @@
 ﻿@model HMSCore.Areas.Admin.Models.PatientsDetailsViewModel
 @{
-    ViewData["Title"] = "Patients Details";
+    ViewData["Title"] = "Patients Bill";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
- 
+
 <head>
     <style>
         .btn-secondary {
@@ -18,10 +18,10 @@
     </style>
 </head>
 <section class="content-header">
-    <h1>Patients Details</h1>
+    <h1>Patients Bill</h1>
     <ol class="breadcrumb">
         <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
-        <li class="active">Patients Details</li>
+        <li class="active">Patients Bill</li>
     </ol>
 </section>
 
@@ -54,14 +54,12 @@
                     <select class="form-control input-sm" asp-for="FilterColumn">
                         <option value="">-- Select --</option>
                         <option value="PatientName">Patient Name</option>
-                        <option value="Contact">Contact</option>
-                        <option value="DepartmentName">Department Name</option>
-                        <option value="DoctorName">Doctor Name</option> 
+                        <option value="Contact">Contact</option> 
                     </select>
 
                     <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" />
                     <button type="submit" class="btn btn-primary btn-flat">Search</button>
-                    <a href="/Admin/OPd/PatientsDetails" class="btn btn-default btn-flat">Show All</a>
+                    <a href="/Admin/OPd/PatientsBill" class="btn btn-default btn-flat">Show All</a>
                 </form>
             </div>
         </div>
@@ -69,15 +67,15 @@
         <div class="row mt-3" style="margin-left: 3px !important;">
             <div class="col-sm-3">
                 <label>From Date:</label>
-                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" /> 
+                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
 
             </div>
             <div class="col-sm-3">
                 <label>To Date:</label>
                 <input type="date" id="ToDate" asp-for="ToDate" class="form-control input-sm" />
             </div>
-            <div class="col-sm-2" style="margin-top: 22px;"> 
-                    <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button> 
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
             </div>
 
         </div>
@@ -91,13 +89,8 @@
                         <th>Age</th>
                         <th>Contact No</th>
                         <th>Address</th>
-                        <th>Department</th>
-                        <th>Doctor</th>
-                        <th>Doctor Contact</th>
-                        <th>Consult Fee</th>
-                        <th>Details</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
+                        <th>Create Bill</th>
+                    
                     </tr>
                 </thead>
                 <tbody>
@@ -110,25 +103,10 @@
                             <td>@patient.Age</td>
                             <td>@patient.ContactNo</td>
                             <td>@patient.Address1</td>
-                            <td>@patient.DepartmentName</td>
-                            <td>@patient.DoctorName</td>
-                            <td>@patient.DoctorNumber</td>
-                            <td>@patient.ConsultFee</td>
                             <td>
-                                <a href="/Admin/OPD/CheckupHistory?pid=@patient.PatientId" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-bars"></i>
+                                <a href="/Admin/OPD/CreateBill?patientId=@patient.PatientId" class="btn btn-sm btn-warning">
+                                    <i class="fa fa-edit"></i>Create Bill
                                 </a>
-                            </td>
-                            <td>
-                                <a href="/Admin/OPD/AddPatient?patientId=@patient.PatientId" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                            </td>
-                            <td>
-                                <form method="post" asp-action="DeletePatients" onsubmit="return confirm('Are you sure to delete this patient?');">
-                                    <input type="hidden" name="id" value="@patient.PatientId" />
-                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                                </form>
                             </td>
                         </tr>
                     }

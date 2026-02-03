@@ -1,0 +1,210 @@
+﻿@model HMSCore.Areas.Admin.Models.CheckupHistoryViewModel
+@{
+    ViewData["Title"] = "Patient Checkup Detail";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+ 
+ 
+<div class="content-wrapper" style="margin-left:31px;">
+    <section class="content-header">
+        <h1>Patient Detail</h1>
+    </section>
+
+    <section class="content">
+        <div class="row">
+
+            <!-- LEFT : PROFILE -->
+            <div class="col-md-3">
+
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+                        <img class="profile-user-img img-responsive img-circle"
+                             src="@Url.Content(string.IsNullOrEmpty(Model.ProfilePath)
+                                        ? "~/adminassets/img/def-profile-img.png"
+                                        : Model.ProfilePath)" />
+
+                        <h3 class="profile-username text-center">@Model.FullName</h3>
+
+                        <ul class="list-group list-group-unbordered">
+                            <li class="list-group-item">
+                                <b>Patient Id</b>
+                                <span class="pull-right">@Model.PatientId</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Gender</b>
+                                <span class="pull-right">@Model.Gender</span>
+                            </li>
+                         @*    <li class="list-group-item">
+                                <b>Blood Group</b>
+                                <span class="pull-right">@Model.BloodGroup</span>
+                            </li> *@
+                            <li class="list-group-item">
+                                <b>Birth Date</b>
+                                <span class="pull-right">
+                                    @(Model.DOB.HasValue? Model.DOB.Value.ToString("dd-MMM-yyyy") : "N/A")
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Other Info</h3>
+                    </div>
+                    <div class="box-body">
+                        <strong><i class="fa fa-phone"></i> Contact</strong>
+                        <p class="text-muted">@Model.Contact</p>
+                        <hr />
+                        <strong><i class="fa fa-map-marker"></i> Address</strong>
+                        <p class="text-muted">@Model.Address</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT : CHECKUP HISTORY -->
+            <div class="col-md-9">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Checkup History</h3>
+
+                        <a class="btn btn-success btn-sm pull-right"
+                           href="/admin/OPD/AddNewCheckup?pid=@Model.PatientId">
+                            <i class="fa fa-plus"></i> Add New Checkup
+                        </a>
+                    </div>
+
+                    <div class="box-body">
+
+                        @foreach (var chk in Model.Checkups)
+                        {
+                            <ul class="timeline timeline-inverse">
+
+                                <li class="time-label">
+                                    <span class="bg-red">
+                                        @chk.CheckupDate.ToString("dd MMM yyyy")
+                                    </span>
+                                    <span class="bg-blue">
+                                        Doctor : @chk.DoctorName
+                                    </span>
+
+                                    <span class="pull-right margin-r-10">
+                                        <a class="btn btn-info btn-sm"
+                                           target="_blank"
+                                           href="@Url.Action("PrintCheckupInvoice","OPD",
+                                                  new { pageName = "CheckupInvoice", checkupId = @chk.CheckupId })">
+                                        <i class="fa fa-print"></i>
+                                    </a>
+
+                                        <a class="btn btn-primary btn-sm"
+                                           href="/admin/OPD/EditCheckup?checkupId=@chk.CheckupId">
+                                            <i class="fa fa-pencil"></i>
+                                        </a>
+
+                                        <a href="javascript:void(0)"
+                                           class="btnDeleteCheckup btn btn-danger btn-sm"
+                                           data-id="@chk.CheckupId">
+                                            <i class="fa fa-trash"></i> Delete
+                                        </a>
+                                    </span>
+                                </li>
+
+                                <li>
+                                    <i class="fa fa-child bg-blue"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Symptoms</h3>
+                                        <div class="timeline-body">@chk.Symptoms</div>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <i class="fa fa-code-fork bg-aqua"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Diagnosis</h3>
+                                        <div class="timeline-body">@chk.Diagnosis</div>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <i class="fa fa-flask bg-yellow"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Prescription</h3>
+
+                                        <div class="timeline-body"> 
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Medicine</th>
+                                                        <th>No. Of Days</th>
+                                                        <th>When To Take</th>
+                                                        <th>Before Meal?</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{
+                                                        int i = 1;
+                                                    }
+                                                    @foreach (var p in chk.Prescriptions)
+                                                    {
+                                                        <tr>
+                                                            <td>@i</td>
+                                                            <td>@p.MedicineName</td>
+                                                            <td>@p.NoOfDays</td>
+                                                            <td>@p.WhenToTake</td>
+                                                            <td>@(p.IsBeforeMeal ? "Yes" : "No")</td>
+                                                        </tr>
+                                                        i++;
+                                                    }
+                                                </tbody>
+                                            </table>
+
+                                            <b>Extra Note:</b> @chk.ExtraNotes
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <i class="fa fa-clock-o bg-gray"></i>
+                                </li>
+                            </ul>
+                        }
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).on("click", ".btnDeleteCheckup", function () {
+            let id = $(this).data("id");
+
+            if (confirm("Are you sure you want to delete this checkup?")) {
+                $.ajax({
+                    url: "/admin/OPD/DeleteCheckup",
+                    type: "POST",
+                    data: { checkupId: id },
+                    success: function (response) {
+                        // Check server response
+                        if (response.success) {
+                            alert(response.message || "Checkup deleted successfully!");
+                            // Optionally remove row from table
+                            $("#checkupRow_" + id).remove();
+                        } else {
+                            alert(response.message || "Error deleting checkup!");
+                        }
+                    },
+                    error: function () {
+                        alert("Error connecting to server!");
+                    }
+                });
+            }
+        });
+    </script>
+}
+

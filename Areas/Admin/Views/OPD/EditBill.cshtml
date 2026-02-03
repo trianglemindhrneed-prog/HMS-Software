@@ -1,0 +1,259 @@
+﻿@model HMSCore.Areas.Admin.Models.CreateBillViewModel
+@{
+    ViewData["Title"] = "Create Bill";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .row {
+        margin-top: 10px;
+    }
+
+    .btn-secondary {
+        background: green;
+        color: #fff;
+    }
+</style>
+
+<section class="content-header create-bill">
+    <h1>Update Bill</h1>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-body">
+
+            <form asp-action="EditBill" method="post">
+
+                <!-- ================= BILL DETAILS ================= -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Bill No</label>
+                        <input asp-for="BillNo" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Bill Date</label>
+                        <input asp-for="BillDate" type="date" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Patient Id</label>
+                        <input asp-for="PatientNo" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Name</label>
+                        <input asp-for="Name" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        <label>Age</label>
+                        <input asp-for="Age" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Gender</label>
+                        <input asp-for="Gender" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Consult Fee</label>
+                        <input asp-for="ConsultFee" id="ConsultFee" class="form-control charge" placeholder="0.00" />
+                    </div>
+                </div>
+
+                <!-- ================= TREATMENT CHARGES ================= -->
+                <h4 class="mt-3">Treatment Charges</h4>
+
+                <table class="table table-bordered" id="treatmentTable">
+                    <thead>
+                        <tr>
+                            <th>Treatment</th>
+                            <th>Charge</th>
+                            <th>
+                                <button type="button" class="btn btn-sm btn-success" id="addRow">+</button>
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @for (int i = 0; i < Model.Charges.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <!-- 🔴 IMPORTANT: Index binding -->
+                                    <input type="hidden" name="Charges.Index" value="@i" />
+
+                                    <input autocomplete="off" type="text"
+                                           name="Charges[@i].Treatment"
+                                           class="form-control"
+                                           placeholder="Enter treatment description"
+                                           value="@Model.Charges[i].Treatment" />
+                                </td>
+
+                                <td>
+                                    <input autocomplete="off" type="number"
+                                           name="Charges[@i].Charge"
+                                           class="form-control charge"
+                                           placeholder="0.00"
+                                           value="@Model.Charges[i].Charge" />
+                                </td>
+
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger removeRow">x</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- ================= BILL CALCULATIONS ================= -->
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        <label>Total Amount</label>
+                        <input asp-for="TotalAmount" id="totalAmount" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Discount (%)</label>
+                        <input asp-for="Discount" id="Discount" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Discount Amount</label>
+                        <input id="discountAmount" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Total</label>
+                        <input asp-for="Total" id="total" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        <label>Paid Value</label>
+                        <input asp-for="PaidValue" id="PaidValue" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Grand Total</label>
+                        <input asp-for="GrandTotal" id="grandTotal" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Balance As On</label>
+                        <input asp-for="Balance" id="Balance" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <!-- ================= SAVE / PRINT ================= -->
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        @if (TempData["BillSaved"] == null)
+                        {
+                            <button type="submit" class="btn btn-primary mt-3" id="btnSave">
+                                Update Bill
+                            </button>
+                        }
+                        else
+                        {
+                            <a class="btn btn-secondary mt-3"
+                               id="btnPrint"
+                               target="_blank"
+                               href="@Url.Action("PrintBilling", "OPD", new { pageName = "BillRe_Print", id = Model.BillNo })">
+                                Print
+                            </a>
+                        }
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btnPrint').on('click', function () {
+                setTimeout(function () {
+                    window.location.reload();
+                }, 500);
+            });
+        });
+    </script>
+
+    <script>
+        function calculateBill() {
+            let consultFee = parseFloat($('#ConsultFee').val()) || 0;
+            let treatmentTotal = 0;
+
+            $('#treatmentTable tbody tr').each(function () {
+                let charge = parseFloat($(this).find('.charge').val()) || 0;
+                treatmentTotal += charge;
+            });
+
+            let totalAmount = consultFee + treatmentTotal;
+            let discountPercent = parseFloat($('#Discount').val()) || 0;
+            let discountAmount = totalAmount * discountPercent / 100;
+            let totalAfterDiscount = totalAmount - discountAmount;
+            let paidValue = parseFloat($('#PaidValue').val()) || 0;
+            let balance = totalAfterDiscount - paidValue;
+
+            $('#totalAmount').val(totalAmount.toFixed(2));
+            $('#discountAmount').val(discountAmount.toFixed(2));
+            $('#total').val(totalAfterDiscount.toFixed(2));
+            $('#grandTotal').val(totalAfterDiscount.toFixed(2));
+            $('#Balance').val(balance.toFixed(2));
+        }
+
+        $(document).on('input', '.charge, #ConsultFee, #Discount, #PaidValue', calculateBill);
+
+        $('#addRow').click(function () {
+            let index = $('#treatmentTable tbody tr').length;
+
+            let row = `<tr>
+                <td>
+                    <input type="hidden" name="Charges.Index" value="${index}" />
+                    <input autocomplete="off" type="text"
+                           name="Charges[${index}].Treatment"
+                           class="form-control"
+                           placeholder="Enter treatment description" />
+                </td>
+                <td>
+                    <input autocomplete="off" type="number"
+                           name="Charges[${index}].Charge"
+                           class="form-control charge"
+                           placeholder="0.00" />
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger removeRow">x</button>
+                </td>
+            </tr>`;
+
+            $('#treatmentTable tbody').append(row);
+            calculateBill();
+        });
+
+        $(document).on('click', '.removeRow', function () {
+            $(this).closest('tr').remove();
+            calculateBill();
+        });
+
+        $(document).ready(function () {
+            calculateBill();
+        });
+
+        $('#btnPrint').on('click', function () {
+            setTimeout(function () {
+                location.reload();
+            }, 500);
+        });
+    </script>
+}
+
