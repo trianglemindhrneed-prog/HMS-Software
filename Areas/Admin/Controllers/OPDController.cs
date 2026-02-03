@@ -112,7 +112,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> PrintPreception(string pageName, string id) 
+        public async Task<IActionResult> PrintPreception(string pageName, string id)
         {
             var handler = new HttpClientHandler
             {
@@ -129,6 +129,48 @@ namespace HMSCore.Areas.Admin.Controllers
             Response.Headers.Add("Content-Disposition", "inline; filename=Patient_{id}.pdf");
             return File(pdfBytes, "application/pdf");
         }
+
+        //[HttpGet]
+        //public async Task<IActionResult> PrintPreception(string pageName, string id)
+        //{
+        //    // 1. Configure HttpClientHandler
+        //    var handler = new HttpClientHandler
+        //    {
+        //        // Bypass SSL certificate errors (only if necessary)
+        //        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true,
+
+        //        // Use server credentials to access protected WebForms pages
+        //        UseDefaultCredentials = true
+        //    };
+
+        //    using var client = new HttpClient(handler);
+
+        //    try
+        //    {
+        //        // 2. Get base URL from configuration
+        //        var baseUrl = _configuration["WebFormBaseUrl"];
+
+        //        // 3. Build the full WebForms page URL
+        //        var url = $"{baseUrl}/{pageName}.aspx?PatientId={id}";
+
+        //        // 4. Fetch the page as byte array (PDF)
+        //        var pdfBytes = await client.GetByteArrayAsync(url);
+
+        //        // 5. Return PDF to browser inline
+        //        Response.Headers.Add("Content-Disposition", $"inline; filename=Patient_{id}.pdf");
+        //        return File(pdfBytes, "application/pdf");
+        //    }
+        //    catch (HttpRequestException ex)
+        //    {
+        //        // If the WebForms page is unreachable or returns 403/404
+        //        return StatusCode(500, $"Error fetching PDF: {ex.Message}");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Catch all other errors
+        //        return StatusCode(500, $"Unexpected error: {ex.Message}");
+        //    }
+        //}
 
         private async Task LoadDropdowns(AddPatientViewModel model)
         {
