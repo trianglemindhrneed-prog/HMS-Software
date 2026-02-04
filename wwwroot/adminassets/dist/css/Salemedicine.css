@@ -1,0 +1,120 @@
+﻿
+.txt {
+    border-radius: 6px;
+}
+
+.btns {
+    height: 40px;
+    width: 20%;
+    background-color: #204d74;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
+}
+
+.btn {
+    margin-right: 5px;
+}
+
+.white-box-new-design {
+    background: #fff;
+    box-shadow: 0 0 50px 0 #00000021;
+    max-width: 1230px;
+    margin: 20px auto 0;
+    overflow: hidden;
+    padding: 20px 30px 40px;
+}
+
+    .white-box-new-design input, .white-box-new-design select {
+       /*width: 100% !important;*/
+        border: 1px solid #00000066;
+        padding: 0px 10px;
+        background: transparent !important;
+        border-radius: 5px !important;
+    }
+
+    .white-box-new-design .col-sm-12 {
+        padding: 0;
+    }
+
+    .white-box-new-design .calender-img {
+        height: 20px !important;
+        width: 20px !important;
+        position: absolute;
+        top: 40px;
+        right: 20px;
+        padding: 0;
+    }
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.create-bill {
+    max-width: 1230px;
+    margin: 0 auto;
+    padding: 20px 0 0 0;
+}
+
+.two-btn-design input {
+    width: auto !important;
+    background: #00c0ef !important;
+    border: none;
+    line-height: 35px;
+}
+
+.two-btn-design {
+    display: flex;
+    background: #fff;
+    padding: 20px 20px;
+    box-shadow: 0 0 50px 0 #00000014;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+p.twobtn-wrap-text {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 600;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.white-box-new-design input.sale-btn {
+    line-height: 35px;
+    background: #3c8dbc !important;
+    color: #fff;
+    font-size: 16px;
+    max-width: 130px;
+    margin: 10px 0 0 auto;
+    border: none;
+}
+
+table.table tr th, table.table tr td {
+    text-align: center;
+}
+
+.discount-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    grid-gap: 15px;
+}
+
+.button-sale input {
+    background: #3c8dbc !important;
+    line-height: 35px;
+    border: none;
+}
+
+.discount-wrap input {
+    width: auto !important;
+}
+
+@media(max - width:767px) {
+    .white-box-new-design .col-sm-3.mg {
+        padding: 0;
+    }
+}
+

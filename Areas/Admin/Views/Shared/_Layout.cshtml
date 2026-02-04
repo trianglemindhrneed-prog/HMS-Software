@@ -250,13 +250,14 @@
                                 <li><a href="/admin/OPD/PatientsDetails"><i class="fa fa-users"></i> Existing Patients</a></li>
                                 <li><a href="/admin/OPD/PatientsBill"><i class="fa fa-receipt"></i> Create Patient Bill</a></li>
                                 <li><a href="/admin/OPD/BillHistory"><i class="fa fa-history"></i> Bill History</a></li>
-                                <li><a href="AdminNewSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
-                                <li><a href="BillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Medicine Sale Details</a></li>
+                                <li><a href="/admin/Pharmacy/SaleMedicine"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
+                                <li><a href="/admin/Pharmacy/BillSaleMedicine"><i class="fa fa-pills"></i> Medicine Sale Details</a></li>
                                 <li><a href="OtherSaleProduct.aspx"><i class="fa fa-capsules"></i>Outside Sale Medicine</a></li>
                                 <li><a href="OtherBillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Outside Medicine Sale Details</a></li>
-                                <% if (userType == "Admin") { %>
-                                <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
-                                <% } %>
+                                @if (role == "Admin")
+                                {
+                                    <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
+                                }
                             </ul>
                         </li>
                     }
@@ -389,7 +390,9 @@
         </footer>
     </div>
 
-    <script src="~/adminassets/bower_components/jquery/dist/jquery.min.js"></script>
+ <script src="~/adminassets/bower_components/jquery/dist/jquery.min.js"></script>
+  @*   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+
     <script src="~/adminassets/bower_components/jquery-ui/jquery-ui.min.js"></script>
     <script>
         $.widget.bridge('uibutton', $.ui.button);
