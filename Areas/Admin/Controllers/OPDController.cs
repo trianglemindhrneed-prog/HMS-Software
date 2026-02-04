@@ -914,21 +914,7 @@ namespace HMSCore.Areas.Admin.Controllers
             return outputParam.Value?.ToString() ?? prefix + "001";
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteBill(string billNo)
-        {
-            await _dbLayer.ExecuteSPAsync(
-                "sp_opdManagePatientBill",
-                new[]
-                {
-            new SqlParameter("@Action","Delete"),
-            new SqlParameter("@BillNo",billNo)
-                }
-            );
-
-            TempData["Success"] = $"Bill {billNo} deleted successfully";
-            return RedirectToAction("PatientsList");
-        }
+  
         [HttpGet]
         public async Task<IActionResult> PrintBilling(string pageName, string id)
         {
@@ -1115,6 +1101,54 @@ namespace HMSCore.Areas.Admin.Controllers
 
             return View(vm);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteBill(string billNo)
+        {
+            await _dbLayer.ExecuteSPAsync(
+                "sp_opdManagePatientBill",
+                new[]
+                {
+            new SqlParameter("@Action","DeleteBill"),
+            new SqlParameter("@BillNo",billNo)
+                }
+            );
+
+            TempData["Message"] = $"Bill {billNo} deleted successfully"; 
+            TempData["MessageType"] = "success";
+            return RedirectToAction("BillHistory");
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedBill(string selectedIds)
+        {
+            if (!string.IsNullOrWhiteSpace(selectedIds))
+            {
+                var billNos = selectedIds.Split(',');
+
+                foreach (var billNo in billNos)
+                {
+                    await _dbLayer.ExecuteSPAsync(
+                        "sp_opdManagePatientBill",
+                        new[]
+                        {
+                    new SqlParameter("@Action", "DeleteBill"),
+                    new SqlParameter("@BillNo", billNo)
+                        }
+                    );
+                }
+
+                TempData["Message"] = "Selected bills deleted successfully";
+                TempData["MessageType"] = "success";
+            }
+            else
+            {
+                TempData["Message"] = "No bills selected";
+                TempData["MessageType"] = "error";
+            }
+
+            return RedirectToAction("BillHistory");
+        }
+
 
 
 

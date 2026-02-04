@@ -1,10 +1,9 @@
 ﻿@model HMSCore.Areas.Admin.Models.PatientBillViewModel
 
 @{
-    ViewData["Title"] = "Patients Bill";
+    ViewData["Title"] = "Patient Bill History";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
-}
-
+} 
 <head>
     <style>
         .btn-secondary {
@@ -19,10 +18,10 @@
     </style>
 </head>
 <section class="content-header">
-    <h1>Patients Bill</h1>
+    <h1>Patient Bill History</h1>
     <ol class="breadcrumb">
         <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
-        <li class="active">Patients Bill</li>
+        <li class="active">Patient Bill History</li>
     </ol>
 </section>
 
@@ -30,9 +29,16 @@
     <div class="box">
         <div class="box-header with-border">
             <div class="pull-left">
-                <a href="/Admin/OPD/AddPatient" class="btn btn-danger btn-flat">
+                <a href="/Admin/OPD/PatientsBill" class="btn btn-danger btn-flat">
                     <i class="fa fa-plus"></i> Add New
-                </a> 
+                </a>
+                <form method="post" asp-action="DeleteSelectedBill" id="deleteSelectedForm" style="display:inline-block;">
+                    <input type="hidden" name="selectedIds" id="selectedIds" />
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">
+                        Delete Selected
+                    </button>
+                </form>
+
             </div>
 
             <div class="pull-right">
@@ -55,7 +61,7 @@
 
                     <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" />
                     <button type="submit" class="btn btn-primary btn-flat">Search</button>
-                    <a href="/Admin/OPd/PatientsBill" class="btn btn-default btn-flat">Show All</a>
+                    <a href="/Admin/OPd/BillHistory" class="btn btn-default btn-flat">Show All</a>
                 </form>
             </div>
         </div>
@@ -89,6 +95,8 @@
                         <th>Consult Fee</th> 
                         <th>Grand Total</th>
                         <th>Bill History</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
 
                     </tr>
                 </thead>
@@ -105,10 +113,23 @@
                             <td>@bill.BillDate?.ToString("dd/MM/yyyy")</td> 
                             <td>@bill.ConsultFee?.ToString("0.00")</td>
                             <td>@bill.GrandTotal?.ToString("0.00")</td>
+                            <td> 
+                                <a class="btn btn-secondary"
+                                   target="_blank"
+                                   href="@Url.Action("PrintBilling","OPD",new { pageName = "BillRe_Print", id = @bill.BillNo })">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            </td>
                             <td>
-                                <a href="/Admin/OPD/ViewBill?billNo=@bill.BillNo" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-eye"></i> View
+                                <a href="/Admin/OPD/EditBill?billNo=@bill.BillNo" class="btn btn-sm btn-warning">
+                                    <i class="fa fa-edit"></i>
                                 </a>
+                            </td>
+                            <td>
+                                <form method="post" asp-action="DeleteBill" onsubmit="return confirm('Are you sure to delete this patient?');">
+                                    <input type="hidden" name="billNo" value="@bill.BillNo" />
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
+                                </form>
                             </td>
                         </tr>
                     }
@@ -129,14 +150,19 @@
         }
 
         // Handle Delete Selected IDs
-        document.querySelector('form[asp-action="DeleteSelected"]').onsubmit = function () {
-            var selected = Array.from(document.querySelectorAll('.chkSelect:checked')).map(c => c.value);
+             document.getElementById('deleteSelectedForm').onsubmit = function () {
+            var selected = Array.from(document.querySelectorAll('.chkSelect:checked'))
+                                .map(c => c.value);
+
             if (selected.length === 0) {
-                alert('Please select at least one slot.');
+                alert('Please select at least one bill.');
                 return false;
             }
+
             document.getElementById('selectedIds').value = selected.join(',');
-        }
+            return true;
+        };
+
     </script>
     <script>
         function submitSearchForm() {
