@@ -44,55 +44,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
             return View(model);
         }
-
-        // POST: Save Medicine Sale
-        [HttpPost]
-        public async Task<IActionResult> SaleMedicine(SaleMedicineViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                await LoadDropdowns(model);
-                return View(model);
-            }
-
-            try
-            {
-                // Convert medicines list to JSON for SP
-                string jsonMedicines = Newtonsoft.Json.JsonConvert.SerializeObject(model.Medicines);
-
-                var parameters = new[]
-                {
-                    new SqlParameter("@Action", "SaveSale"),
-                    new SqlParameter("@InvoiceId", model.InvoiceId),
-                    new SqlParameter("@PatientId", model.PatientId),
-                    new SqlParameter("@PatientName", model.PatientName ?? (object)DBNull.Value),
-                    new SqlParameter("@InvoiceDate", model.SaleDate),
-                    new SqlParameter("@GrandTotal", model.GrandTotal),
-                    new SqlParameter("@DiscountPercent", model.DiscountPercent),
-                    new SqlParameter("@GstPercent", model.GstPercent),
-                    new SqlParameter("@FinalAmount", model.FinalAmount),
-                    new SqlParameter("@MedicinesJson", jsonMedicines)
-                };
-
-                await _dbLayer.ExecuteSPAsync("sp_MedicineSale", parameters);
-
-                model.IsSaved = true;
-                TempData["Message"] = $"Sale {model.InvoiceId} saved successfully!";
-                TempData["MessageType"] = "success";
-
-                // Clear medicines for next sale
-                model.Medicines = new List<MedicineModel>();
-            }
-            catch (Exception ex)
-            {
-                TempData["Message"] = "Error while saving sale: " + ex.Message;
-                TempData["MessageType"] = "error";
-            }
-
-            await LoadDropdowns(model);
-            return View(model);
-        }
-
+         
         // Helper: Load dropdowns
         private async Task LoadDropdowns(SaleMedicineViewModel model)
         {
@@ -165,45 +117,64 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMedicinesByCheckup(int checkupId)
         {
-            var medicines = new List<MedicineModel>();
-
-            var dt = await _dbLayer.ExecuteSPAsync(
-                "sp_MedicineSale",
-                new[] {
-            new SqlParameter("@Action","GetMedicinesByCheckup"),
-            new SqlParameter("@CheckupId", checkupId)
-                }
-            );
-            foreach (DataRow row in dt.Rows)
+            try
             {
-                int noOfDays = 0;
-                int whenToTake = 0;
-                int.TryParse(row["NoOfDays"]?.ToString(), out noOfDays);
-                int.TryParse(row["WhenToTake"]?.ToString(), out whenToTake);
-                int requestedQty = noOfDays * whenToTake;
+                var medicines = new List<MedicineModel>();
 
-                medicines.Add(new MedicineModel
+                var dt = await _dbLayer.ExecuteSPAsync(
+                    "sp_MedicineSale",
+                    new[] {
+                new SqlParameter("@Action","GetMedicinesByCheckup"),
+                new SqlParameter("@CheckupId", checkupId)
+                    }
+                );
+
+                if (dt == null || dt.Rows.Count == 0)
+                    return Json(medicines);
+
+                foreach (DataRow row in dt.Rows)
                 {
-                    MedicineId = Convert.ToInt32(row["MedicineId"]),
-                    MedicineName = row["MedicineName"].ToString(),
-                    CategoryName = row["CategoryName"].ToString(),
-                    MRP = Convert.ToDecimal(row["MRP"]),
-                    AvailableQty = Convert.ToInt32(row["AvailableQty"]),
-                    NoOfDays = noOfDays,
-                    WhenToTake = whenToTake,
-                    RequestedQty = requestedQty,
-                    Quantity = requestedQty,
-                    Total = Convert.ToDecimal(row["MRP"]) * requestedQty
-                });
+                    int SafeInt(object val) => int.TryParse(val?.ToString(), out int x) ? x : 0;
+                    decimal SafeDecimal(object val) => decimal.TryParse(val?.ToString(), out decimal x) ? x : 0;
+                    string SafeString(object val) => val?.ToString() ?? "";
+
+                    // Parse SP values safely
+                    int noOfDays = SafeInt(row["NoOfDays"]);
+                    int whenToTake = SafeInt(row["WhenToTake"]);
+                    int requestedQty = SafeInt(row["RequestedQty"]);
+                    int availableQty = SafeInt(row["AvailableQty"]);
+                     
+                    int quantity = SafeInt(row["Quantity"]);
+                    if (quantity == 0)
+                        quantity = requestedQty > availableQty ? availableQty : requestedQty;
+
+                    decimal mrp = SafeDecimal(row["MRP"]);
+
+                    medicines.Add(new MedicineModel
+                    {
+                        MedicineId = SafeInt(row["MedicineId"]),
+                        MedicineName = SafeString(row["MedicineName"]),
+                        CategoryName = SafeString(row["CategoryName"]),
+                        MRP = mrp,
+                        AvailableQty = availableQty,
+                        NoOfDays = noOfDays,
+                        WhenToTake = whenToTake,
+                        RequestedQty = requestedQty,
+                        Quantity = quantity,
+                        Total = mrp * quantity
+                    });
+                }
+
+                return Json(medicines);
             }
-
-
-
-            return Json(medicines);
+            catch (Exception ex)
+            {
+                var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, $"Server Error: {msg}");
+            }
         }
 
 
-       
         [HttpGet]
         public async Task<IActionResult> GetMedicinesByCategory(int categoryId)
         {
@@ -258,6 +229,72 @@ namespace HMSCore.Areas.Admin.Controllers
                 mrp = Convert.ToDecimal(row["MRP"])
             });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SaleMedicine(SaleMedicineViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                await LoadDropdowns(model);
+                return View(model);
+            }
+
+            try
+            {
+                var parameters = new[]
+                {
+            new SqlParameter("@Action", "SaveSale"),
+            new SqlParameter("@InvoiceId", model.InvoiceId),
+            new SqlParameter("@PatientId", model.PatientId),
+            new SqlParameter("@PatientName", model.PatientName ?? (object)DBNull.Value),
+            new SqlParameter("@InvoiceDate", model.SaleDate),
+            new SqlParameter("@GrandTotal", model.GrandTotal),
+            new SqlParameter("@DiscountPercent", model.DiscountPercent),
+            new SqlParameter("@GstPercent", model.GstPercent),
+            new SqlParameter("@FinalAmount", model.FinalAmount),
+            new SqlParameter("@MedicinesJson", model.MedicinesJson)
+        };
+
+                await _dbLayer.ExecuteSPAsync("sp_MedicineSale", parameters);
+
+                model.IsSaved = true;   // ⭐ VERY IMPORTANT
+
+                TempData["Message"] = $"Sale {model.InvoiceId} saved successfully!";
+                TempData["MessageType"] = "success";
+
+                model.Medicines = new List<MedicineModel>();
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = "Error while saving sale: " + ex.Message;
+                TempData["MessageType"] = "error";
+            }
+
+            await LoadDropdowns(model);
+            return View(model);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> PrintMedicineBill(string pageName, string id)
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+
+            using var client = new HttpClient(handler);
+
+            var baseUrl = _configuration["WebFormBaseUrl"];
+            var url = $"{baseUrl}/{pageName}.aspx?ID={id}";
+
+            var pdfBytes = await client.GetByteArrayAsync(url);
+
+            Response.Headers.Add("Content-Disposition", "inline; filename=Patient_{id}.pdf");
+            return File(pdfBytes, "application/pdf");
+        }
+
+
 
 
     }

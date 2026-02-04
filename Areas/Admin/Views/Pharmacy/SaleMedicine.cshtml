@@ -13,6 +13,10 @@
         .discount-wrap label, .discount-wrap span {
             margin-right: 10px;
         }
+         .btn-secondary {
+            background: green;
+            color: aliceblue;
+        }
     </style>
 </head>
 
@@ -29,7 +33,7 @@
         <!-- Patient Selection -->
         <div class="form-group col-sm-3">
             <label>Patient</label>
-            <select id="ddlPatient" asp-for="PatientId" asp-items="Model.PatientList" class="form-control">
+            <select id="PatientId" name="PatientId" asp-for="PatientId" asp-items="Model.PatientList" class="form-control">
                 <option value="">-- Select Patient --</option>
             </select>
         </div>
@@ -112,28 +116,48 @@
             <div class="form-inline discount-wrap" style="margin-top: 10px; justify-content: end;">
                 <div class="form-group">
                     <label>Grand Total:</label>
-                    <span id="lblGrandTotal">0.00</span>
+                    <span  id="lblGrandTotal">0.00</span>
                 </div>
                 <div class="form-group">
                     <label>Discount (%)</label>
-                    <input type="number" id="txtDiscount" class="form-control" value="@Model.DiscountPercent" min="0" max="100" />
+                    <input asp-for="DiscountPercent" type="number" id="txtDiscount" class="form-control" value="@Model.DiscountPercent" min="0" max="100" />
                 </div>
                 <div class="form-group">
                     <label>GST (%)</label>
-                    <input type="number" id="txtGST" class="form-control" value="@Model.GstPercent" min="0" max="100" />
+                    <input asp-for="GstPercent" type="number" id="txtGST" class="form-control" value="@Model.GstPercent" min="0" max="100" />
                 </div>
                 <div class="form-group">
                     <label>Final Amount:</label>
                     <span id="lblFinalAmount">0.00</span>
                 </div>
                 <input type="hidden" id="hfSelectedMedicines" name="MedicinesJson" />
-                <input type="hidden" id="hfGrandTotal" />
+                <input asp-for="GrandTotal" type="hidden" id="hfGrandTotal" />
+                <input asp-for="FinalAmount" type="hidden" id="hfFinalAmount" />
+
             </div>
         </div>
 
         <!-- Submit Button -->
+ <div>@if (!Model.IsSaved)
+{
+    <button type="submit" class="btn btn-success sale-btn" id="btnSave">
+        Save Sale
+    </button>
+}
+</div>
         <div class="row">
-            <button type="submit" class="btn btn-success sale-btn">Save Sale</button>
+            @if (Model.IsSaved)
+{ 
+          <a id="btnPrint" class="btn btn-secondary"
+         target="_blank"
+         href="@Url.Action(
+                         "PrintMedicineBill",
+                         "Pharmacy",
+                         new { pageName = "PrintSale_Product", id = Model.InvoiceId })">
+      Print
+  </a>
+}
+
         </div>
     </form>
 </div>
@@ -141,179 +165,192 @@
 @section Scripts {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Initialize selected medicines from server
-    var selectedMedicines = @Html.Raw(
-        Newtonsoft.Json.JsonConvert.SerializeObject(
-            Model.Medicines != null 
-                ? Model.Medicines.Select(m => new {
-                    MedicineId = m.MedicineId,
-                    MedicineName = m.MedicineName ?? "",
-                    CategoryName = m.CategoryName ?? "",
-                    Quantity = m.Quantity,
-                    MRP = m.MRP,
-                    Total = m.Total
-                  }).ToList()
-                : new List<object>()
-        )
-    );
+$(document).ready(function () {
 
-    // Render medicines table
-    function renderMedicinesTable() {
-        var tbody = $("#tblMedicines tbody");
-        tbody.empty();
-        var grandTotal = 0;
+    $("#btnPrint").on("click", function () {
+        setTimeout(function () {
+            window.location.href = '@Url.Action("SaleMedicine","Pharmacy")';
+        }, 1000); // 1 sec delay
+    });
 
-        selectedMedicines.forEach(function(med, index){
-            med.Quantity = med.Quantity || 0;
-            med.MRP = med.MRP || 0;
-            med.Total = med.MRP * med.Quantity;
-            grandTotal += med.Total;
+});
+</script>
 
-            var row = `<tr>
-                <td>${med.CategoryName}</td>
-                <td>${med.MedicineName}</td>
-                <td>${med.MRP.toFixed(2)}</td>
-               <td>${med.Quantity}</td>
-                <td>${med.Total.toFixed(2)}</td>
-                <td><button type="button" class="btn btn-danger btn-sm btnRemove" data-index="${index}">Remove</button></td>
-            </tr>`;
-            tbody.append(row);
+<script>
+var selectedMedicines = @Html.Raw(
+    Newtonsoft.Json.JsonConvert.SerializeObject(
+        Model.Medicines != null 
+            ? Model.Medicines.Select(m => new {
+                MedicineId = m.MedicineId,
+                MedicineName = m.MedicineName ?? "",
+                CategoryName = m.CategoryName ?? "",
+                Quantity = m.Quantity,
+                MRP = m.MRP,
+                Total = m.Total
+              }).ToList()
+            : new List<object>()
+    )
+);
+
+function renderMedicinesTable() {
+    var tbody = $("#tblMedicines tbody");
+    tbody.empty();
+    var grandTotal = 0;
+
+    selectedMedicines.forEach(function(med, index){
+        med.Quantity = med.Quantity != null ? Number(med.Quantity) : 0;
+        med.MRP = med.MRP != null ? Number(med.MRP) : 0;
+        med.Total = med.MRP * med.Quantity;
+        grandTotal += med.Total;
+
+        var row = `<tr>
+            <td>${med.CategoryName}</td>
+            <td>${med.MedicineName}</td>
+            <td>${med.MRP.toFixed(2)}</td>
+            <td>${med.Quantity}</td>
+            <td>${med.Total.toFixed(2)}</td>
+            <td><button type="button" class="btn btn-danger btn-sm btnRemove" data-index="${index}">Remove</button></td>
+        </tr>`;
+        tbody.append(row);
+    });
+
+    var discount = parseFloat($("#txtDiscount").val()) || 0;
+    var gst = parseFloat($("#txtGST").val()) || 0;
+    var finalAmount = grandTotal - (grandTotal * discount / 100);
+    finalAmount += (finalAmount * gst / 100);
+
+    $("#lblGrandTotal").text(grandTotal.toFixed(2));
+    $("#lblFinalAmount").text(finalAmount.toFixed(2));
+    $("#hfSelectedMedicines").val(JSON.stringify(selectedMedicines));
+    $("#hfGrandTotal").val(grandTotal.toFixed(2));
+    $("#hfFinalAmount").val(finalAmount.toFixed(2)); 
+}
+
+$(document).ready(function(){
+
+    renderMedicinesTable();
+
+    // Patient selection & checkup dates
+    $("#PatientId").change(function(){
+        var patientId = $(this).val();
+        if(patientId){
+            $.get('@Url.Action("GetPatientName","Pharmacy")', { patientId: patientId }, function(data){
+                $("input[name='PatientName']").val(data.name);
+            });
+            $.get('@Url.Action("GetPatientCheckupDates","Pharmacy")', { patientId: patientId }, function(dates){
+                var container = $("#checkupDatesContainer");
+                container.empty();
+                dates.forEach(function(date){
+                    var btn = $('<button type="button" class="btn btn-info btn-sm m-1"></button>');
+                    btn.text(date.checkupDateStr);
+                    btn.attr('data-checkupid', date.checkupId);
+                    container.append(btn);
+                });
+            });
+        } else {
+            $("input[name='PatientName']").val('');
+            $("#checkupDatesContainer").empty();
+        }
+    });
+
+   
+  // Click checkup date -> load medicines
+$("#checkupDatesContainer").on("click", "button", function(){
+    var checkupId = $(this).data("checkupid");
+    if(checkupId){
+        $.get('@Url.Action("GetMedicinesByCheckup","Pharmacy")', { checkupId: checkupId }, function(meds){
+            console.log("Medicines from server:", meds);  
+         selectedMedicines = meds.map(function(m){
+    var qty = m.quantity ? parseInt(m.quantity) : 0;   
+    var mrp = m.mrp ? parseFloat(m.mrp) : 0;
+
+    return {
+        MedicineId: m.medicineId ? parseInt(m.medicineId) : 0,
+        MedicineName: m.medicineName || "",
+        CategoryName: m.categoryName || "",
+        Quantity: qty,
+        RequestedQty: m.requestedQty ? parseInt(m.requestedQty) : 0,
+        MRP: mrp,
+        Total: qty * mrp
+    };
+});
+renderMedicinesTable();
+
         });
-
-        var discount = parseFloat($("#txtDiscount").val()) || 0;
-        var gst = parseFloat($("#txtGST").val()) || 0;
-        var finalAmount = grandTotal - (grandTotal * discount / 100);
-        finalAmount += (finalAmount * gst / 100);
-
-        $("#lblGrandTotal").text(grandTotal.toFixed(2));
-        $("#lblFinalAmount").text(finalAmount.toFixed(2));
-        $("#hfSelectedMedicines").val(JSON.stringify(selectedMedicines));
-        $("#hfGrandTotal").val(grandTotal.toFixed(2));
     }
+});
 
-    $(document).ready(function(){
-        renderMedicinesTable();
 
-        // Patient selection & checkup dates
-        $("#ddlPatient").change(function(){
-            var patientId = $(this).val();
-            if(patientId){
-                $.get('@Url.Action("GetPatientName","Pharmacy")', { patientId: patientId }, function(data){
-                    $("input[name='PatientName']").val(data.name);
+    // Category -> Medicine dropdown
+    $("#ddlCategory").change(function(){
+        var categoryId = $(this).val();
+        $("#ddlMedicine").empty().append('<option value="">-- Select Medicine --</option>');
+        $("#txtAvailableQty").val('');
+        $("#txtMRP").val('');
+        if(categoryId){
+            $.get('@Url.Action("GetMedicinesByCategory","Pharmacy")', { categoryId: categoryId }, function(data){
+                data.forEach(function(m){
+                    $("#ddlMedicine").append(`<option value="${m.id}">${m.name}</option>`);
                 });
-                $.get('@Url.Action("GetPatientCheckupDates","Pharmacy")', { patientId: patientId }, function(dates){
-                    var container = $("#checkupDatesContainer");
-                    container.empty();
-                    dates.forEach(function(date){
-                        var btn = $('<button type="button" class="btn btn-info btn-sm m-1"></button>');
-                        btn.text(date.checkupDateStr);
-                        btn.attr('data-checkupid', date.checkupId);
-                        container.append(btn);
-                    });
-                });
-            } else {
-                $("input[name='PatientName']").val('');
-                $("#checkupDatesContainer").empty();
-            }
-        });
+            });
+        }
+    });
 
-        // Click checkup date
-        $("#checkupDatesContainer").on("click", "button", function(){
-            var checkupId = $(this).data("checkupid");
-            if(checkupId){
-                $.get('@Url.Action("GetMedicinesByCheckup","Pharmacy")', { checkupId: checkupId }, function(meds){
-                    selectedMedicines = meds.map(function(m){
-                        return {
-                            MedicineId: parseInt(m.MedicineId) || 0,
-                            MedicineName: m.MedicineName || "",
-                            CategoryName: m.CategoryName || "",
-                            Quantity: parseInt(m.RequestedQty || 0),
-                            MRP: parseFloat(m.MRP) || 0,
-                            Total: (parseFloat(m.MRP) || 0) * (parseInt(m.RequestedQty || 0))
-                        };
-                    });
-                    renderMedicinesTable();
-                });
-            }
-        });
-
-        // Category -> Medicine
-        $("#ddlCategory").change(function(){
-            var categoryId = $(this).val();
-            $("#ddlMedicine").empty().append('<option value="">-- Select Medicine --</option>');
+    // Medicine details
+    $("#ddlMedicine").change(function(){
+        var medId = $(this).val();
+        if(medId){
+            $.get('@Url.Action("GetMedicineDetails","Pharmacy")', { productId: medId }, function(data){
+                $("#txtAvailableQty").val(data.qty);
+                $("#txtMRP").val(parseFloat(data.mrp).toFixed(2));
+            });
+        } else {
             $("#txtAvailableQty").val('');
             $("#txtMRP").val('');
-            if(categoryId){
-                $.get('@Url.Action("GetMedicinesByCategory","Pharmacy")', { categoryId: categoryId }, function(data){
-                    data.forEach(function(m){
-                        $("#ddlMedicine").append(`<option value="${m.id}">${m.name}</option>`);
-                    });
-                });
-            }
-        });
-
-        $("#ddlMedicine").change(function(){
-            var medId = $(this).val();
-            if(medId){
-                $.get('@Url.Action("GetMedicineDetails","Pharmacy")', { productId: medId }, function(data){
-                    $("#txtAvailableQty").val(data.qty);
-                    $("#txtMRP").val(parseFloat(data.mrp).toFixed(2));
-                });
-            } else {
-                $("#txtAvailableQty").val('');
-                $("#txtMRP").val('');
-            }
-        });
-
-        // Add medicine
-        $("#btnAddMedicine").click(function(){
-            var catText = $("#ddlCategory option:selected").text();
-            var medText = $("#ddlMedicine option:selected").text();
-            var medId = $("#ddlMedicine").val();
-            var qty = parseInt($("#txtQuantity").val());
-            var available = parseInt($("#txtAvailableQty").val());
-            var mrp = parseFloat($("#txtMRP").val());
-
-            if(!medId || qty <= 0 || qty > available){
-                alert("Invalid selection or quantity exceeds available stock.");
-                return;
-            }
-
-            var exists = selectedMedicines.some(function(m){ return m.MedicineId == medId; });
-            if(exists){ alert("Medicine already added."); return; }
-
-            selectedMedicines.push({
-                MedicineId: parseInt(medId),
-                MedicineName: medText,
-                CategoryName: catText,
-                Quantity: qty,
-                MRP: mrp,
-                Total: qty*mrp
-            });
-
-            renderMedicinesTable();
-        });
-
-        // Editable Qty
-        $("#tblMedicines").on("input", ".txtQty", function(){
-            var idx = $(this).data("index");
-            var newQty = parseInt($(this).val()) || 0;
-            selectedMedicines[idx].Quantity = newQty;
-            selectedMedicines[idx].Total = selectedMedicines[idx].MRP * newQty;
-            renderMedicinesTable();
-        });
-
-        // Remove
-        $("#tblMedicines").on("click", ".btnRemove", function(){
-            var idx = $(this).data("index");
-            selectedMedicines.splice(idx, 1);
-            renderMedicinesTable();
-        });
-
-        // Discount / GST
-        $("#txtDiscount,#txtGST").on("input", function(){
-            renderMedicinesTable();
-        });
+        }
     });
+
+    // Add medicine manually
+    $("#btnAddMedicine").click(function(){
+        var catText = $("#ddlCategory option:selected").text();
+        var medText = $("#ddlMedicine option:selected").text();
+        var medId = $("#ddlMedicine").val();
+        var qty = parseInt($("#txtQuantity").val());
+        var available = parseInt($("#txtAvailableQty").val());
+        var mrp = parseFloat($("#txtMRP").val());
+
+        if(!medId || qty <= 0 || qty > available){
+            alert("Invalid selection or quantity exceeds available stock.");
+            return;
+        }
+
+        var exists = selectedMedicines.some(function(m){ return m.MedicineId == medId; });
+        if(exists){ alert("Medicine already added."); return; }
+
+        selectedMedicines.push({
+            MedicineId: parseInt(medId),
+            MedicineName: medText,
+            CategoryName: catText,
+            Quantity: qty,
+            MRP: mrp,
+            Total: qty * mrp
+        });
+
+        renderMedicinesTable();
+    });
+
+    // Remove medicine
+    $("#tblMedicines").on("click", ".btnRemove", function(){
+        var idx = $(this).data("index");
+        selectedMedicines.splice(idx, 1);
+        renderMedicinesTable();
+    });
+
+    // Discount / GST update
+    $("#txtDiscount,#txtGST").on("input", function(){
+        renderMedicinesTable();
+    });
+});
 </script>
 }
+
