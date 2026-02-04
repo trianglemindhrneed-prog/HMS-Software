@@ -1,4 +1,41 @@
 ﻿@model List<HMSCore.Areas.Admin.Models.IpdAdmission>
+
+@{
+    ViewData["Title"] = "IPD Admissions";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<head>
+
+    <style>
+        .btn-secondary {
+            background: #18d118bf;
+            font-weight: bold;
+            color: aliceblue;
+        }
+
+            .btn-secondary:hover {
+                color: aliceblue;
+            }
+    </style>
+
+
+
+
+
+</head>
+@if (TempData["Message"] != null)
+{
+    <script>
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: "3000"
+        };
+        toastr["@TempData["MessageType"]"]("@TempData["Message"]");
+    </script>
+}
 <section class="content-header">
     <h1>IPD Admissions</h1>
 </section>
@@ -20,6 +57,14 @@
 
             <div class="pull-right">
                 <form method="get" asp-action="IPDPatients" class="form-inline mb-3">
+
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
 
                     <select name="status"
                             class="form-control input-sm"
@@ -130,10 +175,15 @@
                                       onsubmit="return confirm('Are you sure?')">
                                     <input type="hidden" name="id" value="@p.AdmissionId" />
                                     <input type="hidden" name="actionType" value="Delete" />
-                                    <button class="btn btn-danger btn-sm">
+                                    <button class="btn btn-danger btn-sm" >
                                         <i class="fa fa-trash"></i>
                                     </button>
+
+
                                 </form>
+
+
+
                             </td>
                         </tr>
                                         }

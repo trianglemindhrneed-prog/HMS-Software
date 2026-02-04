@@ -2,7 +2,9 @@
 @{
     ViewData["Title"] = "Add Patient";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
 }
+
 <head>
     <style>
         .btn-secondary {
@@ -73,8 +75,14 @@
     <div class="form-group">
         <label class="col-md-2 control-label">Contact No *</label>
         <div class="col-md-4">
-            <input asp-for="ContactNo" class="form-control" placeholder="Enter Contact Number" />
-            <span asp-validation-for="ContactNo" class="text-danger"></span>
+                    <input asp-for="ContactNo"
+                           class="form-control"
+                           placeholder="Enter Contact Number"
+                           maxlength="10"
+                           minlength="10"
+                           onkeypress="return event.charCode >= 48 && event.charCode <= 57" />
+
+                    <span asp-validation-for="ContactNo" class="text-danger"></span>
         </div>
     </div>
             <div class="form-group">
