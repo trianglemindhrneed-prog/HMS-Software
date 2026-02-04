@@ -94,10 +94,16 @@ public class IPDController : BaseController
             new SqlParameter("@Status",model.Status)
         };
 
+
+
         await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", param);
-        TempData["Success"] = "IPD Admission Saved Successfully";
+
+        TempData["Message"] = "IPD Admission Saved Successfully";
+        TempData["MessageType"] = "success";
 
         return RedirectToAction("IPDPatients");
+
+
     }
 
     /* ================= LIST + SEARCH ================= */
@@ -207,8 +213,6 @@ public class IPDController : BaseController
     }
 
 
-
-
     //========= IPDCheckupHistory ====================
     public async Task<IActionResult> IPDCheckupHistory(string pid)
     {
@@ -292,90 +296,68 @@ public class IPDController : BaseController
     // ===============================
     // DELETE CHECKUP (AJAX)
     // ===============================
-    [HttpPost]
-    public async Task<IActionResult> DeleteCheckup(int checkupId)
-    {
-        SqlParameter[] param =
-        {
-                        new SqlParameter("@Action","DELETE_CHECKUP"),
-                        new SqlParameter("@CheckupId",checkupId)
-                    };
+    //[HttpPost]
+    //public async Task<IActionResult> DeletePatients(int id)
+    //{
+    //    await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", new[]
+    //    {
+    //    new SqlParameter("@Action", "DeletePatient"),
+    //    new SqlParameter("@PatientId", id)
+    //});
 
-        await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", param);
-        return Json(new { success = true });
+    //    TempData["Message"] = "Patient deleted successfully";
+    //    TempData["MessageType"] = "success";
+
+    //    return RedirectToAction("IPDPatients");
+    //}
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteIPDPatient(int id)
+    {
+        await _dbLayer.ExecuteSPAsync(
+            "sp_IPDAdmission_Manage",
+            new[]
+            {
+            new SqlParameter("@Action", "DELETE"),
+            new SqlParameter("@AdmissionID", id)
+            });
+
+        TempData["Message"] = "IPD patient deleted successfully";
+        TempData["MessageType"] = "success";
+
+        return RedirectToAction("IPDPatients");
     }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteSelectedIPD(int[] selectedIds)
+    {
+        if (selectedIds != null && selectedIds.Length > 0)
+        {
+            foreach (var id in selectedIds)
+            {
+                await _dbLayer.ExecuteSPAsync(
+                    "sp_IPDAdmission_Manage",
+                    new[]
+                    {
+                    new SqlParameter("@Action", "DELETE"),
+                    new SqlParameter("@AdmissionID", id)
+                    });
+            }
+
+            TempData["Message"] = "Selected IPD patients deleted successfully";
+            TempData["MessageType"] = "success";
+        }
+        else
+        {
+            TempData["Message"] = "No IPD patients selected";
+            TempData["MessageType"] = "error";
+        }
+
+        return RedirectToAction("IPDPatients");
+    }
+
+
 }
 
-    //public async Task<IActionResult> IPDCheckupHistory(string pid)
-    //{
-    //    if (string.IsNullOrEmpty(pid))
-    //        return RedirectToAction("IPDPatients");
-
-    //    IPDCheckupHistoryPageVM model = new();
-
-    //    // ===== PATIENT PROFILE =====
-    //    var profileParam = new SqlParameter[]
-    //    {
-    //            new SqlParameter("@Action","GETBY_PATIENTID"),
-    //            new SqlParameter("@PatientID", pid)
-    //    };
-    //    DataTable dtProfile = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", profileParam);
-
-    //    if (dtProfile.Rows.Count > 0)
-    //    {
-    //        var r = dtProfile.Rows[0];
-    //        model.Patient.PatientID = r["PatientID"].ToString();
-    //        model.Patient.Name = r["Name"].ToString();
-    //        model.Patient.Age = r["Age"] == DBNull.Value ? null : (int?)Convert.ToInt32(r["Age"]);
-    //        model.Patient.Gender = r["Gender"].ToString();
-    //        model.Patient.Number = r["Number"].ToString();
-    //        model.Patient.Address = r["Address"].ToString();
-    //        model.Patient.ProfilePath = r["ProfilePath"].ToString();
-    //    }
-
-    //    // ===== CHECKUP HISTORY =====
-    //    var chkParam = new SqlParameter[]
-    //    {
-    //            new SqlParameter("@Action","CHECKUP_HISTORY"),
-    //            new SqlParameter("@AdmissionID", dtProfile.Rows[0]["AdmissionID"])
-    //    };
-    //    DataTable dtCheckups = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", chkParam);
-
-    //    foreach (DataRow row in dtCheckups.Rows)
-    //    {
-    //        IPDCheckupHistoryPageVM.IPDCheckupVM chk = new()
-    //        {
-    //            CheckupId = Convert.ToInt32(row["CheckupId"]),
-    //            CheckupDate = row["CheckupDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(row["CheckupDate"]),
-    //            DoctorName = row["DoctorName"].ToString(),
-    //            Symptoms = row["Symptoms"].ToString(),
-    //            Diagnosis = row["Diagnosis"].ToString(),
-    //            ExtraNotes = row["ExtraNotes"].ToString()
-    //        };
-
-    //        // ===== PRESCRIPTIONS =====
-    //        var preParam = new SqlParameter[]
-    //        {
-    //                new SqlParameter("@Action","PRESCRIPTION"),
-    //                new SqlParameter("@CheckupId", chk.CheckupId)
-    //        };
-    //        DataTable dtPre = await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", preParam);
-
-    //        foreach (DataRow p in dtPre.Rows)
-    //        {
-    //            chk.Prescriptions.Add(new IPDCheckupHistoryPageVM.IPDPrescriptionVM
-    //            {
-    //                MedicineName = p["MedicineName"].ToString(),
-    //                NoOfDays = p["NoOfDays"].ToString(),
-    //                WhenToTake = p["WhenToTake"].ToString(),
-    //                IsBeforeMeal = Convert.ToBoolean(p["IsBeforeMeal"])
-    //            });
-    //        }
-
-    //        model.Checkups.Add(chk);
-    //    }
-
-    //    return View(model);
-    //}
 
 

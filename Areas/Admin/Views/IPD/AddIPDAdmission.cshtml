@@ -1,6 +1,52 @@
 ﻿@using HMSCore.Areas.Admin.Models
 @model IpdAdmission
 
+
+<style>
+    <style >
+    .field-validation-error {
+        display: block;
+        min-height: 18px; /* space reserved */
+        font-size: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+
+    /* Har form control ke liye spacing */
+    .form-control,
+    select,
+    textarea {
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    /* Har field ke niche gap */
+    .form-group,
+    .col-md-3,
+    .col-md-4 {
+        margin-bottom: 18px;
+    }
+
+    /* Validation message ke liye fixed space */
+    .field-validation-error {
+        display: block;
+        min-height: 18px;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    label {
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+</style>
+
+
+
+
 @{
     ViewData["Title"] = "IPD Admission";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
@@ -8,8 +54,9 @@
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show">
         @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
     </div>
 }
 <script>
@@ -60,109 +107,127 @@
                 </div>
             }
 
-            <form asp-action="AddIPDAdmission" method="post">
-             <div class="row g-3">
+            <form asp-action="AddIpdAdmission" method="post">
+                <div class="row g-3">
 
+                    <!-- Patient ID -->
                     <div class="col-md-3">
                         <label class="form-label">Patient ID</label>
-                        <input type="hidden" asp-for="AdmissionId" />
-                        <input asp-for="PatientID" class="form-control" readonly style="color: green; font-weight: bold;" />
+                        <input asp-for="PatientID" class="form-control" readonly />
+                        <span asp-validation-for="PatientID" class="text-danger"></span>
                     </div>
 
+                    <!-- Name -->
                     <div class="col-md-3">
-                        <label class="form-label">Name</label>
-                        <input asp-for="Name" class="form-control" />
+                        <label class="form-label">Patient Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter Name" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
+                    <!-- Age -->
                     <div class="col-md-3">
                         <label class="form-label">Age</label>
-                        <input asp-for="Age" type="number" class="form-control" />
+                        <input asp-for="Age" class="form-control" placeholder="Age" />
+                        <span asp-validation-for="Age" class="text-danger"></span>
                     </div>
 
+                    <!-- Gender -->
                     <div class="col-md-3">
                         <label class="form-label">Gender</label>
                         <select asp-for="Gender" class="form-control">
-                            <option value="">-- Select Gender --</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
+                            <option value="">-- Select --</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
                         </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
                     </div>
 
+                    <!-- Contact Number -->
                     <div class="col-md-3">
-                        <label class="form-label">Number</label>
-                        <input asp-for="Number" class="form-control" />
+                        <label class="form-label">Contact Number</label>
+                        <input asp-for="Number"
+                               class="form-control"
+                               placeholder="Enter 10 digit contact number"
+                               maxlength="10"
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'');" />
+                        <span asp-validation-for="Number" class="text-danger"></span>
                     </div>
 
+                    <!-- Doctor -->
                     <div class="col-md-3">
                         <label class="form-label">Doctor</label>
                         <select asp-for="DoctorId"
-                                asp-items="ViewBag.DoctorList"
+                                asp-items="ViewBag.Doctors"
                                 class="form-control">
+                            <option value="">-- Select Doctor --</option>
                         </select>
-
-         
+                        <span asp-validation-for="DoctorId" class="text-danger"></span>
                     </div>
 
+                    <!-- Bed Category -->
                     <div class="col-md-3">
                         <label class="form-label">Bed Category</label>
-                       
                         <select asp-for="BedCategoryId"
-                                asp-items="ViewBag.BedCategoryList"
-                                class="form-control"
-                                id="ddlBedCategory">
+                                asp-items="ViewBag.BedCategories"
+                                class="form-control">
+                            <option value="">-- Select Category --</option>
                         </select>
-
+                        <span asp-validation-for="BedCategoryId" class="text-danger"></span>
                     </div>
 
+                    <!-- Bed -->
                     <div class="col-md-3">
                         <label class="form-label">Bed</label>
                         <select asp-for="BedId"
-                                class="form-control"
-                                id="ddlBed">
+                                asp-items="ViewBag.Beds"
+                                class="form-control">
                             <option value="">-- Select Bed --</option>
                         </select>
+                        <span asp-validation-for="BedId" class="text-danger"></span>
                     </div>
 
+                    <!-- Admission Date -->
                     <div class="col-md-3">
-                        <label class="form-label">Admission Date & Time</label>
+                        <label class="form-label">Admission Date</label>
                         <input asp-for="AdmissionDateTime"
                                type="datetime-local"
-                               class="form-control"
-                               value="@Model.AdmissionDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
-
+                               class="form-control" />
+                        <span asp-validation-for="AdmissionDateTime" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-3">
+                    <!-- Initial Diagnosis -->
+                    <div class="col-md-4">
                         <label class="form-label">Initial Diagnosis</label>
                         <textarea asp-for="InitialDiagnosis"
                                   class="form-control"
-                                  rows="2"></textarea>
+                                 ></textarea>
                     </div>
 
-                    <div class="col-md-3">
+                    <!-- Advance Amount -->
+                    <div class="col-md-4">
                         <label class="form-label">Advance Amount</label>
-                        <input asp-for="AdvanceAmount" type="number" class="form-control" />
+                        <input asp-for="AdvanceAmount"
+                               class="form-control"
+                               placeholder="Enter advance amount" />
+                        <span asp-validation-for="AdvanceAmount" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">Status</label>
-                        <select asp-for="Status" class="form-control">
-                            <option value="">-- Select Status --</option>
-                            <option value="Admitted">Admitted</option>
-                            <option value="Discharged">Discharged</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
+                    <br/>
+                    <!-- Submit -->
+                    <div class="col-md-12 text-end">
+                        <button type="submit" class="btn btn-success">
+                            Save 
+                        </button>
+                       
                     </div>
 
                 </div>
-
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="fa fa-save"></i> Save
-                    </button>
-                </div>
-
             </form>
+
+            @section Scripts {
+                <partial name="_ValidationScriptsPartial" />
+            }
 
         </div>
     </div>
