@@ -1,0 +1,155 @@
+﻿@model HMSCore.Areas.Admin.Models.IPDVital
+@{
+    ViewData["Title"] = "IPD Vital";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-@TempData["MessageType"]">
+        @TempData["Message"]
+    </div>
+}
+
+<section class="content-header">
+    <h1>Add Patients Vital</h1>
+    <ol class="breadcrumb">
+        <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#">Patients</a></li>
+        <li class="active">Add Patients Vital</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form asp-action="IpdVital"
+                          asp-controller="IPD"
+                          asp-area="Admin"
+                          method="post"
+                          class="form-horizontal">
+
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="VitalsId" />
+
+                        <!-- ================= ROW 1 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label>Patient</label>
+                                <select asp-for="PatientId"
+                                        asp-items="ViewBag.PatientList"
+                                        class="form-control">
+                                    <option value="">-- Select Patient --</option>
+                                </select>
+                                <span asp-validation-for="PatientId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Date</label>
+                                <input asp-for="RecordedDate"
+                                       type="date"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Weight (kg)</label>
+                                <input asp-for="Weight" class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Height (cm)</label>
+                                <input asp-for="Height" class="form-control" />
+                            </div>
+                        </div>
+
+                        <!-- ================= ROW 2 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label>Temperature (°C)</label>
+                                <input asp-for="Temperature"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Blood Pressure</label>
+                                <input asp-for="BP"
+                                       placeholder="120/80"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Pulse Rate</label>
+                                <input asp-for="Pulse"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label>Respiratory Rate</label>
+                                <input asp-for="RR"
+                                       class="form-control" />
+                            </div>
+                        </div>
+
+                        <!-- ================= ROW 3 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label>SpO2 (%)</label>
+                                <input asp-for="SpO2"
+                                       class="form-control" />
+                            </div>
+                          
+                                <div class="col-md-3">
+                                    <label>Blood Group</label>
+                                    <select asp-for="BloodGroup" class="form-control">
+                                        <option value="">-- Select --</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+
+
+                            <div class="col-md-6">
+                                <label>Remarks</label>
+                                <textarea asp-for="Notes"
+                                          rows="2"
+                                          class="form-control"></textarea>
+                            </div>
+                        </div>
+                      
+                        <!-- ================= BUTTONS ================= -->
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit"
+                                        class="btn btn-primary btn-flat">
+                                    Save
+                                </button>
+
+                                <a asp-action="IpdVitalDetails"
+                                   asp-controller="IPD"
+                                   asp-area="Admin"
+                                   class="btn btn-default btn-flat">
+                                    Clear
+                                </a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
