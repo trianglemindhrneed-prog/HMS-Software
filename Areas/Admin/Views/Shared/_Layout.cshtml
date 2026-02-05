@@ -205,22 +205,16 @@
                                 @if (ViewBag.UserRole == "Admin")
  
                                 {
-                                    <li>
-                                        <a href="@Url.Action("AddIPDAdmission", "IPD")">
-                                            <i class="fa fa-user-plus"></i> IPD Admission
-                                        </a>
-                                    </li>
- 
+                                    <li><a href="@Url.Action("AddIPDAdmission", "IPD")"><i class="fa fa-user-plus"></i> IPD Admissions </a> </li>
+                                    
                                 }
-                                <li>
-                                    <a href="@Url.Action("IPDPatients", "IPD")">
-                                        <i class="fa fa-user-plus"></i> IPD Patients
-                                    </a>
-                                    </li>
-                                 
+                                <li><a href="@Url.Action("IPDPatients", "IPD")"><i class="fa fa-user-plus"></i> IPD Patients </a> </li>
+
                                 <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
                                 <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
-                                <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
+
+                                <li><a href="@Url.Action("IpdVitalDetails", "IPD")"><i class="fa fa-user-plus"></i> Vital Details </a> </li>
+
                                 <li><a href="IPDPNDetails.aspx"><i class="fa fa-notes-medical"></i> Progress Notes</a></li>
                                 <li><a href="IPDBillingLedgerDetails.aspx"><i class="fa fa-file-invoice-dollar"></i> Billing Ledger</a></li>
                                 <li><a href="IPDNursingTasksDetails.aspx"><i class="fa fa-tasks"></i> Nursing Tasks / Order Sheet</a></li>
