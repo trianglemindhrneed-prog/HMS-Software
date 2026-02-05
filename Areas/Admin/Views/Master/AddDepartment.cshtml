@@ -14,13 +14,7 @@
 <section class="content">
     <div class="row">
         <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    @if (TempData["Message"] != null)
-                    {
-                        <div class="alert alert-success">@TempData["Message"]</div>
-                    }
-                </div>
+            <div class="box"> 
                 <div class="box-body">
                     <form asp-action="AddDepartment" method="post" class="form-horizontal">
                         <input type="hidden" asp-for="DepartmentId" />

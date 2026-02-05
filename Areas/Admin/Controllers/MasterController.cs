@@ -99,10 +99,19 @@ namespace HMSCore.Areas.Admin.Controllers
 
                 TempData["MessageType"] = "success";
             }
+            catch (SqlException ex)
+            {
+                // Handle RAISERROR from SP
+                TempData["Message"] = ex.Message;
+                TempData["MessageType"] = "error";
+
+                return View(model); // Return to the same view with input data
+            }
             catch (Exception)
             {
                 TempData["Message"] = "Something went wrong. Please try again.";
                 TempData["MessageType"] = "error";
+                return View(model);
             }
 
             return RedirectToAction("DepartmentList");
@@ -413,7 +422,7 @@ namespace HMSCore.Areas.Admin.Controllers
             }
 
             // Handle Profile Image Upload
-            string profilePath = model.ProfileImagePath; // keep old path if no new upload
+            string profilePath = model.ProfileImagePath;
             if (ProfileImage != null && ProfileImage.Length > 0)
             {
                 string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/doctors");
@@ -427,7 +436,7 @@ namespace HMSCore.Areas.Admin.Controllers
                     await ProfileImage.CopyToAsync(fileStream);
                 }
 
-                profilePath = "/uploads/doctors/" + uniqueFileName; // relative path for DB/View
+                profilePath = "/uploads/doctors/" + uniqueFileName;
             }
 
             try
@@ -445,7 +454,7 @@ namespace HMSCore.Areas.Admin.Controllers
             new SqlParameter("@Address", model.Address),
             new SqlParameter("@Password", model.Password),
             new SqlParameter("@IsActive", model.IsActive),
-            new SqlParameter("@ProfileImagePath", profilePath) // ✅ save path in DB
+            new SqlParameter("@ProfileImagePath", profilePath)
         };
 
                 await _dbLayer.ExecuteSPAsync("sp_ManageDoctor", parameters);
@@ -455,7 +464,14 @@ namespace HMSCore.Areas.Admin.Controllers
                     : "Doctor updated successfully!";
                 TempData["MessageType"] = "success";
             }
-            catch (Exception ex)
+            catch (SqlException ex)
+            {
+                // Catch RAISERROR from SP for duplicates
+                TempData["Message"] = ex.Message;
+                TempData["MessageType"] = "error";
+                return View(model);
+            }
+            catch (Exception)
             {
                 TempData["Message"] = "Something went wrong while saving doctor.";
                 TempData["MessageType"] = "error";
@@ -630,12 +646,10 @@ namespace HMSCore.Areas.Admin.Controllers
             // ----------------------------
             if (model.ProfileImage != null && model.ProfileImage.Length > 0)
             {
-                // Folder path
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/nurses");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                // Unique file name
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfileImage.FileName);
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -644,7 +658,6 @@ namespace HMSCore.Areas.Admin.Controllers
                     await model.ProfileImage.CopyToAsync(stream);
                 }
 
-                
                 model.ProfileImagePath = "/uploads/nurses/" + fileName;
             }
 
@@ -702,7 +715,14 @@ namespace HMSCore.Areas.Admin.Controllers
                 TempData["Message"] = action == "Insert" ? "Nurse added successfully!" : "Nurse updated successfully!";
                 TempData["MessageType"] = "success";
             }
-            catch (Exception ex)
+            catch (SqlException ex)
+            {
+                // Handle duplicate error from SP
+                TempData["Message"] = ex.Message;
+                TempData["MessageType"] = "error";
+                return View(model);
+            }
+            catch (Exception)
             {
                 TempData["Message"] = "Something went wrong while saving nurse.";
                 TempData["MessageType"] = "error";
