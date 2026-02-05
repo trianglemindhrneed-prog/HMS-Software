@@ -85,9 +85,33 @@
                         </div>
 </div>
 </div> 
+<!-- Booking Result Modal -->
+<div class="modal fade" id="bookingResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Appointment Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p id="bookingResultMessage"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
     function isValidEmail(email) {
         var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
@@ -143,19 +167,37 @@
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(model),
-            success: function(res){
-                if(res.success){ 
-                    var msg = "✅ Your appointment is booked successfully!\n\n" +
-                              "Booking ID: " + res.bookingId + "\n" +
-                              "Date: " + $("#calendar").val() + "\n" +
-                              "Slot: " + $("#hdnSlotTime").val() + "\n\n" +
-                              "Please check your email for details.";
-                    alert(msg); 
+                    success: function (res) {
+            if (res.success) {
+
+                var msg = `
+                    <strong>✅ Appointment Booked Successfully!</strong><br><br>
+                    <b>Booking ID:</b> ${res.bookingId}<br>
+                    <b>Date:</b> ${$("#calendar").val()}<br>
+                    <b>Slot:</b> ${$("#hdnSlotTime").val()}<br><br>
+                    Please check your email for details.
+                `;
+
+                $("#bookingResultMessage").html(msg);
+
+                $("#bookingResultModal .modal-header")
+                    .removeClass("bg-danger")
+                    .addClass("bg-success");
+
+                $("#bookingResultModal").modal("show");
+
+                // Reload after modal close
+                $("#bookingResultModal").on("hidden.bs.modal", function () {
                     location.reload();
-                } else {
-                    $("#bookingMessage").html('<span class="text-danger">⚠ ' + res.message + '</span>');
-                }
-            },
+                });
+
+            } else {
+                $("#bookingMessage").html(
+                    '<span class="text-danger">⚠ ' + res.message + '</span>'
+                );
+            }
+        },
+
             error: function(xhr){
                 $("#bookingMessage").html('<span class="text-danger">Error occurred: '+xhr.statusText+'</span>');
             }
@@ -228,45 +270,6 @@
                 return hh.toString().padStart(2,'0') + ':' + mm + ' ' + ampm;
             }
 
-            // function loadSlots() {
-            //     var docId = $("#ddlDoctors").val();
-            //     if (!docId) {
-            //         $("#slotsContainer").empty();
-            //         $("#bookingFormContainer").hide();
-            //         return;
-            //     }
-
-            //     $.getJSON('/BookAppointment/GetSchedules', { doctorId: docId, date: selectedDate }, function (data) {
-            //         $("#slotsContainer").empty();
-            //         $("#bookingFormContainer").hide();
-            //         selectedSlot = null;
-
-            //         if (data.error) { alert('Error loading slots: ' + data.message); return; }
-
-            //         // Use a map to prevent duplicates and mark priority
-            //         var slotMap = {}; // key = 24-hour time, value = type
-            //         $.each(data.available, function(i, s){ slotMap[parseTo24Hour(s)] = 'available'; });
-            //         $.each(data.timeout, function(i, s){ slotMap[parseTo24Hour(s)] = 'timeout'; });
-            //         $.each(data.blocked, function(i, s){ slotMap[parseTo24Hour(s)] = 'blocked'; });
-            //         $.each(data.booked, function(i, s){ slotMap[parseTo24Hour(s)] = 'booked'; }); // booked overrides others
-
-            //         // Convert map to sorted array
-            //         var allSlots = Object.keys(slotMap)
-            //             .sort(function(a,b){ return parseTimeToMinutes(a) - parseTimeToMinutes(b); })
-            //             .map(function(t){ return { time: t, type: slotMap[t] }; });
-
-            //         // Render buttons
-            //         $.each(allSlots, function(i, slot){
-            //             var displayTime = to12HourFormat(slot.time);
-            //             var btn = '';
-            //             if(slot.type === 'available') btn = '<button class="btn slotBtn btn-success" data-slot="'+displayTime+'">'+displayTime+'</button>';
-            //             if(slot.type === 'booked') btn = '<button class="btn btn-primary" disabled>'+displayTime+'</button>';
-            //             if(slot.type === 'timeout') btn = '<button class="btn btn-pink" disabled>'+displayTime+'</button>';
-            //             if(slot.type === 'blocked') btn = '<button class="btn btn-danger" disabled>'+displayTime+'</button>';
-            //             $("#slotsContainer").append(btn);
-            //         });
-            //     });
-            // }
                     function loadSlots() {
             var docId = $("#ddlDoctors").val();
             if (!docId) {
@@ -337,49 +340,7 @@
                 $("#hdnSlotTime").val(selectedSlot);
                 $("#bookingFormContainer").slideDown();
             });
-
-            // Book appointment
-        //     $("#btnBook").click(function() {
-        //         if (!selectedSlot) { alert("Please select a slot!"); return; }
-
-        //         var model = {
-        //             SelectedDepartmentId: $("#ddlDepartments").val(),
-        //             SelectedDoctorId: $("#ddlDoctors").val(),
-        //             SelectedDate: selectedDate,
-        //             SelectedSlot: selectedSlot,
-        //             PatientName: $("#txtName").val(),
-        //             Phone: $("#txtPhone").val(),
-        //             Email: $("#txtEmail").val(),
-        //             Message: $("#txtMessage").val(),
-        //             PaymentMode: $("#ddlPayment").val()
-        //         };
-
-        //         $.ajax({
-        //             url: '/BookAppointment/BookAppointment',
-        //             type: 'POST',
-        //             contentType: 'application/json',
-        //             data: JSON.stringify(model),
-        //             success: function(res){
-        //                       if(res.success){ 
-        //     var msg = "✅ Your appointment is booked successfully!\n\n" +
-        //               "Booking ID: " + res.bookingId + "\n" +
-        //               "Date: " + selectedDate + "\n" +
-        //               "Slot: " + selectedSlot + "\n\n" +
-        //               "Please check your email for details.";
-
-        //     alert(msg); 
-        //     location.reload();
-        // } else {
-        //     $("#bookingMessage").html('<span class="text-danger">⚠ ' + res.message + '</span>');
-        // }
-
-        //             },
-        //             error: function(xhr){
-        //                 $("#bookingMessage").html('<span class="text-danger">Error occurred: '+xhr.statusText+'</span>');
-        //             }
-        //         });
-        //     });
-
+             
             function getToday() {
                 var today = new Date();
                 var yyyy = today.getFullYear();
