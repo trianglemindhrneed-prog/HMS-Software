@@ -1150,7 +1150,109 @@ namespace HMSCore.Areas.Admin.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> TodayPatientsDetails(
+             string filterColumn = null,
+             string keyword = null,
+             string fromDate = null,
+             string toDate = null,
+             int pageSize = 20)
+        {
 
+
+            object fromDateValue = string.IsNullOrEmpty(fromDate)
+                ? DBNull.Value
+                : DateTime.ParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            object toDateValue = string.IsNullOrEmpty(toDate)
+                ? DBNull.Value
+                : DateTime.ParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture).AddDays(1);
+
+
+            // Prepare SQL parameters for the stored procedure
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Action", "SelectPatients"),
+        new SqlParameter("@FilterColumn", string.IsNullOrEmpty(filterColumn) ? DBNull.Value : (object)filterColumn),
+        new SqlParameter("@Keyword", string.IsNullOrEmpty(keyword) ? DBNull.Value : (object)keyword),
+        new SqlParameter("@FromDate", fromDateValue),
+        new SqlParameter("@ToDate", toDateValue)
+            };
+
+            // Execute stored procedure
+            DataTable dt = await _dbLayer.ExecuteSPAsync("sp_OpdManageTodayPatients", parameters);
+
+            // Map DataTable to ViewModel with DBNull-safe conversions
+            var patients = dt.AsEnumerable().Select(r => new PatientsDetailsViewModel
+            {
+                Id = r["Id"] == DBNull.Value ? 0 : Convert.ToInt32(r["Id"]),
+                PatientId = r["PatientId"] == DBNull.Value ? null : r["PatientId"].ToString(),
+                PatientName = r["PatientName"] == DBNull.Value ? null : r["PatientName"].ToString(),
+                Age = r["Age"] == DBNull.Value ? null : r["Age"].ToString(),
+                ContactNo = r["ContactNo"] == DBNull.Value ? null : r["ContactNo"].ToString(),
+                Address1 = r["Address1"] == DBNull.Value ? null : r["Address1"].ToString(),
+                ConsultFee = r["ConsultFee"] == DBNull.Value ? null : r["ConsultFee"].ToString(),
+                DepartmentName = r["DepartmentName"] == DBNull.Value ? null : r["DepartmentName"].ToString(),
+                DoctorName = r["DoctorName"] == DBNull.Value ? null : r["DoctorName"].ToString(),
+                DoctorNumber = r["DoctorNumber"] == DBNull.Value ? null : r["DoctorNumber"].ToString(),
+                CreatedDate = r["CreatedDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["CreatedDate"])
+            }).ToList();
+
+            // Prepare ViewModel for the view
+            var vm = new PatientsDetailsViewModel
+            {
+                PageSize = pageSize,
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = string.IsNullOrEmpty(fromDate) ? (DateTime?)null : DateTime.Parse(fromDate),
+                ToDate = string.IsNullOrEmpty(toDate) ? (DateTime?)null : DateTime.Parse(toDate),
+                Patients = patients
+            };
+
+            return View(vm);
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTodayPatients(int id)
+        {
+            await _dbLayer.ExecuteSPAsync("sp_OpdManageTodayPatients", new[]
+            {
+        new SqlParameter("@Action", "DeletePatient"),
+        new SqlParameter("@PatientId", id)
+    });
+
+            TempData["Message"] = "Patient deleted successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("PatientsDetails");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTodayPatientSelected(int[] selectedIds)
+        {
+            if (selectedIds != null && selectedIds.Length > 0)
+            {
+                foreach (var id in selectedIds)
+                {
+                    await _dbLayer.ExecuteSPAsync("sp_OpdManageTodayPatients", new[]
+                    {
+                new SqlParameter("@Action", "DeletePatient"),
+                new SqlParameter("@PatientId", id)
+            });
+                }
+
+                TempData["Message"] = "Selected patients deleted successfully";
+                TempData["MessageType"] = "success";
+            }
+            else
+            {
+                TempData["Message"] = "No patients selected";
+                TempData["MessageType"] = "error";
+            }
+
+            return RedirectToAction("PatientsDetails");
+        }
 
     }
 }

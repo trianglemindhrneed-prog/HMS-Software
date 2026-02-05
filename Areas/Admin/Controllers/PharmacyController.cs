@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace HMSCore.Areas.Admin.Controllers
@@ -295,7 +296,95 @@ namespace HMSCore.Areas.Admin.Controllers
         }
 
 
+        [HttpGet]
+        public async Task<IActionResult> BillSaleMedicine(
+     string filterColumn = null,
+     string keyword = null,
+     DateTime? fromDate = null,
+     DateTime? toDate = null)
+        {
+            var dt = await _dbLayer.ExecuteSPAsync(
+                "SP_SaleMedicineReport",
+                new[]
+                {
+            new SqlParameter("@FilterColumn", (object)filterColumn ?? DBNull.Value),
+            new SqlParameter("@Keyword", (object)keyword ?? DBNull.Value),
+            new SqlParameter("@FromDate", (object)fromDate ?? DBNull.Value),
+            new SqlParameter("@ToDate", (object)toDate?.AddDays(1) ?? DBNull.Value)
+                });
 
+            var list = dt.AsEnumerable().Select(r => new SaleMedicineReportViewModel
+            {
+                Id = Convert.ToInt32(r["Id"]),
+                InvoiceId = r["InvoiceId"].ToString(),
+                InvoiceDate = Convert.ToDateTime(r["InvoiceDate"]),
+                PatientId = r["PatientId"].ToString(),
+                PatientName = r["PatientName"].ToString(),
+                GrandTotal = Convert.ToDecimal(r["GrandTotal"]),
+                FinalAmount = Convert.ToDecimal(r["FinalAmount"])
+            }).ToList();
+
+            return View(new SaleMedicineReportPageVM
+            {
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Records = list
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteMedicineBill(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                TempData["Message"] = "Invalid invoice";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("BillSaleMedicine");
+            }
+
+            await _dbLayer.ExecuteSPAsync(
+                "SP_SaleMedicineReport",
+                new[]
+                {
+            new SqlParameter("@Action", "DELETE"),
+            new SqlParameter("@InvoiceId", id)
+                });
+
+            TempData["Message"] = "Invoice deleted successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("BillSaleMedicine");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedMedicine(string[] selectedIds)
+        {
+            if (selectedIds == null || selectedIds.Length == 0)
+            {
+                TempData["Message"] = "No invoice selected";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("BillSaleMedicine");
+            }
+
+            foreach (var invoiceId in selectedIds)
+            {
+                await _dbLayer.ExecuteSPAsync(
+                    "SP_SaleMedicineReport",
+                    new[]
+                    {
+                new SqlParameter("@Action", "DELETE"),
+                new SqlParameter("@InvoiceId", invoiceId)
+                    });
+            }
+
+            TempData["Message"] = "Selected invoices deleted successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("BillSaleMedicine");
+        }
 
     }
 

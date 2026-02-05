@@ -200,24 +200,10 @@
                             </a>
                             <ul class="treeview-menu">
  
-                                @if (role == "Admin")
- 
-                                @if (ViewBag.UserRole == "Admin")
- 
-                                {
-                                    <li>
-                                        <a href="@Url.Action("AddIPDAdmission", "IPD")">
-                                            <i class="fa fa-user-plus"></i> IPD Admission
-                                        </a>
-                                    </li>
- 
-                                }
-                                <li>
-                                    <a href="@Url.Action("IPDPatients", "IPD")">
-                                        <i class="fa fa-user-plus"></i> IPD Patients
-                                    </a>
-                                    </li>
-                                 
+                                @if (role == "Admin") {
+                             <li> <a href="@Url.Action("AddIPDAdmission", "IPD")">  <i class="fa fa-user-plus"></i> IPD Admission </a> </li>
+  
+                                <li>  <a href="@Url.Action("IPDPatients", "IPD")">  <i class="fa fa-user-plus"></i> IPD Patients </a> </li> 
                                 <li><a href="IPDDischargePList.aspx"><i class="fa fa-user-check"></i> IPD Discharged Patients</a></li>
                                 <li><a href="IpdSaleProduct.aspx"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
                                 <li><a href="IpdVitalDetails.aspx"><i class="fa fa-heartbeat"></i> Vital Details</a></li>
@@ -251,12 +237,10 @@
                                 <li><a href="/admin/OPD/PatientsBill"><i class="fa fa-receipt"></i> Create Patient Bill</a></li>
                                 <li><a href="/admin/OPD/BillHistory"><i class="fa fa-history"></i> Bill History</a></li>
                                 <li><a href="/admin/Pharmacy/SaleMedicine"><i class="fa fa-capsules"></i> Sale Medicine</a></li>
-                                <li><a href="/admin/Pharmacy/BillSaleMedicine"><i class="fa fa-pills"></i> Medicine Sale Details</a></li>
-                                <li><a href="OtherSaleProduct.aspx"><i class="fa fa-capsules"></i>Outside Sale Medicine</a></li>
-                                <li><a href="OtherBillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Outside Medicine Sale Details</a></li>
+                                <li><a href="/admin/Pharmacy/BillSaleMedicine"><i class="fa fa-pills"></i> Medicine Sale Details</a></li> 
                                 @if (role == "Admin")
                                 {
-                                    <li><a href="TodayPatientsDetails.aspx"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
+                                    <li><a href="/admin/OPD/TodayPatientsDetails"><i class="fa fa-calendar-day"></i> Today's Patients</a></li>
                                 }
                             </ul>
                         </li>
@@ -275,6 +259,8 @@
                             <ul class="treeview-menu">
                                 <li><a href="ManageCategory.aspx"><i class="fa fa-layer-group"></i> Add Category</a></li>
                                 <li><a href="NewProductAdd.aspx"><i class="fa fa-capsules"></i> Add Medicine</a></li>
+                                <li><a href="OtherSaleProduct.aspx"><i class="fa fa-capsules"></i>Outside Sale Medicine</a></li>
+                                <li><a href="OtherBillSaleProductPatient.aspx"><i class="fa fa-pills"></i> Outside Medicine Sale Details</a></li>
                             </ul>
                         </li>
                     }
