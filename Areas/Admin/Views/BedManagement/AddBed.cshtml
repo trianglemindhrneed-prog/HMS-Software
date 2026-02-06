@@ -1,0 +1,77 @@
+﻿@model HMSCore.Areas.Admin.Models.Bed
+
+@{
+    ViewData["Title"] = Model.BedId > 0 ? "Edit Bed" : "Add Bed";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>@ViewData["Title"]</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li><a asp-action="BedList">Bed List</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form asp-action="AddBed" method="post" class="form-horizontal">
+                        <input type="hidden" asp-for="BedId" />
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Category *</label>
+                            <div class="col-md-4">
+                                <select asp-for="BedCategoryId"
+                                        asp-items="ViewBag.Categories"
+                                        class="form-control" required>
+                                    <option value="">-- Select Category --</option>
+                                </select>
+                                <span asp-validation-for="BedCategoryId" class="text-danger"></span>
+                            </div>
+                        </div> 
+                  @*       <div class="form-group">
+                            <label class="col-md-2 control-label">Bed Name *</label>
+                            <div class="col-md-4">
+                                <input asp-for="BedName" class="form-control" required />
+                                <span asp-validation-for="BedName" class="text-danger"></span>
+                            </div>
+                        </div> *@
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Bed Number *</label>
+                            <div class="col-md-4">
+                                <input autocomplete="off" asp-for="BedNumber" class="form-control" required />
+                                <span asp-validation-for="BedNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Description</label>
+                            <div class="col-md-4">
+                                <textarea asp-for="Description"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit" class="btn btn-success btn-flat">Save</button>
+                                <a asp-action="BedList" class="btn btn-primary btn-flat">Cancel</a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+

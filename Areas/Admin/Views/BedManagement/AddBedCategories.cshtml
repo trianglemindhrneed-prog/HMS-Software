@@ -1,0 +1,63 @@
+﻿@model HMSCore.Areas.Admin.Models.BedCategory
+@{
+    ViewData["Title"] = "Add Bed Category";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<section class="content-header">
+    <h1>Add Bed Category</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Add Bed Category</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+                    <form asp-action="AddBedCategories" method="post" class="form-horizontal">
+                        <input type="hidden" asp-for="BedCategoryId" />
+
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Bed Category Name <span class="required">*</span></label>
+                            <div class="col-md-4">
+                                <input type="text" autocomplete="off" asp-for="BedCategoryName" class="form-control" maxlength="200" required />
+                                <span asp-validation-for="BedCategoryName" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Bed Price<span class="required">*</span></label>
+                            <div class="col-md-4">
+                                <input autocomplete="off" type="number" asp-for="BedPrice" class="form-control" required />
+                                <span asp-validation-for="BedPrice" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">
+                                Description<span class="required">*</span>
+                            </label>
+                            <div class="col-md-4">
+                                <textarea autocomplete="off"
+                                          asp-for="Description"
+                                          class="form-control"
+                                          style="height: 125px;"
+                                          maxlength="500">
+        </textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit" class="btn btn-success btn-flat">Save</button>
+                                <button type="reset" class="btn btn-primary btn-flat">Reset</button>
+                                <a asp-action="BedCategoriesList" class="btn btn-primary btn-flat"><i class="fa fa-ban"></i>&nbsp;Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+

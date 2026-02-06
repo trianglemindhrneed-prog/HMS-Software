@@ -1,0 +1,151 @@
+﻿@model HMSCore.Areas.Admin.Models.BedAllotmentListViewModel
+@{
+    ViewData["Title"] = "Bed Allotments";
+}
+
+<section class="content-header">
+    <h1>Bed Allotments</h1>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <form method="post" asp-action="DeleteSelectedBedAllotment" id="deleteSelectedForm">
+                    <input type="hidden" name="selectedIds" id="selectedIds" />
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Delete selected?');">Delete Selected</button>
+                </form>
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+
+                    <select name="filterColumn" class="form-control input-sm">
+                        <option value="">-- Select --</option>
+                        <option value="BedCategory" selected="@Model.FilterColumn == " BedCategory"">Bed Category</option>
+                        <option value="BedName" selected="@Model.FilterColumn == " BedName"">Bed Number</option>
+                        <option value="PatientName" selected="@Model.FilterColumn == " PatientName"">Patient Name</option>
+                    </select>
+                    <input type="text" name="keyword" value="@Model.Keyword" class="form-control input-sm" placeholder="Search" />
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="@Url.Action("BedAllotmentList")" class="btn btn-default">Show All</a>
+                </form>
+            </div>
+        </div>
+        <!-- Date Filter -->
+        <div class="row mt-3" style="margin-left: 3px !important;display:none;">
+            <div class="col-sm-3">
+                <label>From Date:</label>
+                <input type="date" id="FromDate" name="fromDateStr" asp-for="FromDate" class="form-control input-sm" />
+
+            </div>
+            <div class="col-sm-3">
+                <label>To Date:</label>
+                <input type="date" id="ToDate"  asp-for="ToDate" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
+            </div>
+
+        </div>
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th>Bed Category</th>
+                        <th>Bed Number</th>
+                        <th>Patient Id</th>
+                        <th>Patient Name</th>
+                        <th>Allotment Date</th>
+                        <th>Discharge Date</th>
+                        @* <th>Edit</th> *@
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.BedAllotments)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="chkSelect" value="@item.BedAllotmentId" /></td>
+                            <td>@item.BedCategory</td>
+                            <td>@item.BedNumber</td>
+                            <td>@item.PatientId</td>
+                            <td>@item.PatientName</td>
+                            <td>@item.AllotmentDate?.ToString("dd-MM-yyyy")</td>
+                            <td>@item.DischargeDate?.ToString("dd-MM-yyyy")</td>
+                         @*    <td>
+                                <a class="btn btn-xs btn-info" href="@Url.Action("Edit", new { id = item.BedAllotmentId })">Edit</a>
+                            </td> *@
+                            <td>
+                                <form method="post" asp-action="DeleteBedAllotment" onsubmit="return confirm('Delete this record?');">
+                                    <input type="hidden" name="id" value="@item.BedAllotmentId" />
+                                    <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+                function submitSearchForm() {
+            var form = document.querySelector('form[method="get"]');
+            if (!form) return;
+
+            // Copy visible FromDate / ToDate values to hidden inputs with correct names
+            let fromInput = document.getElementById('FromDate');
+            let toInput = document.getElementById('ToDate');
+
+            // Remove old hidden inputs if exist
+            let oldFrom = form.querySelector('input[name="fromDate"]');
+            let oldTo = form.querySelector('input[name="toDate"]');
+            if (oldFrom) oldFrom.remove();
+            if (oldTo) oldTo.remove();
+
+            // Append new hidden inputs with correct casing
+            if (fromInput && fromInput.value) {
+                let hiddenFrom = document.createElement('input');
+                hiddenFrom.type = 'hidden';
+                hiddenFrom.name = 'fromDate'; // matches controller parameter
+                hiddenFrom.value = fromInput.value;
+                form.appendChild(hiddenFrom);
+            }
+            if (toInput && toInput.value) {
+                let hiddenTo = document.createElement('input');
+                hiddenTo.type = 'hidden';
+                hiddenTo.name = 'toDate'; // matches controller parameter
+                hiddenTo.value = toInput.value;
+                form.appendChild(hiddenTo);
+            }
+
+            form.submit();
+        }
+
+        </script>
+    <script>
+        function toggleAll(chkAll) {
+            document.querySelectorAll('.chkSelect').forEach(c => c.checked = chkAll.checked);
+        }
+
+        document.getElementById('deleteSelectedForm').onsubmit = function () {
+            var selected = Array.from(document.querySelectorAll('.chkSelect:checked')).map(c => c.value);
+            if (selected.length === 0) {
+                alert('Select at least one Bed Allotment.');
+                return false;
+            }
+            document.getElementById('selectedIds').value = selected.join(',');
+        }
+    </script>
+}
