@@ -436,15 +436,17 @@
             $('table').each(function() {
                 var table = $(this);
                 var rows = table.find('tbody tr');
-                var defaultRowsPerPage = parseInt($('#pageSizeSelect').val()) || 20; // read from dropdown
-                var rowsPerPage = defaultRowsPerPage;
                 var rowsCount = rows.length;
+                var defaultRowsPerPage = parseInt($('#pageSizeSelect').val()) || 20;
+                var rowsPerPage = defaultRowsPerPage;
                 var pageCount = Math.ceil(rowsCount / rowsPerPage);
                 var currentPage = 1;
 
-                // Create pagination container
+                // Create pagination container only if needed
                 var pagination = $('<div class="table-pagination mt-2"></div>');
-                table.after(pagination);
+                if (pageCount > 1) {
+                    table.after(pagination);
+                }
 
                 function showPage(page) {
                     rows.hide();
@@ -452,9 +454,14 @@
                     var end = start + rowsPerPage;
                     rows.slice(start, end).show();
 
-                    pagination.html('');
-                    for (var i = 1; i <= pageCount; i++) {
-                        pagination.append('<button class="page-btn btn btn-sm ' + (i === page ? 'btn-primary' : 'btn-default') + '">' + i + '</button>');
+                    // Only show pagination if more than one page
+                    if (pageCount > 1) {
+                        pagination.html('');
+                        for (var i = 1; i <= pageCount; i++) {
+                            pagination.append('<button class="page-btn btn btn-sm ' + (i === page ? 'btn-primary' : 'btn-default') + '">' + i + '</button>');
+                        }
+                    } else {
+                        pagination.empty();
                     }
                 }
 
@@ -472,12 +479,21 @@
                     rowsPerPage = parseInt($(this).val());
                     pageCount = Math.ceil(rowsCount / rowsPerPage);
                     currentPage = 1;
+
+                    // Only show pagination if more than one page
+                    if (pageCount > 1 && pagination.parent().length === 0) {
+                        table.after(pagination);
+                    } else if (pageCount <= 1) {
+                        pagination.empty();
+                    }
+
                     showPage(currentPage);
                 });
             });
 
         });
     </script>
+
 
 
 </body>
