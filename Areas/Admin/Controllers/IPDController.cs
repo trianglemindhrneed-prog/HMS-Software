@@ -582,5 +582,38 @@ public class IPDController : BaseController
         // Return same view as IpdVitalDetails
         return View("IpdVitalDetails", list);
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> IpdVitalDetails(DateTime? fromDate, DateTime? toDate)
+    {
+        SqlParameter[] param =
+        {
+        new SqlParameter("@Action", "SEARCH"),
+        new SqlParameter("@FromDate", fromDate.HasValue ? fromDate.Value : (object)DBNull.Value),
+        new SqlParameter("@ToDate", toDate.HasValue ? toDate.Value : (object)DBNull.Value)
+    };
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDVitals_Manage", param);
+
+        var list = dt.AsEnumerable().Select(r => new IPDVital
+        {
+            VitalsId = r.Field<int>("VitalsId"),
+            PatientId = r.Field<string>("PatientId"),
+            RecordedDate = r.Field<DateTime>("RecordedDate"),
+            Temperature = r.Field<string>("Temperature"),
+            Pulse = r.Field<string>("Pulse"),
+            BP = r.Field<string>("BP"),
+            SpO2 = r.Field<string>("SpO2"),
+            RR = r.Field<string>("RR"),
+            Height = r.Field<string>("Height"),
+            Weight = r.Field<string>("Weight"),
+            BloodGroup = r.Field<string>("BloodGroup"),
+            Notes = r.Field<string>("Notes"),
+            RecordedBy = r.Field<string>("RecordedBy")
+        }).ToList();
+
+        return View(list);
+    }
 }
 

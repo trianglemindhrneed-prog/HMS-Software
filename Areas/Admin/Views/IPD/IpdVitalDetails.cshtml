@@ -41,7 +41,7 @@
                         <option value="">-- Search By --</option>
                      
                         <option value="Name">Patient Name</option>
-                     @*    <option value="RecordedDate">Date</option> *@
+              
 
                     </select>
 
@@ -68,7 +68,7 @@
 
         <div class="box-body table-responsive">
 
-           @*  <div class="row mt-3" style="margin-left: 3px !important;">
+            <div class="row mt-3" style="margin-left: 3px !important;">
                 <div class="col-sm-3">
                     <label>From Date:</label>
                   <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
@@ -82,7 +82,7 @@
                     <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
                 </div>
 
-            </div> *@
+            </div>
             <table class="table table-bordered table-hover table-striped">
                 <thead class="bg-gray">
                     <tr class="text-center">
@@ -148,3 +148,15 @@
         </div>
     </div>
 </section>
+
+                                    <script>
+                                            function submitSearchForm() {
+        var fromDate = document.getElementById('FromDate').value;
+        var toDate = document.getElementById('ToDate').value;
+
+        var url = '@Url.Action("IpdVitalDetails", "IPD", new { area = "Admin" })';
+        url += '?fromDate=' + encodeURIComponent(fromDate) + '&toDate=' + encodeURIComponent(toDate);
+
+        window.location.href = url;
+    }
+                                    </script>
