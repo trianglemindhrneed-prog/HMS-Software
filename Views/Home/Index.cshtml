@@ -2,7 +2,55 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!--Main Slider-->
+<section class="main-slider" data-start-height="700" data-slide-overlay="yes">
+
+    <div class="slider">
+        <div class="slides" id="slides">
+            <div class="slide">
+                <img src="img/b1.png" />
+               
+            </div>
+            <div class="slide">
+                <img src="img/b2.png" />
+              
+            </div>
+
+        </div>
+        <button type="button" class="nav prev" id="prev">❮</button>
+        <button type="button" class="nav next" id="next">❯</button>
+    </div>
+
+</section>
+<!--End Main Slider-->
+<!--End FullWidth Section-->
+<script>
+    const slides = document.getElementById("slides");
+    const slideItems = document.querySelectorAll(".slide");
+    const totalSlides = slideItems.length;
+
+    let index = 0;
+
+    // Set total width dynamically (MOST IMPORTANT FIX)
+    slides.style.width = `${totalSlides * 100}%`;
+
+    function showSlide() {
+        slides.style.transform = `translateX(-${index * (100 / totalSlides)}%)`;
+    }
+
+    document.getElementById("next").onclick = () => {
+        index = (index + 1) % totalSlides;
+        showSlide();
+    };
+
+    document.getElementById("prev").onclick = () => {
+        index = (index - 1 + totalSlides) % totalSlides;
+        showSlide();
+    };
+
+    // Auto Slide
+    setInterval(() => {
+        index = (index + 1) % totalSlides;
+        showSlide();
+    }, 7000);
+</script>

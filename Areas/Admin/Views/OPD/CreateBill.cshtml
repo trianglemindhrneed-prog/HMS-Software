@@ -5,12 +5,22 @@
 }
 
 <style>
-    .row{
+    .row {
         margin-top: 10px;
     }
+
     .btn-secondary {
         background: green;
         color: #fff;
+    }
+
+    table#treatmentTable {
+        max-width: 1089px;
+        margin: 0 auto;
+    }
+
+    .treatment-charges {
+        text-align: center;
     }
 </style>
 
@@ -65,7 +75,7 @@
                 </div>
 
                 <!-- ================= TREATMENT CHARGES ================= -->
-                <h4 class="mt-3">Treatment Charges</h4>
+                <h4 class="mt-3 treatment-charges">Treatment Charges</h4>
 
                 <table class="table table-bordered" id="treatmentTable">
                     <thead>
@@ -182,7 +192,7 @@
             $('#btnPrint').on('click', function () {
                 setTimeout(function () {
                     window.location.reload();
-                }, 500); 
+                }, 500);
             });
         });
     </script>
