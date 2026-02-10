@@ -114,9 +114,9 @@
                     @foreach (var p in Model)
                     {
                         <tr>
-                            <td>
+                          @*   <td>
                                 <input type="checkbox" name="selectedIds" value="@p.AdmissionId" class="chkItem" />
-                            </td>
+                            </td> *@
                             <td>@p.PatientID</td>
                             <td>@p.Number</td>
                             <td>@p.Name</td>
@@ -156,7 +156,7 @@
                                 }
                             </td>
 
-                           
+                   @*         
                             <td>
                                 <a class="btn btn-warning btn-sm"
                                    href="@Url.Action("AddIPDAdmission","IPD",
@@ -180,7 +180,7 @@
 
 
 
-                            </td>
+                            </td> *@
                         </tr>
                                         }
                 </tbody>

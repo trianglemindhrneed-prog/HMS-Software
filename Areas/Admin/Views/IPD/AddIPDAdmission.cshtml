@@ -1,50 +1,4 @@
-﻿@using HMSCore.Areas.Admin.Models
-@model IpdAdmission
-
-
-<style>
-    <style >
-    .field-validation-error {
-        display: block;
-        min-height: 18px; /* space reserved */
-        font-size: 12px;
-    }
-
-    .form-group {
-        margin-bottom: 12px;
-    }
-
-
-    /* Har form control ke liye spacing */
-    .form-control,
-    select,
-    textarea {
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
-
-    /* Har field ke niche gap */
-    .form-group,
-    .col-md-3,
-    .col-md-4 {
-        margin-bottom: 18px;
-    }
-
-    /* Validation message ke liye fixed space */
-    .field-validation-error {
-        display: block;
-        min-height: 18px;
-        font-size: 12px;
-        margin-top: 4px;
-    }
-
-    label {
-        margin-bottom: 6px;
-        font-weight: 600;
-    }
-</style>
-
-
+﻿@model HMSCore.Areas.Admin.Models.IpdAdmission
 
 
 @{
@@ -52,38 +6,10 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show">
-        @TempData["Success"]
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-    </div>
-}
-<script>
-        $("#ddlBedCategory").change(function () {
-        var categoryId = $(this).val();
-
-        $("#ddlBed").empty().append('<option>Loading...</option>');
-
-        if (categoryId) {
-            $.get("/Admin/IPD/GetBeds",
-                { categoryId: categoryId },
-                function (data) {
-                    $("#ddlBed").empty();
-                    $.each(data, function (i, item) {
-                        $("#ddlBed").append(
-                            $("<option></option>").val(item.value).text(item.text)
-                        );
-                    });
-                });
-        }
-    });
-</script>
-
     <section class="content-header">
         <h1>IPD Admission</h1>
         <ol class="breadcrumb">
-            <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="Dashboard"><i class="fa fa-home"></i> Home</a></li>
             <li class="active">IPD Admission</li>
         </ol>
     </section>
@@ -91,25 +17,10 @@
     <div class="card">
       <div class="container-fluid" style="background-color: white; padding: 20px;">
 
-            @* Success Message *@
-            @if (ViewBag.Success != null)
-            {
-                <div class="alert alert-success">
-                    @ViewBag.Success
-                </div>
-            }
-
-            @* Patient ID Display *@
-            @if (ViewBag.PatientID != null)
-            {
-                <div class="alert alert-success">
-                    <strong>Patient ID :</strong> @ViewBag.PatientID
-                </div>
-            }
-
-            <form asp-action="AddIpdAdmission" method="post">
+     
+            <form asp-action="AddIPDAdmission" method="post">
                 <div class="row g-3">
-
+                    <input type="hidden" asp-for="PatientID" />
                     <!-- Patient ID -->
                     <div class="col-md-3">
                         <label class="form-label">Patient ID</label>
@@ -158,20 +69,20 @@
                     <div class="col-md-3">
                         <label class="form-label">Doctor</label>
                         <select asp-for="DoctorId"
-                                asp-items="ViewBag.Doctors"
+                                asp-items="ViewBag.DoctorList"
                                 class="form-control">
-                            <option value="">-- Select Doctor --</option>
+                          @*   <option value="">-- Select Doctor --</option> *@
                         </select>
                         <span asp-validation-for="DoctorId" class="text-danger"></span>
+
                     </div>
 
-                    <!-- Bed Category -->
                     <div class="col-md-3">
                         <label class="form-label">Bed Category</label>
                         <select asp-for="BedCategoryId"
-                                asp-items="ViewBag.BedCategories"
-                                class="form-control">
-                            <option value="">-- Select Category --</option>
+                                asp-items="ViewBag.BedCategoryList"
+                                class="form-control"
+                                id="ddlBedCategory">
                         </select>
                         <span asp-validation-for="BedCategoryId" class="text-danger"></span>
                     </div>
@@ -180,55 +91,113 @@
                     <div class="col-md-3">
                         <label class="form-label">Bed</label>
                         <select asp-for="BedId"
-                                asp-items="ViewBag.Beds"
-                                class="form-control">
+                                class="form-control"
+                                id="ddlBed">
                             <option value="">-- Select Bed --</option>
                         </select>
                         <span asp-validation-for="BedId" class="text-danger"></span>
                     </div>
 
-                    <!-- Admission Date -->
-                    <div class="col-md-3">
-                        <label class="form-label">Admission Date</label>
-                        <input asp-for="AdmissionDateTime"
-                               type="datetime-local"
-                               class="form-control" />
-                        <span asp-validation-for="AdmissionDateTime" class="text-danger"></span>
+                    <div class="row mb-3">
+
+                        <!-- Admission Date -->
+                        <div class="col-md-3">
+                            <label class="form-label">Admission Date</label>
+                            <input asp-for="AdmissionDateTime"
+                                   type="datetime-local"
+                                   class="form-control"
+                                   value="@Model.AdmissionDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
+                        </div>
+
+                        <!-- Initial Diagnosis -->
+                        <div class="col-md-3">
+                            <label class="form-label">Initial Diagnosis</label>
+                            <textarea asp-for="InitialDiagnosis"
+                                      class="form-control"
+                                      rows="1"></textarea>
+                        </div>
+
+                        <!-- Advance Amount -->
+                        <div class="col-md-3">
+                            <label class="form-label">Advance Amount</label>
+                            <input asp-for="AdvanceAmount" 
+                                   class="form-control" type="Number" pattern="\d{1,5}"
+                                   placeholder="Enter advance amount" />
+                            <span asp-validation-for="AdvanceAmount" class="text-danger"></span>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select asp-for="Status" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option>Admitted</option>
+                                <option>Discharged</option>
+                                <option>Cancelled</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+
                     </div>
 
-                    <!-- Initial Diagnosis -->
-                    <div class="col-md-4">
-                        <label class="form-label">Initial Diagnosis</label>
-                        <textarea asp-for="InitialDiagnosis"
-                                  class="form-control"
-                                 ></textarea>
-                    </div>
-
-                    <!-- Advance Amount -->
-                    <div class="col-md-4">
-                        <label class="form-label">Advance Amount</label>
-                        <input asp-for="AdvanceAmount"
-                               class="form-control"
-                               placeholder="Enter advance amount" />
-                        <span asp-validation-for="AdvanceAmount" class="text-danger"></span>
-                    </div>
-
-                    <br/>
-                    <!-- Submit -->
-                    <div class="col-md-12 text-end">
-                        <button type="submit" class="btn btn-success">
-                            Save 
-                        </button>
-                       
+                    <!-- Buttons -->
+                    <div class="row">
+                        <div class="col-md-12 text-center" style="margin-top: 27px;">
+                            <button type="submit" class="btn btn-success btn-flat px-4 me-2">
+                                Save
+                            </button>
+                            <button type="reset" class="btn btn-primary btn-flat px-4">
+                                Reset
+                            </button>
+                        </div>
                     </div>
 
                 </div>
             </form>
 
-            @section Scripts {
-                <partial name="_ValidationScriptsPartial" />
-            }
+            </div>
+            </div>
+            </section>
 
-        </div>
-    </div>
-</section>
+
+@section Scripts {
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            
+                <script>
+                    $(document).ready(function () {
+
+                        $('#ddlBedCategory').on('change', function () {
+
+                            var categoryId = $(this).val();
+
+                            $('#ddlBed').empty();
+                            $('#ddlBed').append('<option value="">-- Select Bed --</option>');
+
+                            if (categoryId !== "") {
+                                $.ajax({
+                                    url: '/Admin/IPD/GetBeds',   
+                                    type: 'GET',
+                                    data: { categoryId: categoryId },
+                                    success: function (data) {
+
+                                        if (data && data.length > 0) {
+                                            $.each(data, function (i, bed) {
+                                                $('#ddlBed').append(
+                                                    $('<option></option>')
+                                                        .val(bed.value)
+                                                        .text(bed.text)
+                                                );
+                                            });
+                                        }
+                                    },
+                                    error: function () {
+                                        alert('Bed load nahi hua');
+                                    }
+                                });
+                            }
+                        });
+
+                    });
+                </script>
+
+}
