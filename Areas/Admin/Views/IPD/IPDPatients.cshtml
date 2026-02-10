@@ -20,18 +20,7 @@
     </style>
 
 </head>
-@if (TempData["Message"] != null)
-{
-    <script>
-        toastr.options = {
-            closeButton: true,
-            progressBar: true,
-            positionClass: "toast-top-right",
-            timeOut: "3000"
-        };
-        toastr["@TempData["MessageType"]"]("@TempData["Message"]");
-    </script>
-}
+
 <section class="content-header">
     <h1>IPD Admissions</h1>
 </section>
@@ -42,7 +31,7 @@
 
             <div class="pull-left">
                 <a class="btn btn-danger btn-flat"
-                   href="@Url.Action("AddIPDAdmission", "IPD", new { area = "Admin" })">
+                   href="@Url.Action("AddIPDNewCheckup", "IPD", new { area = "Admin" })">
                     <i class="fa fa-plus"></i> Add IPD
                 </a>
 
@@ -114,9 +103,9 @@
                     @foreach (var p in Model)
                     {
                         <tr>
-                          @*   <td>
-                                <input type="checkbox" name="selectedIds" value="@p.AdmissionId" class="chkItem" />
-                            </td> *@
+                            <td>
+                                <input type="checkbox" name="selectedIds" value="@p.AdmissionID" class="chkItem" />
+                            </td>
                             <td>@p.PatientID</td>
                             <td>@p.Number</td>
                             <td>@p.Name</td>
@@ -132,12 +121,11 @@
 
                             <!-- DETAILS -->
                             <td>
-                               
-                             <a class="btn btn-info btn-xs"
-                                        title="Details"
-       href="@Url.Action("IPDCheckupHistory", "IPD", new { pid = p.PatientID, area = "Admin" })">
+                                <a href="/Admin/IPD/IPDCheckupHistory?pid=@p.PatientID"
+                                   class="btn btn-sm btn-warning">
                                     <i class="fa fa-bars"></i>
-                     </a>
+                                </a>
+
                         </td>
 
                             <!-- DISCHARGE -->
@@ -156,11 +144,11 @@
                                 }
                             </td>
 
-                   @*         
+                           
                             <td>
                                 <a class="btn btn-warning btn-sm"
                                    href="@Url.Action("AddIPDAdmission","IPD",
-                                              new { id = p.AdmissionId, area = "Admin" })">
+                                              new { id = p.AdmissionID, area = "Admin" })">
                                 <i class="fa fa-edit"></i>
                             </a>
                         </td>
@@ -169,7 +157,7 @@
                             <td>
                                 <form method="post" asp-action="ManageIPD"
                                       onsubmit="return confirm('Are you sure?')">
-                                    <input type="hidden" name="id" value="@p.AdmissionId" />
+                                    <input type="hidden" name="id" value="@p.AdmissionID" />
                                     <input type="hidden" name="actionType" value="Delete" />
                                     <button class="btn btn-danger btn-sm" >
                                         <i class="fa fa-trash"></i>
@@ -180,7 +168,7 @@
 
 
 
-                            </td> *@
+                            </td>
                         </tr>
                                         }
                 </tbody>

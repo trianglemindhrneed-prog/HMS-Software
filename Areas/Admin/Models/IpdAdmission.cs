@@ -6,7 +6,7 @@ namespace HMSCore.Areas.Admin.Models
     public class IpdAdmission
     {
         public int AdmissionID { get; set; }
-        public string PatientID { get; set; }
+        public string?  PatientID { get; set; }
 
         public int? DoctorId { get; set; }
         public int? BedCategoryId { get; set; }

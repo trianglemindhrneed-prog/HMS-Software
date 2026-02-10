@@ -24,21 +24,21 @@
                     <!-- Patient ID -->
                     <div class="col-md-3">
                         <label class="form-label">Patient ID</label>
-                        <input asp-for="PatientID" class="form-control" readonly />
+                        <input asp-for="PatientID" class="form-control" readonly autocomplete="off" />
                         <span asp-validation-for="PatientID" class="text-danger"></span>
                     </div>
 
                     <!-- Name -->
                     <div class="col-md-3">
                         <label class="form-label">Patient Name</label>
-                        <input asp-for="Name" class="form-control" placeholder="Enter Name" />
+                        <input asp-for="Name" class="form-control" placeholder="Enter Name" autocomplete="off" />
                         <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
 
                     <!-- Age -->
                     <div class="col-md-3">
                         <label class="form-label">Age</label>
-                        <input asp-for="Age" class="form-control" placeholder="Age" />
+                        <input asp-for="Age" class="form-control" placeholder="Age" autocomplete="off" />
                         <span asp-validation-for="Age" class="text-danger"></span>
                     </div>
 
@@ -57,11 +57,11 @@
                     <!-- Contact Number -->
                     <div class="col-md-3">
                         <label class="form-label">Contact Number</label>
-                        <input asp-for="Number"
+                        <input asp-for="Number" type="number"
                                class="form-control"
                                placeholder="Enter 10 digit contact number"
                                maxlength="10"
-                               oninput="this.value=this.value.replace(/[^0-9]/g,'');" />
+                               oninput="this.value=this.value.replace(/[^0-9]/g,'');" autocomplete="off" />
                         <span asp-validation-for="Number" class="text-danger"></span>
                     </div>
 
@@ -106,7 +106,7 @@
                             <input asp-for="AdmissionDateTime"
                                    type="datetime-local"
                                    class="form-control"
-                                   value="@Model.AdmissionDateTime?.ToString("yyyy-MM-ddTHH:mm")" />
+                                   value="@Model.AdmissionDateTime?.ToString("yyyy-MM-ddTHH:mm")" autocomplete="off" />
                         </div>
 
                         <!-- Initial Diagnosis -->
@@ -123,7 +123,7 @@
                             <input asp-for="AdvanceAmount" 
                                    class="form-control" type="Number" pattern="\d{1,5}"
                                    placeholder="Enter advance amount" />
-                            <span asp-validation-for="AdvanceAmount" class="text-danger"></span>
+                            <span asp-validation-for="AdvanceAmount" class="text-danger" autocomplete="off"></span>
                         </div>
 
                         <!-- Status -->
@@ -135,7 +135,7 @@
                                 <option>Discharged</option>
                                 <option>Cancelled</option>
                             </select>
-                            <span asp-validation-for="Status" class="text-danger"></span>
+                            <span asp-validation-for="Status" class="text-danger" autocomplete="off"></span>
                         </div>
 
                     </div>
