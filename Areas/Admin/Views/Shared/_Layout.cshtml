@@ -319,7 +319,7 @@
                                 <li><a href="pathologypatienttest.aspx"><i class="fa fa-user-md"></i> Pending Tests</a></li>
                                 <li><a href="deliverdpatienttest.aspx"><i class="fa fa-user-md"></i> Delivered Tests</a></li>
                             </ul>
-                        </li>
+                        </li> 
                     }
                     @if (role == "Admin")
                     {
@@ -331,11 +331,11 @@
                                 <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                             </a>
                             <ul class="treeview-menu">
-                                <li><a href="PatientReport.aspx"><i class="fa fa-users"></i> Patients Report</a></li>
-                                <li><a href="PaidAmountReport.aspx"><i class="fa fa-money-bill"></i> Paid Amount</a></li>
-                                <li><a href="DueAmountReport.aspx"><i class="fa fa-money-bill-wave"></i> Due Amount</a></li>
-                                <li><a href="BillSaleProductMIS.aspx"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
-                                <li><a href="PatientAppointmentMIS.aspx"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
+                                <li><a href="/admin/OpdMis/PatientReportMis"><i class="fa fa-users"></i> Patients Report</a></li>
+                                <li><a href="/admin/OpdMis/PaidAmountReport"><i class="fa fa-money-bill"></i> Paid Amount</a></li>
+                                <li><a href="/admin/OpdMis/DueAmountReport"><i class="fa fa-money-bill-wave"></i> Due Amount</a></li>
+                                <li><a href="/admin/OpdMis/BillSaleProductMIS"><i class="fa fa-capsules"></i> Medicine Sale</a></li>
+                                <li><a href="/admin/OpdMis/PatientAppointmentMIS"><i class="fa fa-calendar-check"></i> Appointment Report</a></li>
                             </ul>
                         </li>
 
@@ -356,7 +356,7 @@
                     }
 
                     <!-- Common Option for All Roles -->
-                    <li><a href="ChangePassword.aspx"><i class="fa fa-key"></i> <span>Change Password</span></a></li>
+                    <li><a href="/admin/Dashboard/ChangePassword"><i class="fa fa-key"></i> <span>Change Password</span></a></li>
                 </ul>
             </section>
         </aside>

@@ -1,8 +1,315 @@
-﻿
+﻿@model HMSCore.Areas.Admin.Models.DashboardViewModel
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Dashboard";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    var userType = Model.UserRole;
 }
 
- 
+<style>
+    .bg-paid {
+        background: #008b8b8f;
+        color: aliceblue;
+    }
 
+    .due-card {
+        background: #009ecda8;
+        color: aliceblue;
+    }
+
+    .bg-greens {
+        background: #00a65adb;
+        color: aliceblue;
+    }
+
+    .bg-greene {
+        background: #00a4a6;
+        color: aliceblue;
+    }
+
+    .bg-aquas {
+        background: #0095ef;
+        color: aliceblue;
+    }
+
+    .small-box .icon {
+        position: absolute;
+        top: 15px;
+        right: 10px;
+        font-size: 47px;
+        transition: all .3s linear;
+        color: #fff;
+    }
+
+    .small-box:hover .icon {
+        font-size: 55px;
+    }
+
+    .hcd {
+        text-align: center;
+        padding: 5px;
+        background: cadetblue;
+        color: white;
+        font-family: serif;
+    }
+
+    .small-box {
+        border-radius: 5px;
+        position: relative;
+        overflow: hidden;
+    }
+</style>
+
+<section class="content">
+
+    @if (userType == "Admin" || userType == "Doctor" || userType == "Nurse")
+    {
+        <h3 class="hcd">OPD & Other Records</h3>
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <div class="small-box bg-aquas">
+                    <div class="inner">
+                        <h3>@Model.OPDNewPatients</h3>
+                        <p>@DateTime.Now.ToString("MMMM") Total New Patients</p>
+                    </div>
+                    <div class="icon"><i class="fa fa-stethoscope"></i></div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/OPD/PatientsDetails">
+                    <div class="small-box bg-greens">
+                        <div class="inner">
+                            <h3>@Model.OPDTotalPatients</h3>
+                            <p>Total Patients</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-wheelchair-alt"></i></div>
+                    </div>
+                </a>
+            </div>  
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/OPD/TodayPatientsDetails">
+                    <div class="small-box bg-greene">
+                        <div class="inner">
+                            <h3>@Model.OPDTodaysPatients</h3>
+                            <p>Today Patients</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-hospital-user"></i></div>
+                    </div>
+                </a>
+            </div>
+            @if (userType == "Admin")
+            {
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/OpdMis/PaidAmountReport">
+                        <div class="small-box bg-paid">
+                            <div class="inner">
+                                <h3>₹@Model.TotalPaidAmount</h3>
+                                <p>Total Paid Amount</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-money-bill"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/OpdMis/DueAmountReport">
+                        <div class="small-box due-card">
+                            <div class="inner">
+                                <h3>₹@Model.TotalDueAmount</h3>
+                                <p>Total Due Amount</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-money-bill"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/Pharmacy/SaleMedicine">
+                        <div class="small-box bg-aquas">
+                            <div class="inner">
+                                <h3>₹@Model.TotalSellMedicine</h3>
+                                <p>Total Sell Medicine Amount</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-capsules"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/Master/DoctorsList">
+                        <div class="small-box bg-greens">
+                            <div class="inner">
+                                <h3>@Model.TotalDoctors</h3>
+                                <p>Doctors</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-user-doctor"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/Master/NurseList">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.TotalNurses</h3>
+                                <p>Nurses</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-user-nurse"></i></div>
+                        </div>
+                    </a>
+                </div>
+            }
+       
+            @if (userType == "Doctor" || userType == "Admin")
+            {
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/Appointment/TodayPatientAppointment">
+                        <div class="small-box bg-paid">
+                            <div class="inner">
+                                <h3>@Model.TodaysAppointments</h3>
+                                <p>Today Appointment</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-calendar-check"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="/admin/OpdMis/PatientAppointmentMIS">
+                        <div class="small-box due-card">
+                            <div class="inner">
+                                <h3>@Model.TotalPatientsSeen</h3>
+                                <p>Total Patients Seen</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-user-check"></i></div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+
+        <!-- OPD Row End -->
+
+        <h3 class="hcd">IPD Records</h3>
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <div class="small-box bg-aqua">
+                    <div class="inner">
+                        <h3>@Model.IPDNewPatients</h3>
+                        <p>@DateTime.Now.ToString("MMMM") Total New Patients</p>
+                    </div>
+                    <div class="icon"><i class="fa fa-stethoscope"></i></div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-xs-6">
+                <a href="IPDPatients.aspx">
+                    <div class="small-box bg-greens">
+                        <div class="inner">
+                            <h3>@Model.IPDTotalPatients</h3>
+                            <p>Total Patients</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-wheelchair-alt"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            @if (userType == "Admin")
+            {
+                <div class="col-lg-3 col-xs-6">
+                    <a href="IpdBillSaleProductMIS.aspx">
+                        <div class="small-box bg-aquas">
+                            <div class="inner">
+                                <h3>₹@Model.TotalIPDSellMedicine</h3>
+                                <p>Total Sell Medicine Amount</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-capsules"></i></div>
+                        </div>
+                    </a>
+                </div>
+            }
+
+            @if (userType == "Admin" || userType == "Nurse")
+            {
+                <div class="col-lg-3 col-xs-6">
+                    <a href="javascript:void(0)">
+                        <div class="small-box" style="background: #00efb394; color: white;">
+                            <div class="inner">
+                                <h3>@Model.AvailableBeds</h3>
+                                <p>Available Beds</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-bed"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="BedAllotmentMIS.aspx">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.OccupiedBeds</h3>
+                                <p>Occupied Beds</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-bed-pulse"></i></div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+
+        <!-- IPD Row End -->
+        @if (userType == "Pathology")
+        {
+            <h3 class="hcd">Lab / Pathology Records</h3>
+            <div class="row">
+                <div class="col-lg-3 col-xs-6">
+                    <a href="labtestcategory.aspx">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.LabCategoryCount</h3>
+                                <p>Lab Category</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-flask"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="labtest.aspx">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.LabTestCount</h3>
+                                <p>Lab Tests</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-vials"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="pathologypatienttest.aspx">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.PendingTests</h3>
+                                <p>Pending Tests</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-hourglass-half"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-xs-6">
+                    <a href="deliverdpatienttest.aspx">
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>@Model.DeliveredTests</h3>
+                                <p>Delivered Tests</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-check-circle"></i></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        }
+    }
+</section>
