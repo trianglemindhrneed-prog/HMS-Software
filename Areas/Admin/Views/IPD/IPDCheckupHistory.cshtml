@@ -1,274 +1,206 @@
-﻿@model HMSCore.Areas.Admin.Models.IPDCheckupHistoryPageVM
+﻿@model HMSCore.Areas.Admin.Models.IPDCheckupHistoryViewModel
 
-@* <section class="content-header">
-    <h1>Patient Detail</h1>
-</section>
+<head>
+    <style>
+        .table-pagination {
+            display: none !important;
+        }
+    </style>
+</head>
+<div class="content-wrapper" style="margin-left:31px;">
+    <section class="content-header">
+        <h1>Patient Detail</h1>
+    </section>
 
+    <section class="content">
+        <div class="row">
 
-<section class="content">
-    <div class="row">
+            <!-- LEFT : PROFILE -->
+            <div class="col-md-3">
 
-        <!-- ================= LEFT : PATIENT PROFILE ================= -->
-        <div class="col-md-3">
-            <div class="box box-primary">
-                <div class="box-body box-profile text-center">
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+                        <img class="profile-user-img img-responsive img-circle"
+                             src="@Url.Content(string.IsNullOrEmpty(Model.ProfilePath)
+                                                                     ? "~/adminassets/img/def-profile-img.png"
+                                                                     : Model.ProfilePath)" />
 
-                    <img src="@Url.Content(string.IsNullOrEmpty(Model.Patient.ProfilePath)
-                                                 ? "~/adminassets/img/def-profile-img.png"
-                                                 : Model.Patient.ProfilePath)"
-                         style="width:100px;height:100px;border-radius:50%;object-fit:cover;"
-                         alt="Patient Image" />
+                        <h3 class="profile-username text-center">@Model.FullName</h3>
 
-                    <h3 class="profile-username">@Model.Patient.Name</h3>
+                        <ul class="list-group list-group-unbordered">
+                            <li class="list-group-item">
+                                <b>Patient Id</b>
+                                <span class="pull-right">@Model.PatientId</span>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Gender</b>
+                                <span class="pull-right">@Model.Gender</span>
+                            </li>
 
-                    <ul class="list-group list-group-unbordered text-left">
-                        <li class="list-group-item">
-                            <b>Patient ID</b>
-                            <span class="pull-right">@Model.Patient.PatientID</span>
-                        </li>
-                        <li class="list-group-item">
-                            <b>Gender</b>
-                            <span class="pull-right">@Model.Patient.Gender</span>
-                        </li>
-                        <li class="list-group-item">
-                            <b>Age</b>
-                            <span class="pull-right">@Model.Patient.Age</span>
-                        </li>
-                    </ul>
+                            <li class="list-group-item">
+                                <b>Age</b>
+                                <span class="pull-right">@Model.Age</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Other Info</h3>
+                    </div>
+                    <div class="box-body">
+                        <strong><i class="fa fa-phone"></i> Contact</strong>
+                        <p class="text-muted">@Model.Number</p>
+                        <hr />
+                        <strong><i class="fa fa-map-marker"></i> Address</strong>
+                       @*  <p class="text-muted">@Model.Address</p> *@
+                    </div>
+                </div>
+
             </div>
 
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Other Info</h3>
-                </div>
-                <div class="box-body">
-                    <strong><i class="fa fa-phone margin-r-5"></i> Contact</strong>
-                    <span class="pull-right">@Model.Patient.Number</span>
-                    <hr />
-                    <strong><i class="fa fa-map-marker margin-r-5"></i> Address</strong>
-                    <p class="text-muted">@Model.Patient.Address</p>
-                </div>
-            </div>
-        </div>
+            <!-- RIGHT : CHECKUP HISTORY -->
+            <div class="col-md-9">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Checkup History</h3>
 
-        <!-- ================= RIGHT : CHECKUP HISTORY ================= -->
-        <div class="col-md-9">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Checkup History</h3>
-                </div>
+                        <a class="btn btn-success btn-sm pull-right"
+                           href="/admin/IPD/AddIPDNewCheckup?pid=@Model.PatientId">
+                            <i class="fa fa-plus"></i> Add New Checkup
+                        </a>
+                    </div>
 
-                <div class="box-body">
+                    <div class="box-body">
 
-                    @if (Model.Checkups.Count == 0)
-                    {
-                        <p class="text-center text-muted">
-                            No checkup history found.
-                        </p>
-                    }
+                        @foreach (var chk in Model.Checkups)
+                        {
+                            <ul class="timeline timeline-inverse">
 
-                    @foreach (var c in Model.Checkups)
-                    {
-                        <ul class="timeline timeline-inverse">
+                                <li class="time-label">
+                                    <span class="bg-red">
+                                        @chk.CheckupDate.ToString("dd MMM yyyy")
+                                    </span>
+                                    <span class="bg-blue">
+                                        Doctor : @chk.DoctorName
+                                    </span>
 
-                            <li class="time-label">
-                                <span class="bg-red">
-                                    @c.CheckupDate?.ToString("dd MMM yyyy")
-                                </span>
-
-                                <span class="bg-blue margin-l-10">
-                                    Doctor: @c.DoctorName
-                                </span>
-
-                                <span class="pull-right margin-r-10">
-                                    <a class="btn btn-info btn-sm" target="_blank"
-                                       href="@Url.Action("Invoice", "IPD", new { CheckupId = c.CheckupId })">
+                                    <span class="pull-right margin-r-10">
+                                        <a class="btn btn-info btn-sm"
+                                           target="_blank"
+                                           href="@Url.Action("PrintCheckupInvoice","IPD",
+                                                                                             new { pageName = "CheckupInvoice", checkupId = @chk.CheckupId })">
                                         <i class="fa fa-print"></i>
                                     </a>
 
-                                    <a class="btn btn-primary btn-sm"
-                                       href="@Url.Action("Edit", "IPD", new { CheckupId = c.CheckupId })">
-                                        <i class="fa fa-pencil"></i>
-                                    </a>
+                                        <a class="btn btn-primary btn-sm"
+                                           href="/admin/IPD/IPDEditCheckup?checkupId=@chk.CheckupId">
+                                            <i class="fa fa-pencil"></i>
+                                        </a>
 
-                                    <a href="javascript:void(0)"
-                                       class="btn btn-danger btn-sm btnDeleteCheckup"
-                                       data-id="@c.CheckupId">
-                                        <i class="fa fa-trash"></i>
-                                    </a>
-                                </span>
-                            </li>
+                                        <a href="javascript:void(0)"
+                                           class="btnDeleteCheckup btn btn-danger btn-sm"
+                                           data-id="@chk.CheckupId">
+                                            <i class="fa fa-trash"></i> Delete
+                                        </a>
+                                    </span>
+                                </li>
 
-                            <li>
-                                <i class="fa fa-child bg-blue"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Symptoms</h3>
-                                    <div class="timeline-body">@c.Symptoms</div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <i class="fa fa-code-fork bg-aqua"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Diagnosis</h3>
-                                    <div class="timeline-body">@c.Diagnosis</div>
-                                </div>
-                            </li>
-
-                            <li>
-                                <i class="fa fa-flask bg-yellow"></i>
-                                <div class="timeline-item">
-                                    <h3 class="timeline-header">Prescription</h3>
-
-                                    <div class="timeline-body">
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Medicine</th>
-                                                    <th>Days</th>
-                                                    <th>When</th>
-                                                    <th>Before Meal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @{
-                                                    int i = 1;
-                                                }
-                                                @foreach (var p in c.Prescriptions)
-                                                {
-                                                    <tr>
-                                                        <td>@i</td>
-                                                        <td>@p.MedicineName</td>
-                                                        <td>@p.NoOfDays</td>
-                                                        <td>@p.WhenToTake</td>
-                                                        <td>@(p.IsBeforeMeal ? "Yes" : "No")</td>
-                                                    </tr>
-                                                    i++;
-                                                }
-                                            </tbody>
-                                        </table>
-
-                                        @if (!string.IsNullOrEmpty(c.ExtraNotes))
-                                        {
-                                            <b>Extra Note:</b> 
-                                            @c.ExtraNotes
-                                        }
+                                <li>
+                                    <i class="fa fa-child bg-blue"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Symptoms</h3>
+                                        <div class="timeline-body">@chk.Symptoms</div>
                                     </div>
-                                </div>
-                            </li>
+                                </li>
 
-                            <li>
-                                <i class="fa fa-clock-o bg-gray"></i>
-                            </li>
-                        </ul>
-                    }
+                                <li>
+                                    <i class="fa fa-code-fork bg-aqua"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Diagnosis</h3>
+                                        <div class="timeline-body">@chk.Diagnosis</div>
+                                    </div>
+                                </li>
 
+                                <li>
+                                    <i class="fa fa-flask bg-yellow"></i>
+                                    <div class="timeline-item">
+                                        <h3 class="timeline-header">Prescription</h3>
+
+                                        <div class="timeline-body">
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Medicine</th>
+                                                        <th>No. Of Days</th>
+                                                        <th>When To Take</th>
+                                                        <th>Before Meal?</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                @{
+                                                        int i = 1;
+                                                    }
+                                                    @foreach (var p in chk.Prescriptions)
+                                                    {
+                                                        <tr>
+                                                            <td>@i</td>
+                                                            <td>@p.MedicineName</td>
+                                                            <td>@p.NoOfDays</td>
+                                                            <td>@p.WhenToTake</td>
+                                                            <td>@(p.IsBeforeMeal ? "Yes" : "No")</td>
+                                                        </tr>
+                                                        i++;
+                                                    }
+                                                </tbody>
+                                            </table>
+
+                                            <b>Extra Note:</b> @chk.ExtraNotes
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <i class="fa fa-clock-o bg-gray"></i>
+                                </li>
+                            </ul>
+                        }
+
+                    </div>
                 </div>
             </div>
-        </div>
 
-    </div>
-</section>
+        </div>
+    </section>
+</div>
 
 @section Scripts {
     <script>
         $(document).on("click", ".btnDeleteCheckup", function () {
+            let id = $(this).data("id");
 
-            if (!confirm("Delete this checkup?")) return;
-
-            var id = $(this).data("id");
-
-            $.post('@Url.Action("DeleteCheckup", "IPD", new { area = "Admin" })',
-                { checkupId: id },
-                function (res) {
-                    if (res.success) {
-                        location.reload();
+            if (confirm("Are you sure you want to delete this checkup?")) {
+                $.ajax({
+                    url: "/admin/OPD/DeleteCheckup",
+                    type: "POST",
+                    data: { checkupId: id },
+                    success: function (response) {
+                        // Check server response
+                        if (response.success) {
+                            alert(response.message || "Checkup deleted successfully!");
+                            // Optionally remove row from table
+                            $("#checkupRow_" + id).remove();
+                        } else {
+                            alert(response.message || "Error deleting checkup!");
+                        }
+                    },
+                    error: function () {
+                        alert("Error connecting to server!");
                     }
                 });
+            }
         });
     </script>
-}  *@
-
-<section class="content">
-    <div class="row">
-
-        <div class="col-md-3">
-            <div class="box box-primary text-center">
-                <img src="@Url.Content(string.IsNullOrEmpty(Model.Patient.ProfilePath)
-                                         ? "~/adminassets/img/def-profile-img.png"
-                                         : Model.Patient.ProfilePath)"
-                     style="width:100px;height:100px;border-radius:50%;object-fit:cover;" />
-                <h3>@Model.Patient.Name</h3>
-                <ul class="list-group list-group-unbordered text-left" style="margin: 0 15px;">
-                    <li class="list-group-item"><b>Patient ID</b> <span class="pull-right">@Model.Patient.PatientID</span></li>
-                    <li class="list-group-item"><b>Gender</b> <span class="pull-right">@Model.Patient.Gender</span></li>
-                    <li class="list-group-item"><b>Age</b> <span class="pull-right">@Model.Patient.Age</span></li>
-                </ul>
-               
-            </div>
-
-
-
-        <div class="box box-primary text-center">
-            <div class="box box-primary">
-                <div class="box-header with-border"><h3 class="box-title">Other Info</h3></div>
-                    <div class="box-body text-left">
-                        <strong>
-                            <i class="fa fa-phone"></i> Contact:
-                        </strong><br />
-                        <span style="margin-left:18px;">@Model.Patient.Number</span>
-
-                        <hr />
-
-                        <strong>
-                            <i class="fa fa-map-marker"></i> Address:
-                        </strong><br />
-                        <span style="margin-left:18px;">@Model.Patient.Address</span>
-                    </div>
-            </div>
-        </div>
-          </div>
-      
-        <div class="col-md-9">
-            <div class="box box-primary">
-                <div class="box-header"><h3>Checkup History</h3></div>
-                <div class="box-body">
-                    @foreach (var c in Model.Checkups)
-                    {
-                        <ul class="timeline timeline-inverse">
-                            <li class="time-label"><span class="bg-red">@c.CheckupDate?.ToString("dd MMM yyyy")</span> <span class="bg-blue">Doctor: @c.DoctorName</span></li>
-                            <li><i class="fa fa-child bg-blue"></i><div class="timeline-item"><h3>Symptoms</h3><div>@c.Symptoms</div></div></li>
-                            <li><i class="fa fa-code-fork bg-aqua"></i><div class="timeline-item"><h3>Diagnosis</h3><div>@c.Diagnosis</div></div></li>
-                            <li>
-                                <i class="fa fa-flask bg-yellow"></i><div class="timeline-item">
-                                    <h3>Prescription</h3>
-                                    <table class="table table-bordered">
-                                        <thead><tr><th>#</th><th>Medicine</th><th>Days</th><th>When</th><th>Before Meal</th></tr></thead>
-                                        <tbody>
-                                            @{
-                                                int i = 1;
-                                            }
-                                            @foreach (var p in c.Prescriptions)
-                                            {
-                                                <tr><td>@i</td><td>@p.MedicineName</td><td>@p.NoOfDays</td><td>@p.WhenToTake</td><td>@(p.IsBeforeMeal ? "Yes" : "No")</td></tr>
-                                                i++;
-                                            }
-                                        </tbody>
-                                    </table>
-                                    @if (!string.IsNullOrEmpty(c.ExtraNotes))
-                                    {
-                                        <b>Extra Note:</b> 
-                                        @c.ExtraNotes
-                                    }
-                                </div>
-                            </li>
-                        </ul>
-                    }
-                </div>
-            </div>
-        </div>
-
-    </div>
-</section>
+}

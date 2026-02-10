@@ -1,0 +1,199 @@
+﻿@model HMSCore.Areas.Admin.Models.AddIPDCheckupViewModel
+@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Edit Checkup";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<head>
+    <style>
+        .page-btn {
+            display: none;
+        }
+    </style>
+</head>
+<div class="content-wrapper" style="margin-left:10px;">
+    <section class="content-header">
+        <h1>Patient Checkup</h1>
+    </section>
+
+    <section class="content">
+        <div class="box">
+            <div class="box-body">
+
+                <form asp-action="IPDEditCheckup" method="post">
+                    <input type="hidden" name="checkupId" value="@ViewBag.CheckupId" />
+                    <input type="hidden" asp-for="PatientId" />
+                    <h4 class="page-header">Checkup</h4>
+
+                    <div class="row">
+
+                        <!-- Doctor -->
+                        <div class="form-group col-sm-4">
+                            <label>Doctor <span class="text-danger">*</span></label>
+                            <select asp-for="SelectedDoctorId" class="form-control">
+                                <option value="">-- Select Doctor --</option>
+                                @foreach (var d in Model.Doctors)
+                                {
+                                    <option value="@d.DoctorId">@d.FullName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="SelectedDoctorId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Symptoms -->
+                        <div class="form-group col-sm-4">
+                            <label>Symptoms <span class="text-danger">*</span></label>
+                            <textarea asp-for="Symptoms" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Symptoms" class="text-danger"></span>
+                        </div>
+
+                        <!-- Diagnosis -->
+                        <div class="form-group col-sm-4">
+                            <label>Diagnosis <span class="text-danger">*</span></label>
+                            <textarea asp-for="Diagnosis" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Diagnosis" class="text-danger"></span>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="form-group col-sm-4">
+                            <label>Checkup Date</label>
+                            <input asp-for="CheckupDate" type="date" class="form-control" />
+                        </div>
+
+                    </div>
+
+                    <hr />
+
+                    <!-- PRESCRIPTION -->
+                    <h4 class="page-header">Prescription</h4>
+
+                    <table class="table table-bordered" id="tblMedicines">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>No. of Days</th>
+                                <th>When to Take</th>
+                                <th>Before Meal?</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic rows will be added via JS -->
+                        </tbody>
+                    </table>
+
+                    <button type="button" id="btnAddMedicine" class="btn btn-primary btn-sm">
+                        Add Medicine
+                    </button>
+
+                    <hr />
+
+                    <!-- Extra Notes -->
+                    <div class="form-group">
+                        <label>Extra Notes</label>
+                        <textarea asp-for="ExtraNotes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <br />
+
+                    <button type="submit" class="btn btn-success">
+                        Update Checkup
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        var medicinesList = @Html.Raw(JsonConvert.SerializeObject(Model.Medicines));
+        var existingPrescriptions = @Html.Raw(JsonConvert.SerializeObject(Model.Prescriptions));
+
+        $(document).ready(function() {
+
+            // Load existing prescriptions
+            if (existingPrescriptions.length > 0) {
+                existingPrescriptions.forEach(function(p) {
+                    addMedicineRow(p);
+                });
+            }
+
+            // Add new row
+            $("#btnAddMedicine").click(function () {
+                addMedicineRow();
+            });
+
+        });
+
+        function addMedicineRow(prescription) {
+            let index = $("#tblMedicines tbody tr").length;
+
+            // Medicine options
+            let options = '<option value="">-- Select Medicine --</option>';
+            medicinesList.forEach(function(m) {
+                let selected = prescription && m.MedicineId == prescription.MedicineId ? "selected" : "";
+                options += `<option value="${m.MedicineId}" ${selected}>${m.Name}</option>`;
+            });
+
+            // WhenToTake options
+            let whenOptions = ['1-1-1','1-0-1','0-1-0','1-0-0'];
+            let whenSelectOptions = '<option value="">-- Select --</option>';
+            whenOptions.forEach(function(opt) {
+                let selected = prescription && opt == prescription.WhenToTake ? "selected" : "";
+                whenSelectOptions += `<option value="${opt}" ${selected}>${opt}</option>`;
+            });
+
+            // Checkbox
+            let isBeforeMeal = prescription && prescription.IsBeforeMeal ? "checked" : "";
+
+            let row = `
+                <tr>
+                    <td>
+                        <select name="Prescriptions[${index}].MedicineId" class="form-control">
+                            ${options}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" name="Prescriptions[${index}].NoOfDays"
+                               class="form-control" value="${prescription ? prescription.NoOfDays : 0}" />
+                    </td>
+                    <td>
+                        <select name="Prescriptions[${index}].WhenToTake" class="form-control">
+                            ${whenSelectOptions}
+                        </select>
+                    </td>
+                    <td class="text-center">
+                        <input type="checkbox" name="Prescriptions[${index}].IsBeforeMeal" value="true" ${isBeforeMeal}/>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm btnDeleteRow">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+            $("#tblMedicines tbody").append(row);
+        }
+
+        $(document).on("click", ".btnDeleteRow", function () {
+            $(this).closest("tr").remove();
+            reIndexRows();
+        });
+
+        function reIndexRows() {
+            $("#tblMedicines tbody tr").each(function (i) {
+                $(this).find("select, input").each(function () {
+                    let name = $(this).attr("name");
+                    if (name) $(this).attr("name", name.replace(/\[\d+\]/, "["+i+"]"));
+                });
+            });
+        }
+    </script>
+
+}
