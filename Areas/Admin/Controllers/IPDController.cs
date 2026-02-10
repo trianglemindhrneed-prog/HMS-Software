@@ -16,96 +16,131 @@ public class IPDController : BaseController
         _dbLayer = dbLayer;
     }
 
-    /* ================= ADD / EDIT ================= */
+ 
     [HttpGet]
-    public async Task<IActionResult> AddIPDAdmission(int? id)
+    public async Task<IActionResult> AddIPDAdmission()
     {
         IpdAdmission model = new();
 
-        if (id != null)
-        {
-            DataTable dt = await _dbLayer.ExecuteSPAsync(
-                "sp_IPDAdmission_Manage",
-                new[]
-                {
-                    new SqlParameter("@Action","GETBYID"),
-                    new SqlParameter("@AdmissionID",id)
-                });
-
-            if (dt.Rows.Count == 0) return NotFound();
-
-            DataRow r = dt.Rows[0];
-            model.AdmissionId = Convert.ToInt32(r["AdmissionID"]);
-            model.PatientID = r["PatientID"].ToString();
-            model.Name = r["Name"].ToString();
-            model.Age = r["Age"] != DBNull.Value ? Convert.ToInt32(r["Age"]) : null;
-            model.Gender = r["Gender"].ToString();
-            model.Number = r["Number"].ToString();
-            model.DoctorId = r["DoctorID"] != DBNull.Value ? Convert.ToInt32(r["DoctorID"]) : null;
-            model.BedCategoryId = r["BedCategoryId"] != DBNull.Value ? Convert.ToInt32(r["BedCategoryId"]) : null;
-            model.BedId = r["BedId"] != DBNull.Value ? Convert.ToInt32(r["BedId"]) : null;
-            model.AdvanceAmount = r["AdvanceAmount"] != DBNull.Value ? Convert.ToDecimal(r["AdvanceAmount"]) : null;
-            model.AdmissionDateTime = r["AdmissionDateTime"] != DBNull.Value
-                ? Convert.ToDateTime(r["AdmissionDateTime"])
-                : DateTime.Now;
-            model.Status = r["Status"].ToString();
-        }
-        else
-        {
-            model.PatientID = await GetNextPatientID();
-            model.AdmissionDateTime = DateTime.Now;
-            model.Status = "Admitted";
-        }
+        model.PatientID = await GetNextPatientID();
+        model.AdmissionDateTime = DateTime.Now;
+        model.Status = "Admitted";
 
         ViewBag.GenderList = GetGenderList();
         ViewBag.DoctorList = await GetDoctorsDropdown();
         ViewBag.BedCategoryList = await GetBedCategoryDropdown();
+        ViewBag.Beds = new List<SelectListItem>();
 
         return View(model);
     }
 
+
     [HttpPost]
     [ValidateAntiForgeryToken]
+
     public async Task<IActionResult> AddIPDAdmission(IpdAdmission model)
     {
-        ViewBag.GenderList = GetGenderList();
-        ViewBag.DoctorList = await GetDoctorsDropdown();
-        ViewBag.BedCategoryList = await GetBedCategoryDropdown();
+        // 🔥 FORCE DEFAULT VALUES
+        model.Status = "Admitted";
+        model.AdmissionDateTime ??= DateTime.Now;
 
-        if (!ModelState.IsValid) return View(model);
+        // 🔥 REMOVE VALIDATION ISSUES
+        ModelState.Remove("DoctorId");
+        ModelState.Remove("BedCategoryId");
+        ModelState.Remove("BedId");
+        ModelState.Remove("AdvanceAmount");
+        ModelState.Remove("Age");
 
-        string action = model.AdmissionId > 0 ? "UPDATE" : "INSERT";
+        if (!ModelState.IsValid)
+        {
+            ViewBag.GenderList = GetGenderList();
+            ViewBag.DoctorList = await GetDoctorsDropdown();
+            ViewBag.BedCategoryList = await GetBedCategoryDropdown();
+            ViewBag.Beds = model.BedCategoryId.HasValue
+                ? await GetBedsByCategory(model.BedCategoryId.Value)
+                : new List<SelectListItem>();
+
+            return View(model);
+        }
 
         SqlParameter[] param =
         {
-            new SqlParameter("@Action",action),
-            new SqlParameter("@AdmissionID",model.AdmissionId),
-            new SqlParameter("@PatientID",model.PatientID),
-            new SqlParameter("@DoctorID",model.DoctorId ?? (object)DBNull.Value),
-            new SqlParameter("@BedCategoryId",model.BedCategoryId ?? (object)DBNull.Value),
-            new SqlParameter("@BedId",model.BedId ?? (object)DBNull.Value),
-            new SqlParameter("@AdmissionDateTime",model.AdmissionDateTime),
-            new SqlParameter("@InitialDiagnosis",model.InitialDiagnosis ?? ""),
-            new SqlParameter("@AdvanceAmount",model.AdvanceAmount ?? (object)DBNull.Value),
-            new SqlParameter("@Name",model.Name),
-            new SqlParameter("@Age",model.Age ?? (object)DBNull.Value),
-            new SqlParameter("@Gender",model.Gender),
-            new SqlParameter("@Number",model.Number),
-            new SqlParameter("@Status",model.Status)
-        };
-
-
+        new SqlParameter("@Action", "INSERT"),
+        new SqlParameter("@PatientID", model.PatientID),
+        new SqlParameter("@DoctorId", model.DoctorId ?? (object)DBNull.Value),
+        new SqlParameter("@BedCategoryId", model.BedCategoryId ?? (object)DBNull.Value),
+        new SqlParameter("@BedId", model.BedId ?? (object)DBNull.Value),
+        new SqlParameter("@AdmissionDateTime", model.AdmissionDateTime),
+        new SqlParameter("@InitialDiagnosis", model.InitialDiagnosis ?? ""),
+        new SqlParameter("@AdvanceAmount", model.AdvanceAmount ?? (object)DBNull.Value),
+        new SqlParameter("@Name", model.Name ?? ""),
+        new SqlParameter("@Age", model.Age ?? (object)DBNull.Value),
+        new SqlParameter("@Gender", model.Gender ?? ""),
+        new SqlParameter("@Number", model.Number ?? ""),
+        new SqlParameter("@Status", "Admitted")
+    };
 
         await _dbLayer.ExecuteSPAsync("sp_IPDAdmission_Manage", param);
 
-        TempData["Message"] = "IPD Admission Saved Successfully";
-        TempData["MessageType"] = "success";
-
+        TempData["Success"] = "IPD Admission Saved Successfully";
         return RedirectToAction("IPDPatients");
-
-
     }
 
+
+    [HttpGet]
+    public async Task<IActionResult> GetBeds(int categoryId)
+    {
+        try
+        {
+            var list = new List<SelectListItem>();
+
+            DataTable dt = await _dbLayer.ExecuteSPAsync(
+                "sp_IPD_BedMaster",
+                new[]
+                {
+                new SqlParameter("@Action","BedsByCategory"),
+                new SqlParameter("@BedCategoryId", categoryId)
+                });
+
+            foreach (DataRow r in dt.Rows)
+            {
+                list.Add(new SelectListItem
+                {
+                    Value = r["BedId"].ToString(),
+                    Text = r["BedNumber"].ToString()
+                });
+            }
+
+            return Json(list);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+
+    private async Task<List<SelectListItem>> GetBedsByCategory(int categoryId)
+    {
+        var list = new List<SelectListItem>();
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_IPD_BedMaster",
+            new[]
+            {
+            new SqlParameter("@Action","BedsByCategory"),
+            new SqlParameter("@BedCategoryId", categoryId)
+            });
+
+        foreach (DataRow r in dt.Rows)
+            list.Add(new SelectListItem
+            {
+                Value = r["BedId"].ToString(),
+                Text = r["BedNumber"].ToString()
+            });
+
+        return list;
+    }
     /* ================= LIST + SEARCH ================= */
     [HttpGet]
     public async Task<IActionResult> IPDPatients(string search = "", string filter = "")
@@ -123,7 +158,7 @@ public class IPDController : BaseController
         // Convert to list
         var list = dt.AsEnumerable().Select(r => new IpdAdmission
         {
-            AdmissionId = Convert.ToInt32(r["AdmissionID"]),
+            AdmissionID = Convert.ToInt32(r["AdmissionID"]),
             PatientID = r["PatientID"].ToString(),
             Name = r["Name"].ToString(),
             Number = r["Number"].ToString(),
@@ -212,7 +247,6 @@ public class IPDController : BaseController
         return list;
     }
 
-
     //========= IPDCheckupHistory ====================
     public async Task<IActionResult> IPDCheckupHistory(string pid)
     {
@@ -293,24 +327,7 @@ public class IPDController : BaseController
 
         return View(model);
     }
-    // ===============================
-    // DELETE CHECKUP (AJAX)
-    // ===============================
-    //[HttpPost]
-    //public async Task<IActionResult> DeletePatients(int id)
-    //{
-    //    await _dbLayer.ExecuteSPAsync("sp_IPDCheckupMaster", new[]
-    //    {
-    //    new SqlParameter("@Action", "DeletePatient"),
-    //    new SqlParameter("@PatientId", id)
-    //});
-
-    //    TempData["Message"] = "Patient deleted successfully";
-    //    TempData["MessageType"] = "success";
-
-    //    return RedirectToAction("IPDPatients");
-    //}
-
+  
     [HttpPost]
     public async Task<IActionResult> DeleteIPDPatient(int id)
     {
