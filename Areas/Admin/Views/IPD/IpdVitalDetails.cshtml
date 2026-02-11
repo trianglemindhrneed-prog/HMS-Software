@@ -39,10 +39,9 @@
                             class="form-control input-sm"
                             style="width:140px;">
                         <option value="">-- Search By --</option>
-                     
+                        <option value="Patientid">Patient-id</option>
                         <option value="Name">Patient Name</option>
-              
-
+             
                     </select>
 
                     <input type="text"
@@ -57,7 +56,7 @@
                         <i class="fa fa-search"></i>
                     </button>
 
-                    <a asp-controller="Ipd" asp-action="IpdVitalDetails" asp-route-search="" asp-route-filter=""
+                    <a asp-action="IpdVitalDetails"
                        class="btn btn-default btn-sm">
                         Show All
                     </a>
@@ -68,27 +67,13 @@
 
         <div class="box-body table-responsive">
 
-            <div class="row mt-3" style="margin-left: 3px !important;">
-               <div class="col-sm-3">
-                    <label>From Date:</label>
-                  @* <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
- *@
-                </div>
-                <div class="col-sm-3">
-                    <label>To Date:</label>
-                @*  <input type="date" id="ToDate" asp-for="ToDate" class="form-control input-sm" /> *@
-                </div> 
-                <div class="col-sm-2" style="margin-top: 22px;">
-                    <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
-                </div> 
-
-            </div>
+          
             <table class="table table-bordered table-hover table-striped">
                 <thead class="bg-gray">
                     <tr class="text-center">
                         <th style="width:30px;"><input type="checkbox" id="chkAll" /></th>
                         <th style="width:100px;">Patient ID</th>
-                        <th style="width:120px;">Patient Name</th>
+                        <th style="width:150px;">Patient Name</th>
                         <th style="width:150px;">Date</th>
                         <th style="width:90px;">Blood Group</th>
                         <th style="width:90px;">Temperature (°C)</th>
