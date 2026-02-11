@@ -11,5 +11,7 @@ namespace HMSCore.Data
 
         // Execute scalar query (like SELECT MAX)
         Task<object> ExecuteScalarAsync(string query, SqlParameter[] parameters = null);
+        Task<DataSet> ExecuteSPWithMultipleResultsAsync(string spName, SqlParameter[] parameters = null);
+
     }
 }

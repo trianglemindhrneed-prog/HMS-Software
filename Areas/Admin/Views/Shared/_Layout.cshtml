@@ -296,17 +296,15 @@
                                 <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                             </a>
                             <ul class="treeview-menu">
-                                <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
-                                <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
-                                <li><a href="patienttest.aspx"><i class="fa fa-user-md"></i> Patient Lab Tests</a></li>
+                                <li><a href="/admin/LabManagement/LabTestList"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                                <li><a href="/admin/LabManagement/LabCategoryList"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                                <li><a href="/admin/LabManagement/PatientsTest"><i class="fa fa-user-md"></i> Patient Lab Tests</a></li>
                             </ul>
                         </li>
                     }
 
                     @if (role == "Pathology")
-                    {
-
-
+                    { 
                         <!-- Pathology Management -->
                         <li class="treeview">
                             <a href="#">
@@ -314,8 +312,8 @@
                                 <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                             </a>
                             <ul class="treeview-menu">
-                                <li><a href="labtest.aspx"><i class="fa fa-vial"></i> Lab Tests</a></li>
-                                <li><a href="labtestcategory.aspx"><i class="fa fa-vials"></i> Lab Categories</a></li>
+                                <li><a href="/admin/LabManagement/LabTestList"><i class="fa fa-vial"></i> Lab Tests</a></li>
+                                <li><a href="/admin/LabManagement/LabCategoryList"><i class="fa fa-vials"></i> Lab Categories</a></li>
                                 <li><a href="pathologypatienttest.aspx"><i class="fa fa-user-md"></i> Pending Tests</a></li>
                                 <li><a href="deliverdpatienttest.aspx"><i class="fa fa-user-md"></i> Delivered Tests</a></li>
                             </ul>

@@ -1,0 +1,126 @@
+﻿@model HMSCore.Areas.Admin.Models.LabTest
+@{
+    ViewData["Title"] = Model.LabId > 0 ? "Edit Lab Test" : "Add Lab Test";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>@ViewData["Title"]</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="@Url.Action("LabTestList", "LabManagement", new { area = "Admin" })">Lab Test List</a></li>
+        <li class="active">@ViewData["Title"]</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form asp-action="AddLabTest" method="post" class="form-horizontal">
+                        <input type="hidden" asp-for="LabId" />
+
+                        <!-- Category -->
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">
+                                Category <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-4">
+                                <select asp-for="LabCategoryId"
+                                        class="form-control"
+                                        asp-items="ViewBag.Categories"
+                                        required>
+                                    <option value="">-- Select Category --</option>
+                                </select>
+                                <span asp-validation-for="LabCategoryId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Lab Test Name -->
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">
+                                Lab Test Name <span class="text-danger">*</span>
+                            </label>
+                            <div class="col-md-4">
+                                <input asp-for="LabTestName"
+                                       class="form-control"
+                                       maxlength="200"
+                                       required />
+                                <span asp-validation-for="LabTestName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Unit -->
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Unit</label>
+                            <div class="col-md-4">
+                                <input asp-for="Unit"
+                                       class="form-control"
+                                       maxlength="100" />
+                                <span asp-validation-for="Unit" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Reference Manager -->
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Reference Manager</label>
+                            <div class="col-md-4">
+                                <input asp-for="RefrenceManager"
+                                       class="form-control"
+                                       maxlength="200" />
+                                <span asp-validation-for="RefrenceManager" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Test Price -->
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">Test Price</label>
+                            <div class="col-md-4">
+                                <input asp-for="TestPrice"
+                                       class="form-control"
+                                       maxlength="100" />
+                                <span asp-validation-for="TestPrice" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                 @*        <div class="form-group">
+                            <label class="col-md-2 control-label">Description</label>
+                            <div class="col-md-4">
+                                <textarea asp-for="Description"
+                                          class="form-control"
+                                          rows="3"
+                                          maxlength="500"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                        </div> *@
+
+                        <!-- Buttons -->
+                        <div class="form-actions">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit"
+                                        class="btn btn-success btn-flat">
+                                    Save
+                                </button>
+
+                                <a asp-action="LabTestList"
+                                   class="btn btn-primary btn-flat">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

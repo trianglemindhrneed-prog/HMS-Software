@@ -1,0 +1,123 @@
+﻿@model List<HMSCore.Areas.Admin.Models.PatientTestViewModel>
+@{
+    ViewData["Title"] = "Patient Lab Test";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>@ViewData["Title"]</h1>
+    <ol class="breadcrumb">
+        <li><a href="/admin/Dashboard/Index"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Patient Test</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border"> 
+            <div class="pull-left">
+                <a class="btn btn-danger btn-flat" href="@Url.Action("AddPatientsTest", "LabManagement", new { area = "Admin" })">
+                    <i class="fa fa-plus"></i> Add New
+                </a>
+                <form method="post" asp-action="DeleteSelectedPatient" style="display:inline;" id="deleteSelectedForm">
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
+                </form>
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <select class="form-control input-sm" name="filter">
+                        <option value="">-- Select --</option>
+                        @* Manually write options *@
+                        <option value="PatientName" selected="@(ViewBag.Filter?.ToString() == "PatientName" ? "selected" : null)">Patient Name</option>
+                        <option value="TestDate" selected="@(ViewBag.Filter?.ToString() == "TestDate" ? "selected" : null)">Test Date</option>
+                        <option value="DeliveryDate" selected="@(ViewBag.Filter?.ToString() == "DeliveryDate" ? "selected" : null)">Delivery Date</option>
+                    </select>
+
+                    <input type="text" class="form-control input-sm" name="search" value="@ViewBag.Search" placeholder="Search" />
+                    <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                    <a href="@Url.Action("PatientsTest", "LabManagement", new { area = "Admin" })" class="btn btn-default btn-flat">Show All</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" /></th>
+                        <th>Patient Id</th>
+                        <th>Patient Name</th>
+                        <th>Lab Test Name</th>
+                        <th>Test Date</th>
+                        <th>Delivery Date</th>
+                        <th>Status</th>
+                        <th>Test Details</th>
+                        <th>View Report</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var m in Model)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="chkItem" name="selectedIds" value="@m.PatientTestId" form="deleteSelectedForm" />
+                            </td>
+                            <td>@m.UserPatientsId</td>
+                            <td>@m.PatientName</td>
+                            <td>@m.LabTestName</td>
+                            <td>@(m.TestDate?.ToString("dd-MM-yyyy"))</td>
+                            <td>@(m.DeliveryDate?.ToString("dd-MM-yyyy"))</td>
+                            <td>
+                                @if(m.ReportStatus==1)
+                                {
+                                    <span class="label label-success">Delivered</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-warning">Pending</span>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-secondary"
+                                   target="_blank"
+                                   href="@Url.Action("PrintPatientsDetails", "LabManagement", new { pageName = "LabPatientTestInvoice", PatientTestId = @m.PatientTestId })">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                            </td>
+                            <td>
+                                @if(!string.IsNullOrEmpty(m.ReportPath) && m.ReportStatus==1)
+                                {
+                                    <a href="@m.ReportPath" target="_blank"><i class="fa fa-eye"></i></a>
+                                }
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-warning" href="@Url.Action("AddPatientsTest", "LabManagement", new { area = "Admin", id = m.PatientTestId })">
+                                    <i class="fa fa-edit"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <form method="post" asp-action="DeletePatient" style="display:inline;">
+                                    <input type="hidden" name="id" value="@m.PatientTestId" />
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        document.getElementById("chkAll").addEventListener("change", function() {
+            document.querySelectorAll(".chkItem").forEach(chk => chk.checked = this.checked);
+        });
+    </script>
+}

@@ -45,5 +45,26 @@ namespace HMSCore.Data
             await con.OpenAsync();
             return await cmd.ExecuteScalarAsync();
         }
+
+        public async Task<DataSet> ExecuteSPWithMultipleResultsAsync(string spName, SqlParameter[] parameters = null)
+        {
+            using SqlConnection con = new SqlConnection(_connectionString);
+            using SqlCommand cmd = new SqlCommand(spName, con)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+
+            if (parameters != null)
+                cmd.Parameters.AddRange(parameters);
+
+            await con.OpenAsync();
+
+            using SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataSet ds = new DataSet();
+            da.Fill(ds);
+
+            return ds;
+        }
+
     }
 }

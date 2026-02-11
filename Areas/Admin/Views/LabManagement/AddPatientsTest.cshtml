@@ -1,0 +1,271 @@
+﻿@model HMSCore.Areas.Admin.Models.PatientTestViewModel
+@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Add Patient Test";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>Patient Test</h1>
+    <ol class="breadcrumb">
+        <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#">Lab Mgmt</a></li>
+        <li class="active">Patient Test</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form id="patientTestForm" method="post" class="form-horizontal">
+                        <input type="hidden" asp-for="PatientTestId" />
+                        @* Patient *@
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Patient <span class="text-danger">*</span></label>
+                            <div class="col-md-4">
+                                <select asp-for="PatientId" class="form-control" asp-items="@(new SelectList(ViewBag.Patients, "Id", "Name"))">
+                                    <option value="">-- Select Patient --</option>
+                                </select>
+                                <span asp-validation-for="PatientId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        @* Consultant *@
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Consultant <span class="text-danger">*</span></label>
+                            <div class="col-md-4">
+                                <select asp-for="ConsultantId" class="form-control" asp-items="@(new SelectList(ViewBag.Consultants, "Id", "Name"))">
+                                    <option value="">-- Select Consultant --</option>
+                                </select>
+                                <span asp-validation-for="ConsultantId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        @* Test Date *@
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Test Date <span class="text-danger">*</span></label>
+                            <div class="col-md-4">
+                                <input asp-for="TestDate" class="form-control" type="date" />
+                                <span asp-validation-for="TestDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        @* Delivery Date *@
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Delivery Date</label>
+                            <div class="col-md-4">
+                                <input asp-for="DeliveryDate" class="form-control" type="date" />
+                            </div>
+                        </div>
+
+                        @* Report Status *@
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Report Status</label>
+                            <div class="col-md-4">
+                                <select asp-for="ReportStatus" class="form-control"
+                                        asp-items="@(new SelectList(new[] {
+                                                                                    new { Value = 0, Text = "Pending" },
+                                                                                    new { Value = 1, Text = "Delivered" }
+                                                                                }, "Value", "Text", Model.ReportStatus))">
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h4>Test Details</h4>
+
+                        @* Test Header *@
+                        <div id="testHeader" class="row" style="display:@(Model.Tests.Count > 0 ? "flex" : "none"); font-weight:bold;">
+                            <div class="col-md-3">Test</div>
+                            <div class="col-md-2">Result</div>
+                            <div class="col-md-4">Remarks</div>
+                            <div class="col-md-2">Delete</div>
+                        </div>
+
+                        @* Test Rows Container *@
+                        <div id="testRows"></div>
+
+                        @* Hidden template for a row *@
+                        <div id="testRowTemplate" style="display:none;">
+                            <div class="form-group row testRow">
+                                <div class="col-md-3">
+                                    <select class="form-control ddlTestSelect2"></select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input class="form-control testResult" />
+                                </div>
+                                <div class="col-md-4">
+                                    <input class="form-control testRemarks" />
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-danger btn-sm removeTestRow">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Add Test Button *@
+                        <div class="form-group">
+                            <div class="col-md-2">
+                                <button type="button" id="addTest" class="btn btn-primary btn-sm">+ Add Test</button>
+                            </div>
+                        </div>
+
+                        @* Save / Cancel Buttons *@
+                        <div class="form-group">
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-success">Save</button>
+                                <a href="@Url.Action("Index", "PatientTest", new { area = "Admin" })" class="btn btn-default">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        var labTests = @Html.Raw(JsonConvert.SerializeObject(ViewBag.LabTests ?? new List<HMSCore.Areas.Admin.Models.DropDownItems>()));
+        var existingTests = @Html.Raw(JsonConvert.SerializeObject(Model.Tests ?? new List<HMSCore.Areas.Admin.Models.TestItemViewModel>()));
+
+
+        $(document).ready(function () {
+
+            /* =========================
+               SELECT2 INIT FUNCTION
+            ==========================*/
+            function initSelect2($element) {
+                if ($.fn.select2) {
+                    $element.select2({
+                        placeholder: "Select Test",
+                        allowClear: true,
+                        width: "100%"
+                    });
+                }
+            }
+
+            /* =========================
+               ADD TEST ROW FUNCTION
+            ==========================*/
+            function addTestRow(testData) {
+
+                var index = $('#testRows .testRow').length;
+
+                var $row = $('#testRowTemplate .testRow').clone();
+
+                var $select = $row.find('select');
+                var $result = $row.find('.testResult');
+                var $remarks = $row.find('.testRemarks');
+
+                // Set names for model binding
+                $select.attr('name', 'Tests[' + index + '].LabTestId');
+                $result.attr('name', 'Tests[' + index + '].Result');
+                $remarks.attr('name', 'Tests[' + index + '].Remarks');
+
+                // Clear previous options
+                $select.empty();
+                $select.append('<option value="">-- Select Test --</option>');
+
+                // Bind dropdown options
+                $.each(labTests, function (i, lab) {
+                    $select.append('<option value="' + lab.Id + '">' + lab.Name + '</option>');
+                });
+
+                // If editing existing record
+                     if (testData && testData.LabTestId) {
+            $select.val(testData.LabTestId).trigger('change');
+            $result.val(testData.Result);
+            $remarks.val(testData.Remarks);
+        }
+
+
+                $('#testRows').append($row);
+
+                // Initialize select2 AFTER appending
+                initSelect2($select);
+
+                $('#testHeader').show();
+            }
+
+            /* =========================
+               LOAD EXISTING DATA
+            ==========================*/
+            if (existingTests && existingTests.length > 0) {
+                $.each(existingTests, function (i, test) {
+                    addTestRow(test);
+                });
+            }
+
+            /* =========================
+               ADD BUTTON CLICK
+            ==========================*/
+            $('#addTest').on('click', function () {
+                addTestRow(null);
+            });
+
+            /* =========================
+               REMOVE ROW
+            ==========================*/
+            $(document).on('click', '.removeTestRow', function () {
+
+                $(this).closest('.testRow').remove();
+
+                // Re-index rows
+                $('#testRows .testRow').each(function (i) {
+
+                    $(this).find('select').attr('name', 'Tests[' + i + '].LabTestId');
+                    $(this).find('.testResult').attr('name', 'Tests[' + i + '].Result');
+                    $(this).find('.testRemarks').attr('name', 'Tests[' + i + '].Remarks');
+                });
+
+                if ($('#testRows .testRow').length === 0) {
+                    $('#testHeader').hide();
+                }
+            });
+
+            /* =========================
+               FORM VALIDATION
+            ==========================*/
+            $('#patientTestForm').on('submit', function (e) {
+
+                var hasError = false;
+
+                $('#testRows .testRow').each(function () {
+
+                    var value = $(this).find('select').val();
+
+                    if (!value || value === "") {
+                        hasError = true;
+
+                        $(this).find('.select2-selection')
+                               .css('border', '1px solid red');
+                    }
+                    else {
+                        $(this).find('.select2-selection')
+                               .css('border', '');
+                    }
+                });
+
+                if (hasError) {
+                    alert('Please select a Test in all rows.');
+                    e.preventDefault();
+                    return false;
+                }
+
+            });
+
+        });
+    </script>
+}
