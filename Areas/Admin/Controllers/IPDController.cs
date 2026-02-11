@@ -3,6 +3,7 @@ using HMSCore.Areas.Admin.Models;
 using HMSCore.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Globalization;
@@ -11,13 +12,14 @@ using System.Globalization;
 public class IPDController : BaseController
 {
     private readonly IDbLayer _dbLayer;
-
-    public IPDController(IDbLayer dbLayer)
+    private readonly IConfiguration _configuration;
+    public IPDController(IDbLayer dbLayer, IConfiguration configuration)
     {
         _dbLayer = dbLayer;
+        _configuration = configuration;
     }
 
- 
+
     [HttpGet]
     public async Task<IActionResult> AddIPDAdmission()
     {
@@ -674,99 +676,28 @@ public class IPDController : BaseController
 
         return RedirectToAction("IPDCheckupHistory", "IPD", new { pid = model.PatientId });
     }
+    //====================IpdCheckupInvoicePrint============
+    [HttpGet]
+    public async Task<IActionResult> PrintIpdCheckupInvoice(string pageName, string checkupId)
+    {
+        var handler = new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
 
-    //[HttpGet]
-    //public async Task<IActionResult> PrintCheckupInvoice(string pageName, string checkupId)
-    //{
-    //    var handler = new HttpClientHandler
-    //    {
-    //        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-    //    };
+        using var client = new HttpClient(handler);
 
-    //    using var client = new HttpClient(handler);
+        var baseUrl = _configuration["WebFormBaseUrl"];
+        var url = $"{baseUrl}/{pageName}.aspx?checkupId={checkupId}";
 
-    //    var baseUrl = _configuration["WebFormBaseUrl"];
-    //    var url = $"{baseUrl}/{pageName}.aspx?checkupId={checkupId}";
+        var pdfBytes = await client.GetByteArrayAsync(url);
 
-    //    var pdfBytes = await client.GetByteArrayAsync(url);
-
-    //    Response.Headers.Add("Content-Disposition", $"inline; filename=Patient_{checkupId}.pdf");
-    //    return File(pdfBytes, "application/pdf");
-    //}
-
-
-    //[HttpGet]
-    //public async Task<IActionResult> PatientsBill(
-    //  string filterColumn = null,
-    //  string keyword = null,
-    //  string fromDate = null,
-    //  string toDate = null,
-    //  int pageSize = 20)
-    //{
+        Response.Headers.Add("Content-Disposition", $"inline; filename=Patient_{checkupId}.pdf");
+        return File(pdfBytes, "application/pdf");
+    }
 
 
-    //    object fromDateValue = string.IsNullOrEmpty(fromDate)
-    //        ? DBNull.Value
-    //        : DateTime.ParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-    //    object toDateValue = string.IsNullOrEmpty(toDate)
-    //        ? DBNull.Value
-    //        : DateTime.ParseExact(toDate, "yyyy-MM-dd", CultureInfo.InvariantCulture).AddDays(1);
-
-
-    //    // Prepare SQL parameters for the stored procedure
-    //    SqlParameter[] parameters = new SqlParameter[]
-    //    {
-    //    new SqlParameter("@Action", "SelectPatients"),
-    //    new SqlParameter("@FilterColumn", string.IsNullOrEmpty(filterColumn) ? DBNull.Value : (object)filterColumn),
-    //    new SqlParameter("@Keyword", string.IsNullOrEmpty(keyword) ? DBNull.Value : (object)keyword),
-    //    new SqlParameter("@FromDate", fromDateValue),
-    //    new SqlParameter("@ToDate", toDateValue)
-    //    };
-
-    //    // Execute stored procedure
-    //    DataTable dt = await _dbLayer.ExecuteSPAsync("sp_OpdManagePatients", parameters);
-
-    //    // Map DataTable to ViewModel with DBNull-safe conversions
-    //    var patients = dt.AsEnumerable().Select(r => new PatientsDetailsViewModel
-    //    {
-    //        Id = r["Id"] == DBNull.Value ? 0 : Convert.ToInt32(r["Id"]),
-    //        PatientId = r["PatientId"] == DBNull.Value ? null : r["PatientId"].ToString(),
-    //        PatientName = r["PatientName"] == DBNull.Value ? null : r["PatientName"].ToString(),
-    //        Age = r["Age"] == DBNull.Value ? null : r["Age"].ToString(),
-    //        ContactNo = r["ContactNo"] == DBNull.Value ? null : r["ContactNo"].ToString(),
-    //        Address1 = r["Address1"] == DBNull.Value ? null : r["Address1"].ToString(),
-    //        ConsultFee = r["ConsultFee"] == DBNull.Value ? null : r["ConsultFee"].ToString(),
-    //        DepartmentName = r["DepartmentName"] == DBNull.Value ? null : r["DepartmentName"].ToString(),
-    //        DoctorName = r["DoctorName"] == DBNull.Value ? null : r["DoctorName"].ToString(),
-    //        DoctorNumber = r["DoctorNumber"] == DBNull.Value ? null : r["DoctorNumber"].ToString(),
-    //        CreatedDate = r["CreatedDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(r["CreatedDate"])
-    //    }).ToList();
-
-    //    // Prepare ViewModel for the view
-    //    var vm = new PatientsDetailsViewModel
-    //    {
-    //        PageSize = pageSize,
-    //        FilterColumn = filterColumn,
-    //        Keyword = keyword,
-    //        FromDate = string.IsNullOrEmpty(fromDate) ? (DateTime?)null : DateTime.Parse(fromDate),
-    //        ToDate = string.IsNullOrEmpty(toDate) ? (DateTime?)null : DateTime.Parse(toDate),
-    //        Patients = patients
-    //    };
-
-    //    return View(vm);
-    //}
-
-
-
-
-
-
-
-
-
-
-    //=========================IpdVitalDetails===================
+    //=========================IpdVitalDetailsWork===================
     private async Task LoadPatientDropdown(string selectedPatientId = null)
     {
         DataTable dt = await _dbLayer.ExecuteSPAsync(
@@ -806,15 +737,59 @@ public class IPDController : BaseController
     }
 
     // ================= LIST ALL VITALS ON PAGE LOAD =================
-   
+
+    //[HttpGet]
+    //public async Task<IActionResult> IpdVitalDetails()
+    //{
+    //    List<IPDVital> list = new();
+
+    //    DataTable dt = await _dbLayer.ExecuteSPAsync(
+    //        "sp_IPDVitals_Manage",
+    //        new SqlParameter[] { new SqlParameter("@Action", "GETALL") });
+
+    //    foreach (DataRow r in dt.Rows)
+    //    {
+    //        list.Add(new IPDVital
+    //        {
+    //            VitalsId = Convert.ToInt32(r["VitalsId"]),
+    //            PatientId = r["PatientId"].ToString(),
+    //            Name = r["PatientName"]?.ToString(),
+    //            RecordedDate = Convert.ToDateTime(r["RecordedDate"]),
+    //            BloodGroup = r["BloodGroup"]?.ToString(),
+    //            Temperature = r["Temperature"]?.ToString(),
+    //            Pulse = r["Pulse"]?.ToString(),
+    //            Height = r["Height"]?.ToString(),
+    //            Weight = r["Weight"]?.ToString(),
+    //            BP = r["BP"]?.ToString(),
+    //            SpO2 = r["SpO2"]?.ToString(),
+    //            RR = r["RR"]?.ToString(),
+    //            Notes = r["Notes"]?.ToString(),
+    //            RecordedBy = r["RecordedBy"]?.ToString()
+    //        });
+    //    }
+
+    //    return View(list);
+    //}
+
+
+    // ================= LIST ALL VITALS + SEARCH =================
     [HttpGet]
-    public async Task<IActionResult> IpdVitalDetails()
+    public async Task<IActionResult> IpdVitalDetails(string SearchBy, string SearchValue)
     {
         List<IPDVital> list = new();
 
+        SqlParameter[] param =
+        {
+        new SqlParameter("@Action", "GETALL"),
+        new SqlParameter("@SearchBy",
+            string.IsNullOrEmpty(SearchBy) ? DBNull.Value : (object)SearchBy),
+        new SqlParameter("@SearchValue",
+            string.IsNullOrEmpty(SearchValue) ? DBNull.Value : (object)SearchValue)
+    };
+
         DataTable dt = await _dbLayer.ExecuteSPAsync(
             "sp_IPDVitals_Manage",
-            new SqlParameter[] { new SqlParameter("@Action", "GETALL") });
+            param);
 
         foreach (DataRow r in dt.Rows)
         {
@@ -822,8 +797,7 @@ public class IPDController : BaseController
             {
                 VitalsId = Convert.ToInt32(r["VitalsId"]),
                 PatientId = r["PatientId"].ToString(),
-                Name = dt.Columns.Contains("PatientName") ? r["PatientName"].ToString() : string.Empty, // FIX
-
+                Name = r["PatientName"]?.ToString(),
                 RecordedDate = Convert.ToDateTime(r["RecordedDate"]),
                 BloodGroup = r["BloodGroup"]?.ToString(),
                 Temperature = r["Temperature"]?.ToString(),
@@ -838,8 +812,15 @@ public class IPDController : BaseController
             });
         }
 
+        ViewBag.SearchBy = SearchBy;
+        ViewBag.SearchValue = SearchValue;
+
         return View(list);
     }
+
+
+
+
     // ================= ADD / EDIT =================
     [HttpGet]
     public async Task<IActionResult> IpdVital(int? id)
@@ -910,7 +891,9 @@ public class IPDController : BaseController
             new SqlParameter("@Weight", (object)model.Weight ?? DBNull.Value),
             new SqlParameter("@BloodGroup", (object)model.BloodGroup ?? DBNull.Value),
             new SqlParameter("@Notes", (object)model.Notes ?? DBNull.Value),
-            new SqlParameter("@RecordedBy", string.IsNullOrEmpty(model.RecordedBy) ? "Admin" : (object)model.RecordedBy)
+            new SqlParameter("@RecordedBy", string.IsNullOrEmpty(model.RecordedBy) ? "Admin" : (object)model.RecordedBy),
+
+     
 
         };
 
@@ -936,93 +919,7 @@ public class IPDController : BaseController
 
     // ================= Search =================
 
-    [HttpGet]
-    public async Task<IActionResult> IPDVitals(string search = "", string filter = "")
-    {
-        // Call SP
-        SqlParameter[] param =
-        {
-        new SqlParameter("@Action", "SEARCH"),
-        new SqlParameter("@SearchBy", string.IsNullOrWhiteSpace(filter) ? DBNull.Value : filter),
-        new SqlParameter("@SearchText", string.IsNullOrWhiteSpace(search) ? DBNull.Value : search)
-    };
+    
 
-        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDVitals_Manage", param);
-
-        // Convert to list safely
-        var list = dt.AsEnumerable().Select(r => new IPDVital
-        {
-            VitalsId = r.Field<int>("VitalsId"),
-            PatientId = r.Field<string>("PatientId"),
-            Name = r.Field<string>("PatientName"),
-           
-            Temperature = r.Field<string>("Temperature"),
-            Pulse = r.Field<string>("Pulse"),
-            BP = r.Field<string>("BP"),
-            SpO2 = r.Field<string>("SpO2"),
-            RR = r.Field<string>("RR"),
-            Height = r.Field<string>("Height"),
-            Weight = r.Field<string>("Weight"),
-            BloodGroup = r.Field<string>("BloodGroup"),
-            Notes = r.Field<string>("Notes"),
-            RecordedBy = r.Field<string>("RecordedBy")
-        }).ToList();
-
-        // Dynamic filtering in C# (optional, redundant if SP already filtered)
-        if (!string.IsNullOrWhiteSpace(search) && !string.IsNullOrWhiteSpace(filter))
-        {
-            switch (filter)
-            {
-                case "Name":
-                    list = list.Where(x => x.Name != null && x.Name.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
-                    break;
-                case "RecordedDate":
-                    if (DateTime.TryParse(search, out DateTime dtSearch))
-                    {
-                        //list = list.Where(x => x.RecordedDate.HasValue && x.RecordedDate.Value.Date == dtSearch.Date).ToList();
-                    }
-                    break;
-            }
-        }
-
-        // Sort descending by RecordedDate
-        list = list.OrderByDescending(x => x.RecordedDate).ToList();
-
-        // Return same view as IpdVitalDetails
-        return View("IpdVitalDetails", list);
-    }
-
-
-    [HttpGet]
-    public async Task<IActionResult> IpdVitalDetails(DateTime? fromDate, DateTime? toDate)
-    {
-        SqlParameter[] param =
-        {
-        new SqlParameter("@Action", "SEARCH"),
-        new SqlParameter("@FromDate", fromDate.HasValue ? fromDate.Value : (object)DBNull.Value),
-        new SqlParameter("@ToDate", toDate.HasValue ? toDate.Value : (object)DBNull.Value)
-    };
-
-        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDVitals_Manage", param);
-
-        var list = dt.AsEnumerable().Select(r => new IPDVital
-        {
-            VitalsId = r.Field<int>("VitalsId"),
-            PatientId = r.Field<string>("PatientId"),
-            RecordedDate = r.Field<DateTime>("RecordedDate"),
-            Temperature = r.Field<string>("Temperature"),
-            Pulse = r.Field<string>("Pulse"),
-            BP = r.Field<string>("BP"),
-            SpO2 = r.Field<string>("SpO2"),
-            RR = r.Field<string>("RR"),
-            Height = r.Field<string>("Height"),
-            Weight = r.Field<string>("Weight"),
-            BloodGroup = r.Field<string>("BloodGroup"),
-            Notes = r.Field<string>("Notes"),
-            RecordedBy = r.Field<string>("RecordedBy")
-        }).ToList();
-
-        return View(list);
-    }
 }
 
