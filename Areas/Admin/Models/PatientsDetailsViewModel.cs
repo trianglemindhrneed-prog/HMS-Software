@@ -25,6 +25,10 @@
         public string Keyword { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
+        public int? Yearly { get; set; }
+        public int? HalfYearly { get; set; }
+        public int? Monthly { get; set; }
+
     }
 
 }

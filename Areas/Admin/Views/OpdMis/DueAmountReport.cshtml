@@ -1,4 +1,163 @@
-﻿@{
+﻿@model HMSCore.Areas.Admin.Models.PaidAmountReportViewModel
+@{
     ViewData["Title"] = "Due Amount Report";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+ 
+
+<section class="content-header">
+    <h1>Due Amount Report</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Due Amount Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <form method="get" class="form-inline pull-right">
+                <!-- Page Size -->
+                <select id="pageSizeSelect" class="form-control input-sm">
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+
+                <!-- Filter Column -->
+                <select class="form-control input-sm" asp-for="FilterColumn">
+                    <option value="">-- Select --</option>
+                    <option value="PatientId" selected="@(Model.FilterColumn == "PatientId" ? "selected" : null)">Patient Id</option>
+                    <option value="PatientName" selected="@(Model.FilterColumn == "PatientName" ? "selected" : null)">Patient Name</option>
+                    <option value="BillNo" selected="@(Model.FilterColumn == "BillNo" ? "selected" : null)">Bill Number</option>
+                </select>
+
+                <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" />
+                <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                <a href="@Url.Action("DueAmountReport", "OpdMis", new { area = "Admin" })" class="btn btn-default btn-flat">Show All</a>
+            </form>
+        </div>
+
+        <!-- Date Filter (outside the main search form) -->
+        <div class="row mt-3" style="margin-left: 3px !important;">
+            <div class="col-sm-3">
+                <label>From Date:</label>
+                <input type="date" id="fromDateInput" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-3">
+                <label>To Date:</label>
+                <input type="date" id="toDateInput" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitDateSearch()">Search</button>
+            </div>
+        </div>
+        <!-- Due Summary Table -->
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead style="background-color:#41A5EE; color:white;">
+                    <tr>
+                        <th>Last 1 Year Due</th>
+                        <th>Last 6 Months Due</th>
+                        <th>Current Month Due</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Model.YearlyDue.ToString("0.00")</td>
+                        <td>@Model.HalfYearlyDue.ToString("0.00")</td>
+                        <td>@Model.MonthlyDue.ToString("0.00")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+        <!-- Patients Grid -->
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Patient Id</th>
+                        <th>Patient Details</th>
+                        <th>Bill No.</th>
+                        <th>Patient Name</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Discount Amount</th>
+                        <th>Consult Fee</th>
+                        <th>Total</th>
+                        <th>Paid Amount</th>
+                        <th>Due Amount</th>
+                        <th>Bill Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Patients != null && Model.Patients.Count > 0)
+                    {
+                        foreach (var patient in Model.Patients)
+                        {
+                            <tr>
+                                <td>@patient.PatientId</td>
+                                <td>
+                                    <a href="/Admin/OPD/CheckupHistory?pid=@patient.PatientId" class="btn btn-sm btn-warning">
+                                        <i class="fa fa-bars"></i>
+                                    </a>
+                                </td>
+                                <td>@patient.BillNo</td>
+                                <td>@patient.PatientName</td>
+                                <td>@patient.TotalAmount.ToString("0.00")</td>
+                                <td>@(patient.Discount.ToString("F2") + "%")</td>
+
+                                  
+                                <td>@((patient.TotalAmount * patient.Discount / 100).ToString("0.00"))</td>
+                                <td>@patient.ConsultFee</td>
+                                <td>@patient.GrandTotal.ToString("0.00")</td>
+                                <td>@patient.PaidAmount.ToString("0.00")</td> 
+                                <td>@patient.Balance.ToString("0.00")</td>
+
+                                <td>@patient.BillDate?.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="btn btn-sm @(patient.Balance == 0 ? "btn-success" : "btn-warning")">
+                                        @(patient.Balance == 0 ? "Complete" : "Pending")
+                                    </span>
+
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center">No records found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+@section Scripts {
+    <script>
+        function submitDateSearch() {
+            var fromDate = document.getElementById('fromDateInput').value;
+            var toDate = document.getElementById('toDateInput').value;
+
+            var filterColumn = document.querySelector('select[name="FilterColumn"]')?.value || '';
+            var keyword = document.querySelector('input[name="Keyword"]')?.value || '';
+            var pageSize = document.querySelector('select[name="pageSize"]')?.value || '20';
+
+            var url = '@Url.Action("PaidAmountReport", "OpdMis", new { area = "Admin" })' +
+                      '?fromDate=' + encodeURIComponent(fromDate) +
+                      '&toDate=' + encodeURIComponent(toDate) +
+                      '&filterColumn=' + encodeURIComponent(filterColumn) +
+                      '&keyword=' + encodeURIComponent(keyword) +
+                      '&pageSize=' + encodeURIComponent(pageSize);
+
+            window.location.href = url;
+        }
+    </script>
 }

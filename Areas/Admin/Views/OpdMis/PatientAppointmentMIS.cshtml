@@ -1,4 +1,151 @@
-﻿@{
+﻿@model HMSCore.Areas.Admin.Models.DoctorPatientSeenPageVM
+@{
     ViewData["Title"] = "Patients Appointment";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
+
+<section class="content-header">
+    <h1>Seen Patients Appointment Report</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Seen Patients Appointment Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <button type="button" id="btnPrint" class="btn btn-primary">Print</button>
+
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <select class="form-control input-sm" asp-for="FilterColumn">
+                        <option value="">-- Select --</option>
+                        <option value="DoctorName" selected='@(Model.FilterColumn == "DoctorName" ? "selected" : null)'>Doctor Name</option>
+                        <option value="Phone" selected='@(Model.FilterColumn == "Phone" ? "selected" : null)'>Phone</option>
+                        <option value="Email" selected='@(Model.FilterColumn == "Email" ? "selected" : null)'>Email</option>
+                    </select>
+
+
+                    <input type="text" name="keyword" value="@Model.Keyword" class="form-control input-sm" placeholder="Search" />
+                    <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                    <a href="/Admin/OpdMis/DoctorPatientSeenMIS" class="btn btn-default btn-flat">Show All</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="box-body table-responsive" id="printableArea">
+            <table id="gvDoctorSummary" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Doctor Name</th>
+                        <th>Mobile No.</th>
+                        <th>Email</th>
+                        <th>Patients Seen (Done)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Records)
+                    {
+                        <tr>
+                            <td>@row.DoctorName</td>
+                            <td>@row.MobileNu</td>
+                            <td>@row.Email</td>
+                            <td>@row.PatientSeenCount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="box-footer" id="printableFooter">
+            <strong>Total Doctors:</strong> @Model.TotalDoctors
+            &nbsp; | &nbsp;
+            <strong>Total Patients Seen:</strong> @Model.TotalPatientsSeen
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#btnPrint").click(function () {
+                var printContents = $("#printableArea").html();
+                var printFooter = $("#printableFooter").html();
+
+                // Open a new window
+                var newWin = window.open('', '', 'width=900,height=700');
+
+                // Create the HTML document structure
+                var doc = newWin.document;
+                doc.open();
+
+                // Build head
+                var head = doc.createElement('head');
+                var title = doc.createElement('title');
+                title.textContent = 'Seen Patients Appointment Report';
+                head.appendChild(title);
+
+                // Add Bootstrap CSS
+                var link = doc.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/adminassets/bower_components/bootstrap/dist/css/bootstrap.min.css';
+                head.appendChild(link);
+
+                // Add custom styles
+                var style = doc.createElement('style');
+                style.textContent = `
+                    table {width: 100%; border-collapse: collapse;}
+                    table, th, td {border: 1px solid black;}
+                    th, td {padding: 8px; text-align: left;}
+                    .box-footer {margin-top: 15px; font-weight: bold;}
+                    h3 {text-align: center;}
+                `;
+                head.appendChild(style);
+
+                doc.documentElement.appendChild(head);
+
+                // Build body
+                var body = doc.createElement('body');
+
+                // Header
+                var h3 = doc.createElement('h3');
+                h3.textContent = 'Seen Patients Appointment Report';
+                body.appendChild(h3);
+
+                // Printable table
+                var tableDiv = doc.createElement('div');
+                tableDiv.innerHTML = printContents;
+                body.appendChild(tableDiv);
+
+                // Footer
+                var footerDiv = doc.createElement('div');
+                footerDiv.innerHTML = printFooter;
+                body.appendChild(footerDiv);
+
+                doc.documentElement.appendChild(body);
+
+                // Add hot-reload script safely (escaped)
+                var refreshScript = doc.createElement('script');
+                refreshScript.src = '/_framework/aspnetcore-browser-refresh.js';
+                doc.body.appendChild(refreshScript);
+
+                doc.close();
+
+                // Wait for window to load before printing
+                newWin.onload = function () {
+                    newWin.focus();
+                    newWin.print();
+                    newWin.close();
+                };
+            });
+        });
+    </script>
+}
+
+
+
+

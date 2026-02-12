@@ -20,7 +20,10 @@
 
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-
+        // Summary
+        public decimal? YearlyPaid { get; set; }
+        public decimal? HalfYearlyPaid { get; set; }
+        public decimal? MonthlyPaid { get; set; }
         public List<SaleMedicineReportViewModel> Records { get; set; }
     }
 
