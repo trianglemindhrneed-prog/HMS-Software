@@ -970,29 +970,7 @@ namespace HMSCore.Areas.Admin.Controllers
             TempData["MessageType"] = "success";
             return RedirectToAction("TodayPatientAppointment");
         }
-
-        //[HttpGet]
-        //public async Task<IActionResult> PrintAppointment(int appointmentId)
-        //{
-        //    var handler = new HttpClientHandler
-        //    {
-        //        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
-        //    };
-
-        //    using var client = new HttpClient(handler);
-
-        //    var pdfBytes = await client.GetByteArrayAsync(
-        //        $"http://localhost:64385/Admin/Appointment_Print.aspx?AppointmentId={appointmentId}");
-
-
-        //    Response.Headers.Add("Content-Disposition", "inline; filename=Appointment.pdf");
-
-        //    return File(pdfBytes, "application/pdf");
-        //}
-
-
-      
-
+ 
         [HttpGet]
         public async Task<IActionResult> PrintAppointment(string pageName, int id)
         {
@@ -1015,6 +993,59 @@ namespace HMSCore.Areas.Admin.Controllers
             return File(pdfBytes, "application/pdf");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> TodayDoctorPAppointment(
+       string filterColumn,
+       string keyword,
+       DateTime? fromDate,
+       DateTime? toDate,
+       int pageNumber = 1,
+       int pageSize = 20)
+        {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
+            var vm = new AppointmentReportVM
+            {
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = fromDate,
+                ToDate = toDate,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
 
+            var dt = await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
+            {
+        new SqlParameter("@Action","GetPaged"),
+        new SqlParameter("@FilterColumn",(object?)filterColumn ?? DBNull.Value),
+        new SqlParameter("@FilterValue",(object?)keyword ?? DBNull.Value),
+        new SqlParameter("@FromDate",(object?)fromDate ?? DBNull.Value),
+        new SqlParameter("@ToDate",(object?)toDate ?? DBNull.Value),
+        new SqlParameter("@PageNumber",pageNumber),
+        new SqlParameter("@PageSize",pageSize)
+    });
+
+            if (dt.Rows.Count > 0)
+                vm.TotalRecords = Convert.ToInt32(dt.Rows[0]["TotalRecords"]);
+
+            vm.Appointments = dt.AsEnumerable().Select(r => new AppointmentReportViewModel
+            {
+                BookingId = r["BookingId"].ToString(),
+                AppointmentId = Convert.ToInt32(r["AppointmentId"]),
+                PatientName = r["PatientName"].ToString(),
+                Phone = r["Phone"].ToString(),
+                Email = r["Email"].ToString(),
+                DoctorName = r["DoctorName"].ToString(),
+                DepartmentName = r["DepartmentName"].ToString(),
+                AppointmentDate = r["AppointmentDate"] != DBNull.Value ? Convert.ToDateTime(r["AppointmentDate"]) : (DateTime?)null,
+                AppointmentTime = r["AppointmentTime"] != DBNull.Value
+                        ? TimeSpan.Parse(r["AppointmentTime"].ToString())
+                        : (TimeSpan?)null,
+
+                Status = r["Status"].ToString()
+            }).ToList();
+
+            return View(vm);
+        }
     }
 }

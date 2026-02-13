@@ -163,9 +163,8 @@
                             </ul>
                         </li>
                     }
-
-
-                    @if (role == "Admin" || role == "Doctor")
+                     
+                    @if (role == "Admin")
                     {
 
                         <!-- Appointment Management -->
@@ -186,7 +185,7 @@
                     }
                     @if (role == "Doctor")
                     {
-                        <li><a href="PatientAppointment.aspx"><i class="fa fa-calendar-check"></i> <span>Appointments</span></a></li>
+                        <li><a href="/admin/Appointment/TodayDoctorPAppointment"><i class="fa fa-calendar-check"></i> <span>Appointments</span></a></li>
                     }
                     @* Check if user role is Admin, Doctor, or Nurse *@
                     @if (role == "Admin" || role == "Doctor" || role == "Nurse")
@@ -200,7 +199,7 @@
                             </a>
                             <ul class="treeview-menu">
  
-                                @if (role == "Admin") {
+                                 
                              <li> <a href="@Url.Action("AddIPDAdmission", "IPD")">  <i class="fa fa-user-plus"></i> IPD Admission </a> </li>
  
                              <li>  <a href="@Url.Action("IPDPatients", "IPD")">  <i class="fa fa-user-plus"></i> IPD Patients </a> </li> 
@@ -219,7 +218,7 @@
                                 <li><a href="IpdDietPlanDetails.aspx"><i class="fa fa-apple-alt"></i> Diet Plan</a></li>
                                 <li><a href="IpdBillSaleProductPatient.aspx"><i class="fa fa-box"></i> Medicine Sale Details</a></li>
  
-                                    } 
+                                  
                                       
                             </ul>
                         </li>
