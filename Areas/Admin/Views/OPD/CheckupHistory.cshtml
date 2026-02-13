@@ -108,10 +108,12 @@
                                         <form method="post" asp-action="DeleteCheckup" style="display:inline-block;"
                                               onsubmit="return confirm('Are you sure you want to delete this checkup?');">
                                             <input type="hidden" name="checkupId" value="@chk.CheckupId" />
+                                            <input type="hidden" name="patientId" value="@Model.PatientId" />
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fa fa-trash"></i> Delete
                                             </button>
                                         </form>
+
 
 
                                     </span>

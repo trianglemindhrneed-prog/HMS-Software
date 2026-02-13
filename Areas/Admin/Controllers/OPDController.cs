@@ -448,22 +448,30 @@ namespace HMSCore.Areas.Admin.Controllers
                 return View(model);
             }
 
-    
+
 
         [HttpPost]
-        public async Task<IActionResult> DeleteCheckup(int checkupId)
+        public async Task<IActionResult> DeleteCheckup(string checkupId)
         {
-            await _dbLayer.ExecuteSPAsync(
-                    "sp_opdManageCheckup",
-                    new[] {
-                new SqlParameter("@Action", "DeleteCheckup"),
-                new SqlParameter("@CheckupId", checkupId)
-                    });
+            if (string.IsNullOrEmpty(checkupId))
+            {
+                TempData["Message"] = "Invalid Checkup ID";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("Checkuphistory");
+            }
 
-            TempData["Message"] = $"Checkup deleted successfully";
+            await _dbLayer.ExecuteSPAsync("sp_OpdManagePatients", new[]
+            {
+        new SqlParameter("@Action", "DeleteCheckup"),
+        new SqlParameter("@CheckupId", checkupId)
+    });
+
+            TempData["Message"] = "Checkup deleted successfully";
             TempData["MessageType"] = "success";
-            return RedirectToAction("PatientsDetails");
+            var patientId = Request.Form["patientId"];
+            return RedirectToAction("Checkuphistory", new { pid = patientId });
         }
+
 
 
 
