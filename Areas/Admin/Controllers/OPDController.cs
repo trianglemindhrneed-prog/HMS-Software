@@ -462,7 +462,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
             TempData["Message"] = $"Checkup deleted successfully";
             TempData["MessageType"] = "success";
-            return RedirectToAction("CheckupHistory");
+            return RedirectToAction("PatientsDetails");
         }
 
 
