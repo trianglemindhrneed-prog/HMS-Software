@@ -1,12 +1,18 @@
 ﻿using HMSCore.Areas.Admin.Controllers;
 using HMSCore.Areas.Admin.Models;
 using HMSCore.Data;
+using HMSCore.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Hosting;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 [Area("Admin")]
 public class IPDController : BaseController
@@ -736,41 +742,7 @@ public class IPDController : BaseController
         ViewBag.PatientList = list;
     }
 
-    // ================= LIST ALL VITALS ON PAGE LOAD =================
-
-    //[HttpGet]
-    //public async Task<IActionResult> IpdVitalDetails()
-    //{
-    //    List<IPDVital> list = new();
-
-    //    DataTable dt = await _dbLayer.ExecuteSPAsync(
-    //        "sp_IPDVitals_Manage",
-    //        new SqlParameter[] { new SqlParameter("@Action", "GETALL") });
-
-    //    foreach (DataRow r in dt.Rows)
-    //    {
-    //        list.Add(new IPDVital
-    //        {
-    //            VitalsId = Convert.ToInt32(r["VitalsId"]),
-    //            PatientId = r["PatientId"].ToString(),
-    //            Name = r["PatientName"]?.ToString(),
-    //            RecordedDate = Convert.ToDateTime(r["RecordedDate"]),
-    //            BloodGroup = r["BloodGroup"]?.ToString(),
-    //            Temperature = r["Temperature"]?.ToString(),
-    //            Pulse = r["Pulse"]?.ToString(),
-    //            Height = r["Height"]?.ToString(),
-    //            Weight = r["Weight"]?.ToString(),
-    //            BP = r["BP"]?.ToString(),
-    //            SpO2 = r["SpO2"]?.ToString(),
-    //            RR = r["RR"]?.ToString(),
-    //            Notes = r["Notes"]?.ToString(),
-    //            RecordedBy = r["RecordedBy"]?.ToString()
-    //        });
-    //    }
-
-    //    return View(list);
-    //}
-
+  
 
     // ================= LIST ALL VITALS + SEARCH =================
     [HttpGet]
@@ -817,9 +789,6 @@ public class IPDController : BaseController
 
         return View(list);
     }
-
-
-
 
     // ================= ADD / EDIT =================
     [HttpGet]
@@ -917,9 +886,263 @@ public class IPDController : BaseController
         }
     }
 
-    // ================= Search =================
 
-    
+
+    // ================= IPDPNDetailsList =================
+
+
+    [HttpGet]
+    public async Task<IActionResult> IPDPNDetails(string SearchValue)
+    {
+        List<IPDProgressNote> list = new();
+
+        SqlParameter[] param =
+        {
+        new SqlParameter("@Action",
+            string.IsNullOrEmpty(SearchValue) ? "GETALL" : "SEARCH"),
+
+        new SqlParameter("@SearchText",
+            string.IsNullOrEmpty(SearchValue) ? DBNull.Value : (object)SearchValue)
+    };
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_IPDProgressNotes_Manage",
+            param);
+
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new IPDProgressNote
+            {
+                NoteId = Convert.ToInt32(r["NoteId"]),
+                PatientId = r["PatientId"]?.ToString(),
+                VisitDate = r["VisitDate"] == DBNull.Value
+                            ? DateTime.Now
+                            : Convert.ToDateTime(r["VisitDate"]),
+                DoctorId = r["DoctorId"] == DBNull.Value ? null : (int?)r["DoctorId"],
+                DoctorName = r["DoctorName"] == DBNull.Value ? "" : r["DoctorName"].ToString(),
+                Subjective = r["Subjective"]?.ToString(),
+                Objective = r["Objective"]?.ToString(),
+                Assessment = r["Assessment"]?.ToString(),
+                Plans = r["Plans"]?.ToString()
+            });
+        }
+
+        ViewBag.SearchValue = SearchValue;
+
+        return View(list);
+    }
+
+    // ================= IPDPNDetailsDocterdropdown =================
+
+    private async Task LoadDoctorDropdown(int? selectedDoctorId = null)
+    {
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_IPDProgressNotes_Manage",   // ✅ Correct SP
+            new[]
+            {
+            new SqlParameter("@Action", "DOCTOR_DROPDOWN")
+            });
+
+        var list = new List<SelectListItem>
+    {
+        new SelectListItem
+        {
+            Value = "",
+            Text = "-- Select Doctor --"
+        }
+    };
+
+        if (dt != null && dt.Rows.Count > 0)
+        {
+            foreach (DataRow r in dt.Rows)
+            {
+                int doctorId = Convert.ToInt32(r["DoctorId"]);
+                string fullName = r["FullName"]?.ToString();
+
+                list.Add(new SelectListItem
+                {
+                    Value = doctorId.ToString(),      // ID save hoga
+                    Text = fullName,                  // Name show hoga
+                    Selected = selectedDoctorId.HasValue
+                               && doctorId == selectedDoctorId.Value
+                });
+            }
+        }
+
+        ViewBag.DoctorList = list;   // ✅ Correct ViewBag
+    }
+
+    // ================= IPDPNDetailsSave =================
+    [HttpGet]
+    public async Task<IActionResult> IPDProgressNote(int? noteId)
+    {
+        var model = new IPDProgressNote();
+
+        if (noteId.HasValue)
+        {
+            model.NoteId = noteId.Value;
+
+            var dt = await _dbLayer.ExecuteSPAsync(
+                "sp_IPDProgressNotes_Manage",
+                new[]
+                {
+                new SqlParameter("@Action", "GETALL")
+                });
+
+            var row = dt.AsEnumerable()
+                        .FirstOrDefault(r => Convert.ToInt32(r["NoteId"]) == noteId);
+
+            if (row != null)
+            {
+                model.PatientId = row["PatientId"].ToString();
+                model.VisitDate = Convert.ToDateTime(row["VisitDate"]);
+                model.DoctorId = row["DoctorId"] == DBNull.Value ? null : (int?)row["DoctorId"];
+                model.Subjective = row["Subjective"].ToString();
+                model.Objective = row["Objective"].ToString();
+                model.Assessment = row["Assessment"].ToString();
+                model.Plans = row["Plans"].ToString();
+            }
+        }
+
+        // 🔴 YAHI CALL KARNA HAI
+        await LoadPatientDropdown(model.PatientId);
+
+        await LoadDoctorDropdown(model.DoctorId);
+
+        return View(model);
+    }
+    [HttpPost]
+    public async Task<IActionResult> IPDProgressNote(IPDProgressNote model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        string action = model.NoteId == 0 ? "INSERT" : "UPDATE";
+
+        var parameters = new[]
+        {
+        new SqlParameter("@Action", action),
+        new SqlParameter("@NoteId", model.NoteId),
+        new SqlParameter("@PatientId", model.PatientId),
+        new SqlParameter("@VisitDate", model.VisitDate),
+        new SqlParameter("@DoctorId", model.DoctorId ?? (object)DBNull.Value),
+        new SqlParameter("@Subjective", model.Subjective ?? (object)DBNull.Value),
+        new SqlParameter("@Objective", model.Objective ?? (object)DBNull.Value),
+        new SqlParameter("@Assessment", model.Assessment ?? (object)DBNull.Value),
+        new SqlParameter("@Plans", model.Plans ?? (object)DBNull.Value)
+    };
+
+        await _dbLayer.ExecuteSPAsync("sp_IPDProgressNotes_Manage", parameters);
+
+        TempData["Message"] = action == "INSERT"
+            ? "Progress Note saved successfully!"
+            : "Progress Note updated successfully!";
+
+        TempData["MessageType"] = "success";
+
+        return RedirectToAction("IPDPNDetails");
+    }
+
+    // ================= IPDPNDetailsDelete =================
+    [HttpPost]
+    public async Task<IActionResult> DeleteNotes(int id)
+    {
+        await _dbLayer.ExecuteSPAsync("sp_IPDProgressNotes_Manage", new[]
+        {
+        new SqlParameter("@Action", "DELETE"),
+        new SqlParameter("@NoteId", id)
+    });
+
+        TempData["Message"] = "Progress note deleted successfully";
+        TempData["MessageType"] = "success";
+
+        return RedirectToAction("IPDPNDetails");
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteSelecteddata(int[] selectedIds)
+    {
+        if (selectedIds != null && selectedIds.Length > 0)
+        {
+            string ids = string.Join(",", selectedIds);
+
+            await _dbLayer.ExecuteSPAsync("sp_IPDProgressNotes_Manage", new[]
+            {
+            new SqlParameter("@Action", "MULTIPLE_DELETE"),
+            new SqlParameter("@Ids", ids)
+        });
+
+            TempData["Message"] = "Selected progress notes deleted successfully";
+            TempData["MessageType"] = "success";
+        }
+        else
+        {
+            TempData["Message"] = "No records selected";
+            TempData["MessageType"] = "error";
+        }
+
+        return RedirectToAction("IPDPNDetails");
+    }
+
+
+    // ================= IPDBillingLedgerDetailsList =================
+
+    [HttpGet]
+    public async Task<IActionResult> IPDBillingLedgerDetails(string searchColumn, string searchValue)
+    {
+        List<IPDBillingLedgerModel> list = new();
+
+        SqlParameter[] param =
+        {
+        new SqlParameter("@Action",
+            string.IsNullOrEmpty(searchValue) ? "GETALL" : "SEARCH"),
+
+        new SqlParameter("@SearchColumn",
+            string.IsNullOrEmpty(searchColumn) ? DBNull.Value : (object)searchColumn),
+
+        new SqlParameter("@SearchValue",
+            string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue)
+    };
+
+        DataTable dt = await _dbLayer.ExecuteSPAsync(
+            "sp_IPDBillingLedger_Manage",
+            param);
+
+        foreach (DataRow r in dt.Rows)
+        {
+            list.Add(new IPDBillingLedgerModel
+            {
+                LedgerId = Convert.ToInt32(r["LedgerId"]),
+                PatientId = r["PatientId"]?.ToString(),
+
+                BillingDate = r["BillingDate"] == DBNull.Value
+                                ? DateTime.Now
+                                : Convert.ToDateTime(r["BillingDate"]),
+
+                ServiceType = r["ServiceType"]?.ToString(),
+                Description = r["Description"]?.ToString(),
+
+                Amount = r["Amount"] == DBNull.Value
+                            ? 0
+                            : Convert.ToDecimal(r["Amount"]),
+
+                Discount = r["Discount"] == DBNull.Value
+                            ? 0
+                            : Convert.ToDecimal(r["Discount"]),
+
+                IsPaid = r["IsPaid"] != DBNull.Value &&
+                         Convert.ToBoolean(r["IsPaid"]),
+
+                CreatedBy = r["CreatedBy"]?.ToString()
+            });
+        }
+
+        ViewBag.SearchColumn = searchColumn;
+        ViewBag.SearchValue = searchValue;
+
+        return View(list);
+    }
 
 }
 

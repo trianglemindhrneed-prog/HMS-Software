@@ -289,5 +289,122 @@ namespace HMSCore.Areas.Admin.Controllers
             return File(pdfBytes, "application/pdf");
         }
 
+        //=========================BillSaleMedicine===============
+
+
+        [HttpGet]
+        public async Task<IActionResult> BillSaleMedicine(
+     string filterColumn = null,
+     string keyword = null,
+     DateTime? fromDate = null,
+     DateTime? toDate = null)
+        {
+            var dt = await _dbLayer.ExecuteSPAsync(
+                "SP_IPDSaleMedicineReport", 
+                new[]
+                {
+            new SqlParameter("@FilterColumn", (object)filterColumn ?? DBNull.Value),
+            new SqlParameter("@Keyword", (object)keyword ?? DBNull.Value),
+            new SqlParameter("@FromDate", (object)fromDate ?? DBNull.Value),
+            new SqlParameter("@ToDate", (object)toDate?.AddDays(1) ?? DBNull.Value)
+                });
+
+            var list = dt.AsEnumerable().Select(r => new SaleMedicineReportViewModel
+            {
+                Id = Convert.ToInt32(r["Id"]),
+                InvoiceId = r["InvoiceId"].ToString(),
+                InvoiceDate = Convert.ToDateTime(r["InvoiceDate"]),
+                PatientId = r["PatientId"].ToString(),
+                PatientName = r["PatientName"].ToString(),
+                GrandTotal = Convert.ToDecimal(r["GrandTotal"]),
+                FinalAmount = Convert.ToDecimal(r["FinalAmount"])
+            }).ToList();
+
+            return View(new IPDSaleMedicineReportPageVM
+            {
+                FilterColumn = filterColumn,
+                Keyword = keyword,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Records = list
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteMedicineBill(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                TempData["Message"] = "Invalid invoice";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("BillSaleMedicine");
+            }
+
+            await _dbLayer.ExecuteSPAsync(
+                "SP_IPDSaleMedicineReport",
+                new[]
+                {
+            new SqlParameter("@Action", "DELETE"),
+            new SqlParameter("@InvoiceId", id)
+                });
+
+            TempData["Message"] = "Invoice deleted successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("BillSaleMedicine");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedMedicine(string[] selectedIds)
+        {
+            if (selectedIds == null || selectedIds.Length == 0)
+            {
+                TempData["Message"] = "No invoice selected";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("BillSaleMedicine");
+            }
+
+            foreach (var invoiceId in selectedIds)
+            {
+                await _dbLayer.ExecuteSPAsync(
+                    "SP_IPDSaleMedicineReport",
+                    new[]
+                    {
+                new SqlParameter("@Action", "DELETE"),
+                new SqlParameter("@InvoiceId", invoiceId)
+                    });
+            }
+
+            TempData["Message"] = "Selected invoices deleted successfully";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("BillSaleMedicine");
+        }
+
+
+
+        //[HttpGet]
+        //public async Task<IActionResult> PrintMedicineBillOther(string pageName, string id)
+        //{
+        //    var handler = new HttpClientHandler
+        //    {
+        //        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        //    };
+
+        //    using var client = new HttpClient(handler);
+
+        //    var baseUrl = _configuration["WebFormBaseUrl"];
+        //    var url = $"{baseUrl}/{pageName}.aspx?ID={id}";
+
+        //    var pdfBytes = await client.GetByteArrayAsync(url);
+
+        //    Response.Headers.Add("Content-Disposition", "inline; filename=Patient_{id}.pdf");
+        //    return File(pdfBytes, "application/pdf");
+        //}
+
+
+
+
     }
 }
