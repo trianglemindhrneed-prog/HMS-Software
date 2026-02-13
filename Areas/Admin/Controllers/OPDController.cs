@@ -460,7 +460,7 @@ namespace HMSCore.Areas.Admin.Controllers
                 return RedirectToAction("Checkuphistory");
             }
 
-            await _dbLayer.ExecuteSPAsync("sp_OpdManagePatients", new[]
+            await _dbLayer.ExecuteSPAsync("sp_opdCheckupHistory", new[]
             {
         new SqlParameter("@Action", "DeleteCheckup"),
         new SqlParameter("@CheckupId", checkupId)
