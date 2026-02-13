@@ -1,0 +1,133 @@
+﻿@model HMSCore.Areas.Admin.Models.IPDBillingLedgerModel
+
+@{
+    ViewData["Title"] = "IPD Vital";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
+}
+
+<section class="content-header">
+    <h1>Add Patients Vital</h1>
+    <ol class="breadcrumb">
+        <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#">Patients</a></li>
+        <li class="active">Add Patients Vital</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form asp-action="IPDProgressNote"
+                          asp-controller="IPD"
+                          asp-area="Admin"
+                          method="post"
+                          class="form-horizontal">
+
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="LedgerId" />
+
+                        <!-- ================= ROW 1 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-4">
+                                <label>Patient</label>
+                                <select asp-for="PatientId"
+                                        asp-items="ViewBag.PatientList"
+                                        class="form-control">
+                                </select>
+                                <span asp-validation-for="PatientId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Date</label>
+                                <input asp-for="BillingDate"
+                                       type="date"
+                                       class="form-control" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>ServiceType</label>
+                                <input asp-for="ServiceType"
+                                      
+                                       class="form-control" />
+                            </div>
+
+                           
+                        </div>
+
+
+
+                        <!-- ================= ROW 2 ================= -->
+                       @*  <div class="form-group">
+
+                            <div class="col-md-6">
+                                <label>Subjective</label>
+                                <textarea asp-for="Subjective"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                                <span asp-validation-for="Subjective" class="text-danger"></span>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <label>Objective</label>
+
+                                <textarea asp-for="Objective"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                                <span asp-validation-for="Objective" class="text-danger"></span>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-6">
+                                <label>Plans</label>
+
+                                <textarea asp-for="Plans"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                                <span asp-validation-for="Plans" class="text-danger"></span>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <label>Assessment</label>
+
+                                <textarea asp-for="Assessment"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                                <span asp-validation-for="Assessment" class="text-danger"></span>
+                            </div>
+
+
+                        </div>
+ *@
+
+                        <!-- ================= BUTTONS ================= -->
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit"
+                                        class="btn btn-primary btn-flat">
+                                    Save
+                                </button>
+
+                                <a asp-action="IpdVitalDetails"
+                                   asp-controller="IPD"
+                                   asp-area="Admin"
+                                   class="btn btn-default btn-flat">
+                                    Clear
+                                </a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
