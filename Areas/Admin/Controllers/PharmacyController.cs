@@ -364,7 +364,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> DeleteSelectedMedicine(string[] selectedIds)
+        public async Task<IActionResult> DeleteSelectedMedicinePatients(string[] selectedIds)
         {
             if (selectedIds == null || selectedIds.Length == 0)
             {

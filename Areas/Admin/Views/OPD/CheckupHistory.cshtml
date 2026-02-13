@@ -105,11 +105,15 @@
                                             <i class="fa fa-pencil"></i>
                                         </a>
 
-                                        <a href="javascript:void(0)"
-                                           class="btnDeleteCheckup btn btn-danger btn-sm"
-                                           data-id="@chk.CheckupId">
-                                            <i class="fa fa-trash"></i> Delete
-                                        </a>
+                                        <form method="post" asp-action="DeleteCheckup" style="display:inline-block;"
+                                              onsubmit="return confirm('Are you sure you want to delete this checkup?');">
+                                            <input type="hidden" name="checkupId" value="@chk.CheckupId" />
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fa fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+
+
                                     </span>
                                 </li>
 
@@ -182,32 +186,4 @@
     </section>
 </div>
 
-@section Scripts {
-    <script>
-        $(document).on("click", ".btnDeleteCheckup", function () {
-            let id = $(this).data("id");
-
-            if (confirm("Are you sure you want to delete this checkup?")) {
-                $.ajax({
-                    url: "/admin/OPD/DeleteCheckup",
-                    type: "POST",
-                    data: { checkupId: id },
-                    success: function (response) {
-                        // Check server response
-                        if (response.success) {
-                            alert(response.message || "Checkup deleted successfully!");
-                            // Optionally remove row from table
-                            $("#checkupRow_" + id).remove();
-                        } else {
-                            alert(response.message || "Error deleting checkup!");
-                        }
-                    },
-                    error: function () {
-                        alert("Error connecting to server!");
-                    }
-                });
-            }
-        });
-    </script>
-}
 

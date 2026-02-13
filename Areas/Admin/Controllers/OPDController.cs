@@ -326,7 +326,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> DeletePatients(int id)
+        public async Task<IActionResult> DeletePatients(string id)
         {
             await _dbLayer.ExecuteSPAsync("sp_OpdManagePatients", new[]
             {
@@ -341,7 +341,7 @@ namespace HMSCore.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteSelected(int[] selectedIds)
+        public async Task<IActionResult> DeleteSelected(string[] selectedIds)
         {
             if (selectedIds != null && selectedIds.Length > 0)
             {
@@ -448,27 +448,22 @@ namespace HMSCore.Areas.Admin.Controllers
                 return View(model);
             }
 
-        // 🔥 DELETE Checkup
+    
+
         [HttpPost]
         public async Task<IActionResult> DeleteCheckup(int checkupId)
         {
-            try
-            {
-                await _dbLayer.ExecuteSPAsync(
+            await _dbLayer.ExecuteSPAsync(
                     "sp_opdManageCheckup",
                     new[] {
                 new SqlParameter("@Action", "DeleteCheckup"),
                 new SqlParameter("@CheckupId", checkupId)
                     });
 
-                return Json(new { success = true, message = "Checkup deleted successfully!" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Error deleting checkup: " + ex.Message });
-            }
+            TempData["Message"] = $"Checkup deleted successfully";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("CheckupHistory");
         }
-
 
 
 

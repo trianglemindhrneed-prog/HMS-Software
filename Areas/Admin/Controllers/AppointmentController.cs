@@ -12,7 +12,7 @@ namespace HMSCore.Areas.Admin.Controllers
     public class AppointmentController : BaseController
     {
     
-            private readonly IDbLayer _dbLayer;
+        private readonly IDbLayer _dbLayer;
         private readonly IConfiguration _configuration; 
         public AppointmentController(IDbLayer dbLayer, IConfiguration configuration)
             {

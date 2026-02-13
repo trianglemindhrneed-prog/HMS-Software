@@ -33,10 +33,13 @@
                     <i class="fa fa-plus"></i> Add New
                 </a>
 
-                <form method="post" asp-action="DeleteSelected" style="display:inline-block;">
-                    <input type="hidden" name="selectedIds" id="selectedIds" />
-                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
-                </form>
+               
+                <button type="submit"
+                        form="DeleteSelected"
+                        class="btn btn-primary btn-flat"
+                        style="margin-left:10px;">
+                    Delete Selected
+                </button>
             </div>
 
             <div class="pull-right">
@@ -85,7 +88,7 @@
             <table class="table table-bordered table-hover mt-2">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th><input type="checkbox" id="chkAll" /></th>
                         <th>Patient Id</th>
                         <th>Patient Name</th>
                         <th>Age</th>
@@ -104,7 +107,13 @@
                     @foreach (var patient in Model.Patients)
                     {
                         <tr>
-                            <td><input type="checkbox" class="chkSelect" value="@patient.PatientId" /></td>
+                            <td>
+                                <input type="checkbox"
+                                       name="selectedIds"
+                                       value="@patient.PatientId"
+                                       class="chkItem"
+                                       form="DeleteSelected" />
+                            </td>
                             <td>@patient.PatientId</td>
                             <td>@patient.PatientName</td>
                             <td>@patient.Age</td>
@@ -139,13 +148,14 @@
         </div>
     </div>
 </section>
-
+<form method="post" asp-action="DeleteSelected" id="DeleteSelected"></form>
+ 
 @section Scripts {
     <script>
-        function toggleAll(chkAll) {
-            var checkboxes = document.querySelectorAll('.chkSelect');
-            checkboxes.forEach(c => c.checked = chkAll.checked);
-        }
+               document.getElementById("chkAll").addEventListener("change", function () {
+                document.querySelectorAll(".chkItem")
+                    .forEach(c => c.checked = this.checked);
+            });
 
         // Handle Delete Selected IDs
         document.querySelector('form[asp-action="DeleteSelected"]').onsubmit = function () {
