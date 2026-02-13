@@ -23,6 +23,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddPatient(string patientId = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new AddPatientViewModel();
 
             if (!string.IsNullOrEmpty(patientId))
@@ -267,7 +269,8 @@ namespace HMSCore.Areas.Admin.Controllers
           string toDate = null,
           int pageSize = 20)
         {
-        
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
@@ -368,9 +371,11 @@ namespace HMSCore.Areas.Admin.Controllers
 
             [HttpGet]
             public async Task<IActionResult> CheckupHistory(string pid)
-            {
+        {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
-                var model = new CheckupHistoryViewModel
+            var model = new CheckupHistoryViewModel
                 {
                     PatientId = pid
                 };
@@ -472,6 +477,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddNewCheckup(string pid)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (string.IsNullOrWhiteSpace(pid))
             {
                 TempData["Message"] = "Invalid patient.";
@@ -585,6 +592,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> EditCheckup(int checkupId)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new AddCheckupViewModel();
 
             // ---------- Load Checkup ----------
@@ -737,7 +746,8 @@ namespace HMSCore.Areas.Admin.Controllers
           string toDate = null,
           int pageSize = 20)
         {
-
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
@@ -795,6 +805,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> CreateBill(string patientId = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (string.IsNullOrEmpty(patientId))
                 return RedirectToAction("PatientsBill");
 
@@ -937,6 +949,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> EditBill(string billNo)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (string.IsNullOrEmpty(billNo))
                 return RedirectToAction("PatientsBill");
 
@@ -1056,6 +1070,8 @@ namespace HMSCore.Areas.Admin.Controllers
             string toDate = null,
             int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
                 : DateTime.ParseExact(fromDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -1158,7 +1174,8 @@ namespace HMSCore.Areas.Admin.Controllers
              string toDate = null,
              int pageSize = 20)
         {
-
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value

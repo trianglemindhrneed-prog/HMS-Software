@@ -25,6 +25,11 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
+
+
+
             var model = new DashboardViewModel();
 
             // 🔥 Single SP call for dashboard data
@@ -73,6 +78,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult ChangePassword()
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             return View(new ChangePasswordViewModel());
         }
 

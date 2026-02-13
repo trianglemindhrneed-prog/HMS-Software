@@ -26,7 +26,8 @@ namespace HMSCore.Areas.Admin.Controllers
           string toDate = null,
           int pageSize = 20)
         {
-
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
@@ -147,6 +148,8 @@ namespace HMSCore.Areas.Admin.Controllers
          string toDate = null,
          int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // --- Parse dates ---
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
@@ -237,6 +240,8 @@ namespace HMSCore.Areas.Admin.Controllers
         string toDate = null,
         int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // --- Parse dates ---
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value
@@ -321,6 +326,8 @@ namespace HMSCore.Areas.Admin.Controllers
             DateTime? fromDate = null,
             DateTime? toDate = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // 1️⃣ Get the list of invoices from SP using SELECT action
             var dt = await _dbLayer.ExecuteSPAsync(
                 "SP_SaleMedicineMisReport",
@@ -431,6 +438,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> PatientAppointmentMIS(string filterColumn = null, string keyword = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // 1. Get the list of doctors and patients seen
             var dt = await _dbLayer.ExecuteSPAsync(
                 "SP_DoctorPatientSeenSummary",

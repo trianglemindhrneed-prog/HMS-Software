@@ -29,6 +29,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> SaleMedicine()
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new SaleMedicineViewModel();
 
             // 🔥 Generate next invoice number
@@ -303,6 +305,8 @@ namespace HMSCore.Areas.Admin.Controllers
      DateTime? fromDate = null,
      DateTime? toDate = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var dt = await _dbLayer.ExecuteSPAsync(
                 "SP_SaleMedicineReport",
                 new[]
@@ -390,6 +394,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> CategoryList(string search = null, int? status = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters = new SqlParameter[]
             {
                 new SqlParameter("@Action", "Select"),
@@ -417,6 +423,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddCategory(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (id == null)
             {
                 // Adding a new category
@@ -557,6 +565,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> MedicineList(string search = null, int? category = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters = new SqlParameter[]
             {
                 new SqlParameter("@Action", "Select"),
@@ -587,6 +597,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddMedicine(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var dtCat = await _dbLayer.ExecuteSPAsync("sp_ManagePharamcycategory", new SqlParameter[] { new SqlParameter("@Action", "Select") });
             ViewBag.Categories = dtCat.AsEnumerable().Select(r => new SelectListItem
             {
@@ -736,6 +748,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> OtherSaleMedicine()
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new SaleMedicineViewModel();
 
             // 🔥 Generate next invoice number
@@ -827,6 +841,8 @@ namespace HMSCore.Areas.Admin.Controllers
   DateTime? fromDate = null,
   DateTime? toDate = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var dt = await _dbLayer.ExecuteSPAsync(
                 "SP_SaleMedicineOtherReport",
                 new[]

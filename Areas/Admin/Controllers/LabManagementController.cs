@@ -13,11 +13,13 @@ namespace HMSCore.Areas.Admin.Controllers
     {
         private readonly IDbLayer _dbLayer;
         private readonly IConfiguration _configuration;
-        public LabManagementController(IDbLayer dbLayer, IConfiguration configuration)
+        private readonly IWebHostEnvironment _env;
+        public LabManagementController(IDbLayer dbLayer, IConfiguration configuration, IWebHostEnvironment env)
         {
             _dbLayer = dbLayer;
             _configuration = configuration;
-        }
+            _env = env;
+        } 
 
         [HttpGet]
         public async Task<IActionResult> LabCategoryList(string search = null, int? status = null)
@@ -373,6 +375,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
             var model = dt.AsEnumerable().Select(r => new PatientTestViewModel
             {
+                PatientTestDetailId = Convert.ToInt32(r["PatientTestDetailId"]),
                 PatientTestId = Convert.ToInt32(r["PatientTestId"]),
                 PatientId = r["PatientId"].ToString(),
                 UserPatientsId = r["UserPatientsId"].ToString(),
@@ -397,7 +400,7 @@ namespace HMSCore.Areas.Admin.Controllers
             SqlParameter[] parameters = new SqlParameter[]
             {
                 new SqlParameter("@Action", "Delete"),
-                new SqlParameter("@PatientTestId", id)
+                new SqlParameter("@PatientTestDetailId", id)
             };
 
             await _dbLayer.ExecuteSPAsync("sp_ManagePatientTest", parameters);
@@ -416,7 +419,7 @@ namespace HMSCore.Areas.Admin.Controllers
                 SqlParameter[] parameters = new SqlParameter[]
                 {
                     new SqlParameter("@Action", "Delete"),
-                    new SqlParameter("@PatientTestId", id)
+                    new SqlParameter("@PatientTestDetailId", id)
                 };
                 await _dbLayer.ExecuteSPAsync("sp_ManagePatientTest", parameters);
             }
@@ -555,7 +558,7 @@ namespace HMSCore.Areas.Admin.Controllers
             ViewBag.LabTests = dtLabTests.AsEnumerable()
                 .Select(r => new DropDownItems { Id = Convert.ToInt32(r["Id"]), Name = r["Name"].ToString() })
                 .ToList();
-        }
+        } 
 
         private async Task<PatientTestViewModel> GetPatientTestByIdAsync(int id)
         {
@@ -595,14 +598,246 @@ namespace HMSCore.Areas.Admin.Controllers
 
             return model;
         }
+         
+        // GET: PathologyPatientTest List
+        public async Task<IActionResult> PathologyPatientsTest(string search = null, string filter = null)
+        {
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+                new SqlParameter("@Action", "SelectPendingtest"),
+                new SqlParameter("@FilterField", string.IsNullOrEmpty(filter) ? DBNull.Value : (object)filter),
+                new SqlParameter("@FilterValue", string.IsNullOrEmpty(search) ? DBNull.Value : (object)search)
+            };
 
+            DataTable dt = await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
 
+            var model = dt.AsEnumerable().Select(r => new PatientTestViewModel
+            {
+                PatientTestDetailId = Convert.ToInt32(r["PatientTestDetailId"]),
+                PatientTestId = Convert.ToInt32(r["PatientTestId"]),
+                PatientId = r["PatientId"].ToString(),
+                UserPatientsId = r["UserPatientsId"].ToString(),
+                PatientName = r["PatientName"].ToString(),
+                LabTestName = r["LabTestName"].ToString(),
+                TestDate = r["TestDate"] != DBNull.Value ? (DateTime?)r["TestDate"] : null,
+                DeliveryDate = r["DeliveryDate"] != DBNull.Value ? (DateTime?)r["DeliveryDate"] : null,
+                ReportStatus = Convert.ToInt32(r["ReportStatus"]),
+                ReportPath = r["ReportPath"].ToString()
+            }).ToList();
 
+            ViewBag.Filter = filter;
+            ViewBag.Search = search;
 
+            return View(model);
+        }
 
+        // GET: PatientsDeliverdTest List
+        public async Task<IActionResult> PatientsDeliverdTest(string search = null, string filter = null)
+        {
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+                new SqlParameter("@Action", "SelectDeliverdtest"),
+                new SqlParameter("@FilterField", string.IsNullOrEmpty(filter) ? DBNull.Value : (object)filter),
+                new SqlParameter("@FilterValue", string.IsNullOrEmpty(search) ? DBNull.Value : (object)search)
+            };
 
+            DataTable dt = await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
 
+            var model = dt.AsEnumerable().Select(r => new PatientTestViewModel
+            {
+                PatientTestDetailId = Convert.ToInt32(r["PatientTestDetailId"]),
+                PatientTestId = Convert.ToInt32(r["PatientTestId"]),
+                PatientId = r["PatientId"].ToString(),
+                UserPatientsId = r["UserPatientsId"].ToString(),
+                PatientName = r["PatientName"].ToString(),
+                LabTestName = r["LabTestName"].ToString(),
+                TestDate = r["TestDate"] != DBNull.Value ? (DateTime?)r["TestDate"] : null,
+                DeliveryDate = r["DeliveryDate"] != DBNull.Value ? (DateTime?)r["DeliveryDate"] : null,
+                ReportStatus = Convert.ToInt32(r["ReportStatus"]),
+                ReportPath = r["ReportPath"].ToString()
+            }).ToList();
 
+            ViewBag.Filter = filter;
+            ViewBag.Search = search;
+
+            return View(model);
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> PendingTestUploadReport(int patientTestId, int PatientTestDetailId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Message"] = "Please select a file to upload.";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("PathologyPatientsTest");
+            }
+
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext != ".pdf")
+            {
+                TempData["Message"] = "Only PDF files are allowed.";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("PathologyPatientsTest");
+            }
+
+            // Save file to wwwroot/Uploads/Reports
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "Uploads", "Reports");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            string fileName = $"Report_{patientTestId}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+            string fullPath = Path.Combine(uploadsFolder, fileName);
+
+            using (var fs = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(fs);
+            }
+
+            string relativePath = $"/Uploads/Reports/{fileName}";
+
+            // Call SP to update both tables
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Action", "UploadReport"),
+        new SqlParameter("@PatientTestId", patientTestId),
+        new SqlParameter("@PatientTestDetailId", PatientTestDetailId),
+        new SqlParameter("@ReportPath", relativePath),
+        new SqlParameter("@DeliveryDate", DateTime.Now),
+        new SqlParameter("@ReportStatus", 1)
+            };
+
+            await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+
+            TempData["Message"] = "Report uploaded successfully!";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("PathologyPatientsTest");
+        }
+       
+        [HttpPost]
+        public async Task<IActionResult> DeliveredTestUploadReport(int patientTestId, int PatientTestDetailId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Message"] = "Please select a file to upload.";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("PathologyPatientsTest");
+            }
+
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext != ".pdf")
+            {
+                TempData["Message"] = "Only PDF files are allowed.";
+                TempData["MessageType"] = "error";
+                return RedirectToAction("PathologyPatientsTest");
+            }
+
+            // Save file to wwwroot/Uploads/Reports
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "Uploads", "Reports");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            string fileName = $"Report_{patientTestId}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+            string fullPath = Path.Combine(uploadsFolder, fileName);
+
+            using (var fs = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(fs);
+            }
+
+            string relativePath = $"/Uploads/Reports/{fileName}";
+
+            // Call SP to update both tables
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Action", "UploadReport"),
+        new SqlParameter("@PatientTestId", patientTestId),
+        new SqlParameter("@PatientTestDetailId", PatientTestDetailId),
+        new SqlParameter("@ReportPath", relativePath),
+        new SqlParameter("@DeliveryDate", DateTime.Now),
+        new SqlParameter("@ReportStatus", 1)
+            };
+
+            await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+
+            TempData["Message"] = "Report uploaded successfully!";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("PathologyPatientsTest");
+        }
+
+        // POST: Delete Single
+        [HttpPost]
+        public async Task<IActionResult> DeletePatientPathology(int id)
+        {
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+                new SqlParameter("@Action", "Delete"),
+                new SqlParameter("@PatientTestDetailId", id)
+            };
+
+            await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+
+            TempData["Message"] = "Test deleted successfully.";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("PathologyPatientsTest");
+        }
+
+        // POST: Delete Multiple
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedPathologyPatient(int[] selectedIds)
+        {
+            foreach (var id in selectedIds)
+            {
+                SqlParameter[] parameters = new SqlParameter[]
+                {
+                    new SqlParameter("@Action", "Delete"),
+                    new SqlParameter("@PatientTestDetailId", id)
+                };
+                await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+            }
+
+            TempData["Message"] = "Selected tests deleted successfully.";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("PathologyPatientsTest");
+        }
+
+        // POST: Delete Single
+        [HttpPost]
+        public async Task<IActionResult> DeletePatientsDeliverdTest(int id)
+        {
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+                new SqlParameter("@Action", "Delete"),
+                new SqlParameter("@PatientTestDetailId", id)
+            };
+
+            await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+
+            TempData["Message"] = "Test deleted successfully.";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("PatientsDeliverdTest");
+        }
+
+        // POST: Delete Multiple
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelectedPatientsDeliverdTest(int[] selectedIds)
+        {
+            foreach (var id in selectedIds)
+            {
+                SqlParameter[] parameters = new SqlParameter[]
+                {
+                    new SqlParameter("@Action", "Delete"),
+                    new SqlParameter("@PatientTestDetailId", id)
+                };
+                await _dbLayer.ExecuteSPAsync("sp_ManagePathologyPatientTest", parameters);
+            }
+
+            TempData["Message"] = "Selected tests deleted successfully.";
+            TempData["MessageType"] = "success";
+            return RedirectToAction("PatientsDeliverdTest");
+        }
 
 
     }

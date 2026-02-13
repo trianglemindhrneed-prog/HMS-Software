@@ -24,6 +24,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> BedList(string FilterField = null, string FilterValue = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters =
             {
         new SqlParameter("@Action", "Select"),
@@ -51,6 +53,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet] 
         public async Task<IActionResult> AddBed(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var dtCat = await _dbLayer.ExecuteSPAsync(
                 "sp_ManageBedCategory",
                 new[] { new SqlParameter("@Action", "Select") }
@@ -180,6 +184,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> BedCategoriesList(string search = null, int? status = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters = new SqlParameter[]
             {
                 new SqlParameter("@Action", "Select"),
@@ -207,6 +213,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddBedCategories(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (id == null)
             {
                 // Adding a new category
@@ -348,6 +356,8 @@ namespace HMSCore.Areas.Admin.Controllers
           string fromDate = null,
           string toDate = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // Parse dates safely
             object fromDateValue = string.IsNullOrEmpty(fromDate)
                 ? DBNull.Value

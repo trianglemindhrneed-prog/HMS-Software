@@ -7,6 +7,7 @@ namespace HMSCore.Areas.Admin.Models
         {
             public int ConsultantId { get; set; }
             public int PatientTestId { get; set; }
+            public int? PatientTestDetailId { get; set; }
             public string? PatientId { get; set; }
             public string? PatientName { get; set; }
             public string? LabTestName { get; set; }
@@ -16,6 +17,7 @@ namespace HMSCore.Areas.Admin.Models
             public string? ReportPath { get; set; }
             public string? UserPatientsId { get; set; }
 
+        public IFormFile? UploadReportFile { get; set; }
         public List<TestItemViewModel> Tests { get; set; } = new List<TestItemViewModel>();
     }
      

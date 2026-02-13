@@ -20,6 +20,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> DepartmentList(string search = null, int? status = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters = new SqlParameter[]
             {
                 new SqlParameter("@Action", "Select"),
@@ -46,6 +48,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddDepartment(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             if (id == null)
                 return View(new Department { IsActive = true });
 
@@ -203,8 +207,10 @@ namespace HMSCore.Areas.Admin.Controllers
             // ================== Doctors List ==================
             [HttpGet]
             public async Task<IActionResult> DoctorsList(string search = null)
-            {
-                SqlParameter[] parameters =
+        {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
+            SqlParameter[] parameters =
                 {
                 new SqlParameter("@Action","SelectDoctors"),
                 new SqlParameter("@Search", string.IsNullOrEmpty(search) ? DBNull.Value : search)
@@ -332,6 +338,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddDoctor(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             Doctor model = new Doctor();
 
             // Load Departments for dropdown
@@ -503,6 +511,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> NurseList(string search = null, int? status = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             SqlParameter[] parameters = new SqlParameter[]
             {
         new SqlParameter("@Action", "Select"),
@@ -611,6 +621,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> AddNurse(int? id)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             Nurse model = new Nurse { IsActive = true };
 
             if (id == null)

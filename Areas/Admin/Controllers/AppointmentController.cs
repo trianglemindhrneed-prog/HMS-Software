@@ -23,6 +23,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> EditDoctorSlotManager(int? scheduleId)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new DoctorSlotViewModel();
 
             // Load Departments
@@ -174,6 +176,8 @@ namespace HMSCore.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult>  DoctorSlotManager(int? scheduleId = null)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var model = new DoctorSlotViewModel();
 
             // Load Departments
@@ -352,6 +356,8 @@ namespace HMSCore.Areas.Admin.Controllers
           string toDate = null,
           int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             // Prepare parameters for your stored procedure
             SqlParameter[] parameters = new SqlParameter[]
             {
@@ -460,6 +466,8 @@ namespace HMSCore.Areas.Admin.Controllers
             string ShowAfternoon = "true",
             string ShowEvening = "true")
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var vm = new DoctorSlotViewModel
             {
                 DepartmentId = DepartmentId,
@@ -629,6 +637,8 @@ namespace HMSCore.Areas.Admin.Controllers
       string ShowAfternoon = "true",
       string ShowEvening = "true")
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var vm = new DoctorSlotViewModel
             {
                 DepartmentId = DepartmentId,
@@ -770,6 +780,8 @@ namespace HMSCore.Areas.Admin.Controllers
         int pageNumber = 1,
         int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var vm = new AppointmentReportVM
             {
                 FilterColumn = filterColumn,
@@ -885,6 +897,8 @@ namespace HMSCore.Areas.Admin.Controllers
           int pageNumber = 1,
           int pageSize = 20)
         {
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
             var vm = new AppointmentReportVM
             {
                 FilterColumn = filterColumn,

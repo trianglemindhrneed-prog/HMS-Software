@@ -255,61 +255,62 @@
                     </a>
                 </div>
             }
-        </div>
+        </div> 
+     
+    }
 
-        <!-- IPD Row End -->
-        @if (userType == "Pathology")
-        {
-            <h3 class="hcd">Lab / Pathology Records</h3>
-            <div class="row">
-                <div class="col-lg-3 col-xs-6">
-                    <a href="labtestcategory.aspx">
-                        <div class="small-box bg-aqua">
-                            <div class="inner">
-                                <h3>@Model.LabCategoryCount</h3>
-                                <p>Lab Category</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-flask"></i></div>
+    <!-- IPD Row End -->
+    @if (userType == "Pathology")
+    {
+        <h3 class="hcd">Lab / Pathology Records</h3>
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/LabManagement/LabCategoryList">
+                    <div class="small-box bg-aqua">
+                        <div class="inner">
+                            <h3>@Model.LabCategoryCount</h3>
+                            <p>Lab Category</p>
                         </div>
-                    </a>
-                </div>
-
-                <div class="col-lg-3 col-xs-6">
-                    <a href="labtest.aspx">
-                        <div class="small-box bg-aqua">
-                            <div class="inner">
-                                <h3>@Model.LabTestCount</h3>
-                                <p>Lab Tests</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-vials"></i></div>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="col-lg-3 col-xs-6">
-                    <a href="pathologypatienttest.aspx">
-                        <div class="small-box bg-aqua">
-                            <div class="inner">
-                                <h3>@Model.PendingTests</h3>
-                                <p>Pending Tests</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-hourglass-half"></i></div>
-                        </div>
-                    </a>
-                </div>
-
-                <div class="col-lg-3 col-xs-6">
-                    <a href="deliverdpatienttest.aspx">
-                        <div class="small-box bg-aqua">
-                            <div class="inner">
-                                <h3>@Model.DeliveredTests</h3>
-                                <p>Delivered Tests</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-check-circle"></i></div>
-                        </div>
-                    </a>
-                </div>
+                        <div class="icon"><i class="fa fa-flask"></i></div>
+                    </div>
+                </a>
             </div>
-        }
+
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/LabManagement/LabTestList">
+                    <div class="small-box bg-aqua">
+                        <div class="inner">
+                            <h3>@Model.LabTestCount</h3>
+                            <p>Lab Tests</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-vials"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/LabManagement/PathologyPatientsTest">
+                    <div class="small-box bg-aqua">
+                        <div class="inner">
+                            <h3>@Model.PendingTests</h3>
+                            <p>Pending Tests</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-hourglass-half"></i></div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-xs-6">
+                <a href="/admin/LabManagement/PatientsDeliverdTest">
+                    <div class="small-box bg-aqua">
+                        <div class="inner">
+                            <h3>@Model.DeliveredTests</h3>
+                            <p>Delivered Tests</p>
+                        </div>
+                        <div class="icon"><i class="fa fa-check-circle"></i></div>
+                    </div>
+                </a>
+            </div>
+        </div>
     }
 </section>
