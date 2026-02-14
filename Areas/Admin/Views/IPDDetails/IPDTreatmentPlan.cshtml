@@ -1,0 +1,110 @@
+﻿@model HMSCore.Areas.Admin.Models.IPDTreatmentPlan
+
+@{
+    ViewData["Title"] = "IPD Vital";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
+}
+
+<style>
+    .small-checkbox {
+        width: 14px;
+        height: 14px;
+    }
+</style>
+<section class="content-header">
+    <h1>IPD Nursing Tasks</h1>
+    <ol class="breadcrumb">
+        <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#">IPD Nursing Tasks</a></li>
+        <li class="active">IPD Nursing Tasks</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+
+                    <form asp-action="IPDTreatmentPlan"
+                          asp-controller="IPDDetails"
+                          asp-area="Admin"
+                          method="post"
+                          class="form-horizontal">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="PlanId" />
+
+                        <!-- ROW 1 -->
+                        <div class="form-group">
+                            <div class="col-md-4">
+                                <label>Patient</label>
+                                <select asp-for="PatientId"
+                                        asp-items="ViewBag.PatientList"
+                                        class="form-control">
+                                   
+                                </select>
+                                <span asp-validation-for="PatientId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Treatment Day</label>
+                                <input asp-for="TreatmentDay" type="number" class="form-control" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Treatment Date</label>
+                                <input asp-for="TreatmentDate" type="date" class="form-control" />
+                            </div>
+                        </div>
+
+                        <!-- ROW 2 -->
+                        <div class="form-group">
+                            <div class="col-md-4">
+                                <label>Diagnosis</label>
+                                <input asp-for="Diagnosis" class="form-control" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Diet Plan</label>
+                                <input asp-for="DietPlan" class="form-control" />
+                            </div>
+                        </div>
+
+                        <!-- ROW 3 -->
+                        <div class="form-group">
+                            <div class="col-md-6">
+                                <label>Treatment</label>
+                                <textarea asp-for="Treatment" rows="3" class="form-control"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Notes</label>
+                                <textarea asp-for="Notes" rows="3" class="form-control"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- BUTTONS -->
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-9">
+                                <button type="submit" class="btn btn-primary btn-flat">
+                                    Save
+                                </button>
+
+                                <a asp-action="DeletePlan"
+                                   asp-controller="IPDDetails"
+                                   asp-area="Admin"
+                                   class="btn btn-default btn-flat">
+                                    Clear
+                                </a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

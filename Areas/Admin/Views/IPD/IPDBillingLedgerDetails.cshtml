@@ -32,10 +32,10 @@
         <div class="box-header with-border">
             <div class="pull-left">
                 <a href="/Admin/IPD/IPDBillingLedger" class="btn btn-danger btn-flat">
-                    <i class="fa fa-plus"></i>  IPD Billing Ledger
+                    <i class="fa fa-plus"></i>Add New Billing Entry
                 </a>
 
-                <form method="post" asp-action="DeleteSelecteddata" id="deleteForm" style="display:inline-block;">
+                <form method="post" asp-action="DeleteSelectedLedger" id="deleteForm" style="display:inline-block;">
                     <div id="hiddenInputsContainer"></div>
                     <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
                 </form>
@@ -58,8 +58,8 @@
                             style="width:130px;">
                         <option value="">-- Status --</option>
                         <option value="PatientId">PatientId</option>
-                        <option value="Gender">DocterName</option>
-                        <option value="VisitDate">Visite Date</option>
+                        <option value="ServiceType">Service Type</option>
+                       
                     </select>
                     <input type="text"
                            name="search"
@@ -96,6 +96,7 @@
                         <th>Amount (₹)</th>
                         <th>Discount (₹)</th>
                         <th>Paid?</th>
+
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -117,14 +118,30 @@
                             <td>@row.ServiceType</td>
 
                             <td>@row.Description</td>
-
-                            <td>₹ @row.Amount.ToString("N2")</td>
-
-                            <td>₹ @row.Discount.ToString("N2")</td>
+                            <td>
+                                ₹ @(row.Amount.HasValue
+                                    ? row.Amount.Value.ToString("N2")
+                                  : "0.00")
+                        </td>
 
                             <td>
-                                @(row.IsPaid ? "Yes" : "No")
+                                ₹ @(row.Discount.HasValue
+                                ? row.Discount.Value.ToString("N2")
+                                  : "0.00")
+                        </td>
+
+                            <!-- ✅ Paid Column -->
+                            <td>
+                            @if (row.IsPaid)
+                                {
+                                    <span class="label label-success">True</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-danger">False</span>
+                                }
                             </td>
+
 
                             <td>
                                 <!-- Edit Button -->

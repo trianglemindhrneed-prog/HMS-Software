@@ -1,0 +1,175 @@
+﻿@model List<HMSCore.Areas.Admin.Models.IPDTreatmentPlan>
+
+@{
+    ViewData["Title"] = "IPD Treatment Plan";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+
+<head>
+    <style>
+        .btn-secondary {
+            background: #18d118bf;
+            font-weight: bold;
+            color: aliceblue;
+        }
+
+            .btn-secondary:hover {
+                color: aliceblue;
+            }
+    </style>
+</head>
+<section class="content-header">
+    <h1>IPD Treatment Plan</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">IPD Treatment Plan</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <a href="/Admin/IPDDetails/IPDTreatmentPlan" class="btn btn-danger btn-flat">
+                    <i class="fa fa-plus"></i> Add New Task
+                </a>
+
+                <form method="post" asp-action="DeleteSelectedPlan" id="deleteForm" style="display:inline-block;">
+                    <div id="hiddenInputsContainer"></div>
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
+                </form>
+            </div>
+
+
+            <div class="pull-right">
+                <form method="get" asp-action="IPDTRTPlanDetails" class="form-inline mb-3">
+
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+
+                    <select name="status"
+                            class="form-control input-sm"
+                            style="width:130px;">
+                        <option value="">-- Status --</option>
+                        <option value="PatientId">PatientId</option>
+                        <option value="TaskName">TaskName</option>
+                        <option value="Status">Status</option>
+
+                    </select>
+                    <input type="text"
+                           name="search"
+                           value="@Context.Request.Query["search"]"
+                           class="form-control input-sm"
+                           style="width:120px;" />
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        Search
+                    </button>
+
+                    <a asp-action="IPDNursingTasksDetails"
+                       class="btn btn-default btn-sm">
+                        Show All
+                    </a>
+
+                </form>
+
+            </div>
+        </div>
+        <!-- Date Filter -->
+
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="chkAll" onclick="toggleAll(this)" />
+                        </th>
+                        <th>Patient Id</th>
+                        <th>Treatment Day</th>
+                        <th>Treatment Date</th>
+                        <th>Diagnosis</th>
+                        <th>Diet Plan</th>
+                        <th>Entered By</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var row in Model)
+                        {
+                            <tr>
+                                <!-- Checkbox -->
+                                <td>
+                                    <input type="checkbox" class="chkSelect" value="@row.PlanId" />
+                                </td>
+
+                                <!-- PatientId -->
+                                <td>@(row.PatientId ?? "-")</td>
+
+                                <!-- Treatment Day -->
+                                <td>@(row.TreatmentDay.HasValue? row.TreatmentDay.ToString() : "-")</td>
+
+                                <!-- Treatment Date -->
+                                <td>
+                                    @(row.TreatmentDate != DateTime.MinValue
+                                                                ? row.TreatmentDate.ToString("dd-MM-yyyy")
+                                                                : "-")
+                        </td>
+
+                                <!-- Diagnosis -->
+                                <td>@(string.IsNullOrEmpty(row.Diagnosis) ? "-" : row.Diagnosis)</td>
+
+                                <!-- Diet Plan -->
+                                <td>@(string.IsNullOrEmpty(row.DietPlan) ? "-" : row.DietPlan)</td>
+
+                                <!-- Entered By -->
+                                <td>@(row.EnteredBy ?? "-")</td>
+
+                                <!-- Action -->
+                                <td>
+                                    <!-- Edit -->
+                                    <a class="btn btn-warning btn-sm"
+                                       asp-controller="IPDTreatmentPlan"
+                                       asp-action="Create"
+                                       asp-route-id="@row.PlanId">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+
+                                    <!-- Delete -->
+                                    <form method="post"
+                                          asp-action="Delete"
+                                          asp-route-id="@row.PlanId"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Are you sure to delete this plan?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-danger">
+                                No Records Found
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div id="pagination" class="mt-2"></div>
+        </div>
+    </div>
+</section>
+

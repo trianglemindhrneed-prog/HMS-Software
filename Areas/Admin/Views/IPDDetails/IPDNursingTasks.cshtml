@@ -1,4 +1,4 @@
-﻿@model HMSCore.Areas.Admin.Models.IPDBillingLedgerModel
+﻿@model HMSCore.Areas.Admin.Models.IPDNursingTaskViewModel
 
 @{
     ViewData["Title"] = "IPD Vital";
@@ -13,11 +13,11 @@
     }
 </style>
 <section class="content-header">
-    <h1>Add Patients Vital</h1>
+    <h1>IPD Nursing Tasks</h1>
     <ol class="breadcrumb">
         <li><a href="Dashboard.aspx"><i class="fa fa-home"></i> Home</a></li>
-        <li><a href="#">Patients</a></li>
-        <li class="active">Add Patients Vital</li>
+        <li><a href="#">IPD Nursing Tasks</a></li>
+        <li class="active">IPD Nursing Tasks</li>
     </ol>
 </section>
 <section class="content">
@@ -26,15 +26,15 @@
             <div class="box">
                 <div class="box-body">
 
-                    <form asp-action="IPDBillingLedger"
-                          asp-controller="IPD"
+                    <form asp-action="IPDNursingTasks"
+                          asp-controller="IPDDetails"
                           asp-area="Admin"
                           method="post"
                           class="form-horizontal">
 
                         @Html.AntiForgeryToken()
 
-                        <input type="hidden" asp-for="LedgerId" />
+                        <input type="hidden" asp-for="TaskId" />
 
                         <!-- ================= ROW 1 ================= -->
                         <div class="form-group">
@@ -52,19 +52,20 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label>Billing Date</label>
-                                <input asp-for="BillingDate"
-                                       type="date"
+                                <label>Task Details</label>
+                                <input asp-for="TaskName"
+                                       
                                        class="form-control" />
-                                <span asp-validation-for="BillingDate"
+                                <span asp-validation-for="TaskName"
                                       class="text-danger"></span>
                             </div>
 
                             <div class="col-md-4">
-                                <label>Service Type</label>
-                                <input asp-for="ServiceType"
+                                <label>Scheduled Date</label>
+                                <input asp-for="ScheduledDate"
+                                       type="date"
                                        class="form-control" />
-                                <span asp-validation-for="ServiceType"
+                                <span asp-validation-for="ScheduledDate"
                                       class="text-danger"></span>
                             </div>
 
@@ -74,42 +75,35 @@
                         <div class="form-group">
 
                             <div class="col-md-4">
-                                <label>Amount</label>
-                                <input asp-for="Amount"
-                                       type="number"
+                                <label>Given Date</label>
+                                <input asp-for="GivenDate"
+                                       type="date"
                                        class="form-control" />
-                                <span asp-validation-for="Amount"
+                                <span asp-validation-for="GivenDate"
                                       class="text-danger"></span>
                             </div>
 
                             <div class="col-md-4">
-                                <label>Discount</label>
-                                <input asp-for="Discount"
-                                       type="number"
-                                       class="form-control" />
-                                <span asp-validation-for="Discount"
-                                      class="text-danger"></span>
+                                <label asp-for="Status" class="form-label">Status</label>
+                                <select asp-for="Status" class="form-control">
+                                    <option value="">-- Select Status --</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
                             </div>
 
-                            <div class="col-md-4" style="margin-top:27px;">
-                                <div class="checkbox">
-                                    <label>
-                                        <input asp-for="IsPaid" class="small-checkbox" />
-                                        Is Paid?
-                                    </label>
-                                </div>
-                            </div>
-
+                          
                         </div>
 
                         <!-- ================= ROW 3 ================= -->
                         <div class="form-group">
                             <div class="col-md-12">
-                                <label>Description</label>
-                                <textarea asp-for="Description"
+                                <label>Remarks</label>
+                                <textarea asp-for="Remarks"
                                           class="form-control"
                                           rows="3"></textarea>
-                                <span asp-validation-for="Description"
+                                <span asp-validation-for="Remarks"
                                       class="text-danger"></span>
                             </div>
                         </div>

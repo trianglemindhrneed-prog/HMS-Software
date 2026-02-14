@@ -1089,60 +1089,143 @@ public class IPDController : BaseController
     // ================= IPDBillingLedgerDetailsList =================
 
     [HttpGet]
-    public async Task<IActionResult> IPDBillingLedgerDetails(string searchColumn, string searchValue)
+   
+    public async Task<IActionResult> IPDBillingLedgerDetails(string status, string search)
     {
-        List<IPDBillingLedgerModel> list = new();
+        string action = string.IsNullOrEmpty(search) ? "GETALL" : "SEARCH";
 
-        SqlParameter[] param =
+        var parameters = new[]
         {
-        new SqlParameter("@Action",
-            string.IsNullOrEmpty(searchValue) ? "GETALL" : "SEARCH"),
-
-        new SqlParameter("@SearchColumn",
-            string.IsNullOrEmpty(searchColumn) ? DBNull.Value : (object)searchColumn),
-
-        new SqlParameter("@SearchValue",
-            string.IsNullOrEmpty(searchValue) ? DBNull.Value : (object)searchValue)
+        new SqlParameter("@Action", action),
+        new SqlParameter("@SearchValue", (object?)search ?? DBNull.Value),
+        new SqlParameter("@SearchField", (object?)status ?? DBNull.Value)
     };
 
-        DataTable dt = await _dbLayer.ExecuteSPAsync(
-            "sp_IPDBillingLedger_Manage",
-            param);
+        DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDBillingLedger_Manage", parameters);
 
-        foreach (DataRow r in dt.Rows)
+        var list = dt.AsEnumerable().Select(row => new IPDBillingLedgerModel
         {
-            list.Add(new IPDBillingLedgerModel
-            {
-                LedgerId = Convert.ToInt32(r["LedgerId"]),
-                PatientId = r["PatientId"]?.ToString(),
+            LedgerId = Convert.ToInt32(row["LedgerId"]),
+            PatientId = row["PatientId"].ToString(),
+            BillingDate = Convert.ToDateTime(row["BillingDate"]),
+            ServiceType = row["ServiceType"]?.ToString(),
+            Description = row["Description"]?.ToString(),
+            Amount = row["Amount"] == DBNull.Value ? null : Convert.ToDecimal(row["Amount"]),
+            Discount = row["Discount"] == DBNull.Value ? null : Convert.ToDecimal(row["Discount"]),
+            IsPaid = row["IsPaid"] != DBNull.Value && Convert.ToBoolean(row["IsPaid"])
+        }).ToList();
 
-                BillingDate = r["BillingDate"] == DBNull.Value
-                                ? DateTime.Now
-                                : Convert.ToDateTime(r["BillingDate"]),
-
-                ServiceType = r["ServiceType"]?.ToString(),
-                Description = r["Description"]?.ToString(),
-
-                Amount = r["Amount"] == DBNull.Value
-                            ? 0
-                            : Convert.ToDecimal(r["Amount"]),
-
-                Discount = r["Discount"] == DBNull.Value
-                            ? 0
-                            : Convert.ToDecimal(r["Discount"]),
-
-                IsPaid = r["IsPaid"] != DBNull.Value &&
-                         Convert.ToBoolean(r["IsPaid"]),
-
-                CreatedBy = r["CreatedBy"]?.ToString()
-            });
-        }
-
-        ViewBag.SearchColumn = searchColumn;
-        ViewBag.SearchValue = searchValue;
+        ViewBag.Status = status;
+        ViewBag.Search = search;
 
         return View(list);
     }
 
+    public async Task<IActionResult> IPDBillingLedger(int? id)
+    {
+        var model = new IPDBillingLedgerModel
+        {
+            BillingDate = DateTime.Now
+        };
+
+        if (id.HasValue)
+        {
+            var dt = await _dbLayer.ExecuteSPAsync("sp_IPDBillingLedger_Manage",
+                new[]
+                {
+                        new SqlParameter("@Action","GETBYID"),
+                        new SqlParameter("@LedgerId", id.Value)
+                });
+
+            if (dt.Rows.Count > 0)
+            {
+                var row = dt.Rows[0];
+                model.LedgerId = Convert.ToInt32(row["LedgerId"]);
+                model.PatientId = row["PatientId"].ToString();
+                model.BillingDate = Convert.ToDateTime(row["BillingDate"]);
+                model.ServiceType = row["ServiceType"]?.ToString();
+                model.Description = row["Description"]?.ToString();
+                model.Amount = row["Amount"] == DBNull.Value ? null : Convert.ToDecimal(row["Amount"]);
+                model.Discount = row["Discount"] == DBNull.Value ? null : Convert.ToDecimal(row["Discount"]);
+                model.IsPaid = row["IsPaid"] != DBNull.Value && Convert.ToBoolean(row["IsPaid"]);
+            }
+        }
+        await LoadPatientDropdown(model.PatientId);
+        return View(model);
+    }
+
+    // INSERT + UPDATE POST
+    [HttpPost]
+    public async Task<IActionResult> IPDBillingLedger(IPDBillingLedgerModel model)
+    {
+        string action = model.LedgerId == 0 ? "INSERT" : "UPDATE";
+
+        var parameters = new[]
+        {
+                new SqlParameter("@Action", action),
+                new SqlParameter("@LedgerId", model.LedgerId),
+                new SqlParameter("@PatientId", model.PatientId),
+                new SqlParameter("@BillingDate", model.BillingDate),
+                new SqlParameter("@ServiceType", (object?)model.ServiceType ?? DBNull.Value),
+                new SqlParameter("@Description", (object?)model.Description ?? DBNull.Value),
+                new SqlParameter("@Amount", (object?)model.Amount ?? DBNull.Value),
+                new SqlParameter("@Discount", (object?)model.Discount ?? DBNull.Value),
+                new SqlParameter("@IsPaid", model.IsPaid),
+                new SqlParameter("@CreatedBy", "Admin")
+            };
+
+        await _dbLayer.ExecuteSPAsync("sp_IPDBillingLedger_Manage", parameters);
+
+        TempData["Message"] = action == "INSERT"
+      ? "Billing Ledger saved successfully!"
+      : "Billing Ledger updated successfully!";
+
+        TempData["MessageType"] = "success";
+
+        return RedirectToAction("IPDBillingLedgerDetails");
+    }
+
+    // SINGLE DELETE
+    [HttpPost]
+    public async Task<IActionResult> DeleteLedger(int id)
+    {
+        await _dbLayer.ExecuteSPAsync("sp_IPDBillingLedger_Manage",
+            new[]
+            {
+                    new SqlParameter("@Action","DELETE"),
+                    new SqlParameter("@LedgerId",id)
+            });
+
+        TempData["Message"] = "Billing Ledger deleted successfully";
+        TempData["MessageType"] = "success";
+        return RedirectToAction("IPDBillingLedgerDetails");
+    }
+
+   
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteSelectedLedger(int[] selectedIds)
+    {
+        if (selectedIds != null && selectedIds.Length > 0)
+        {
+            string ids = string.Join(",", selectedIds);
+
+            await _dbLayer.ExecuteSPAsync("sp_IPDBillingLedger_Manage", new[]
+            {
+            new SqlParameter("@Action", "DELETE_MULTIPLE"),
+            new SqlParameter("@SearchValue", ids)
+        });
+
+            TempData["Message"] = "Selected ledgers deleted successfully";
+            TempData["MessageType"] = "success";
+        }
+        else
+        {
+            TempData["Message"] = "No records selected";
+            TempData["MessageType"] = "error";
+        }
+
+        return RedirectToAction("IPDBillingLedgerDetails");
+    }
 }
 
