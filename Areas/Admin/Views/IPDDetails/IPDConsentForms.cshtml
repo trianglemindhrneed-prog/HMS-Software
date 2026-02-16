@@ -1,5 +1,120 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model HMSCore.Areas.Admin.Models.IPDConsentForm
+
 @{
+    ViewData["Title"] = "IPD Nursing Tasks";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
+
+<section class="content-header">
+    <h1>IPD Nursing Tasks</h1>
+    <ol class="breadcrumb">
+        <li>
+            <a asp-action="Index" asp-controller="Dashboard" asp-area="Admin">
+                <i class="fa fa-home"></i> Home
+            </a>
+        </li>
+        <li class="active">IPD Nursing Tasks</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-body">
+                    
+                        <form asp-action="IPDConsentForms"
+                          asp-controller="IPDDetails"
+                          asp-area="Admin"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="form-horizontal">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" asp-for="ConsentId" />
+
+                        <!-- ================= ROW 1 ================= -->
+                        <div class="form-group">
+
+                            <div class="col-md-4">
+                                <label>Patient</label>
+                                <select asp-for="PatientId"
+                                        asp-items="ViewBag.PatientList"
+                                        class="form-control">
+                                 
+                                </select>
+                                <span asp-validation-for="PatientId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Consent Type</label>
+                                <input asp-for="ConsentType" class="form-control" />
+                                <span asp-validation-for="ConsentType" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label>Consent Date</label>
+                                <input asp-for="ConsentDate"
+                                       type="date"
+                                       class="form-control" />
+                                <span asp-validation-for="ConsentDate" class="text-danger"></span>
+                            </div>
+
+                        </div>
+
+                        <!-- ================= ROW 2 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-4">
+                                <label>Taken By</label>
+                                <input asp-for="TakenBy" class="form-control" />
+                                <span asp-validation-for="TakenBy" class="text-danger"></span>
+                            </div>
+
+
+                            <div class="col-md-4">
+                                <label>Upload File</label>
+                                <input type="file"
+                                       name="file"
+                                       class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <!-- ================= ROW 3 ================= -->
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <label>Notes</label>
+                                <textarea asp-for="Notes"
+                                          class="form-control"
+                                          rows="3"></textarea>
+                                <span asp-validation-for="Notes" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- ================= BUTTONS ================= -->
+                        <div class="form-group">
+                            <div class="col-md-offset-2 col-md-9">
+
+                                <button type="submit"
+                                        class="btn btn-primary btn-flat">
+                                    Save
+                                </button>
+
+                                <a asp-action="IPDConsentForms"
+                                   asp-controller="IPDDetails"
+                                   asp-area="Admin"
+                                   class="btn btn-default btn-flat">
+                                    Clear
+                                </a>
+
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

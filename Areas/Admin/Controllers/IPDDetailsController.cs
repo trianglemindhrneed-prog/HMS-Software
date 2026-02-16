@@ -345,8 +345,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
         //=================IPDConsentDetails====================
 
-
-        [HttpGet]
+     
         public async Task<IActionResult> IPDConsentDetails(string column, string search)
         {
             string action = string.IsNullOrEmpty(search) ? "GETALL" : "SEARCH";
@@ -356,27 +355,170 @@ namespace HMSCore.Areas.Admin.Controllers
         new SqlParameter("@Action", action),
         new SqlParameter("@FilterColumn", (object?)column ?? DBNull.Value),
         new SqlParameter("@FilterValue", (object?)search ?? DBNull.Value)
-    };
+            };
 
             DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage", parameters);
 
-            var list = dt.AsEnumerable().Select(row => new IPDTreatmentPlan
+            var list = dt.AsEnumerable().Select(row => new IPDConsentForm
             {
-                PlanId = Convert.ToInt32(row["PlanId"]),
+                ConsentId = Convert.ToInt32(row["ConsentId"]),
                 PatientId = row["PatientId"]?.ToString(),
-                TreatmentDay = row["TreatmentDay"] == DBNull.Value ? null : Convert.ToInt32(row["TreatmentDay"]),
-                TreatmentDate = Convert.ToDateTime(row["TreatmentDate"]),
-                Diagnosis = row["Diagnosis"]?.ToString(),
-                Treatment = row["Treatment"]?.ToString(),
-                DietPlan = row["DietPlan"]?.ToString(),
-                Notes = row["Notes"]?.ToString(),
-                EnteredBy = row["EnteredBy"]?.ToString()
+                ConsentType = row["ConsentType"]?.ToString(),
+                ConsentDate = row["ConsentDate"] == DBNull.Value
+                                ? (DateTime?)null
+                                : Convert.ToDateTime(row["ConsentDate"]),
+                UploadedFilePath = row["UploadedFilePath"]?.ToString(),
+                TakenBy = row["TakenBy"]?.ToString(),
+                Notes = row["Notes"]?.ToString()
             }).ToList();
 
             ViewBag.Column = column;
             ViewBag.Search = search;
 
             return View(list);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> IPDConsentForms(int? id)
+        {
+            var model = new IPDConsentForm
+            {
+                ConsentDate = DateTime.Now
+            };
+
+            if (id.HasValue)
+            {
+                var dt = await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage",
+                    new[]
+                    {
+                new SqlParameter("@Action", "GETBYID"),
+                new SqlParameter("@ConsentId", id.Value)
+                    });
+
+                if (dt.Rows.Count > 0)
+                {
+                    var row = dt.Rows[0];
+
+                    model.ConsentId = Convert.ToInt32(row["ConsentId"]);
+                    model.PatientId = row["PatientId"]?.ToString();
+                    model.ConsentType = row["ConsentType"]?.ToString();
+                    model.ConsentDate = row["ConsentDate"] == DBNull.Value
+                                        ? null
+                                        : Convert.ToDateTime(row["ConsentDate"]);
+                    model.UploadedFilePath = row["UploadedFilePath"]?.ToString();
+                    model.TakenBy = row["TakenBy"]?.ToString();
+                    model.Notes = row["Notes"]?.ToString();
+                }
+            }
+
+            await LoadPatientDropdown(model.PatientId);
+
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IPDConsentForms(IPDConsentForm model, IFormFile file)
+        {
+            string filePath = model.UploadedFilePath;
+
+            // File Upload Handling
+            if (file != null && file.Length > 0)
+            {
+                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/consents");
+
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                string fullPath = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(fullPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                filePath = "/uploads/consents/" + fileName;
+            }
+
+            string action = model.ConsentId == 0 ? "INSERT" : "UPDATE";
+
+            var parameters = new[]
+            {
+        new SqlParameter("@Action", action),
+        new SqlParameter("@ConsentId", model.ConsentId),
+        new SqlParameter("@PatientId", (object?)model.PatientId ?? DBNull.Value),
+        new SqlParameter("@ConsentType", (object?)model.ConsentType ?? DBNull.Value),
+        new SqlParameter("@ConsentDate", (object?)model.ConsentDate ?? DBNull.Value),
+        new SqlParameter("@UploadedFilePath", (object?)filePath ?? DBNull.Value),
+        new SqlParameter("@TakenBy", (object?)model.TakenBy ?? DBNull.Value),
+        new SqlParameter("@Notes", (object?)model.Notes ?? DBNull.Value)
+    };
+
+            await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage", parameters);
+
+            TempData["Message"] = action == "INSERT"
+                ? "Consent saved successfully!"
+                : "Consent updated successfully!";
+
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("IPDConsentDetails");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConsentForms(int id)
+        {
+            if (id == 0)
+            {
+                TempData["Message"] = "Invalid Consent ID.";
+                TempData["MessageType"] = "danger";
+                return RedirectToAction("IPDConsentDetails");
+            }
+
+            await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage",
+                new[]
+                {
+            new SqlParameter("@Action","DELETE"),
+            new SqlParameter("@ConsentId",id)
+                });
+
+            TempData["Message"] = "Consent deleted successfully.";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("IPDConsentDetails");
+        }
+
+
+        // =============================
+        // DELETE MULTIPLE
+        // =============================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConsentSelectedPlan(int[] selectedIds)
+        {
+            if (selectedIds == null || selectedIds.Length == 0)
+            {
+                TempData["Message"] = "Please select at least one record.";
+                TempData["MessageType"] = "warning";
+                return RedirectToAction("IPDConsentDetails");
+            }
+
+            string ids = string.Join(",", selectedIds);
+
+            await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage",
+                new[]
+                {
+            new SqlParameter("@Action","DELETE_MULTIPLE"),
+            new SqlParameter("@SearchValue", ids)
+                });
+
+            TempData["Message"] = "Selected records deleted successfully.";
+            TempData["MessageType"] = "success";
+
+            return RedirectToAction("IPDConsentDetails");
         }
 
 

@@ -22,7 +22,7 @@
                     <i class="fa fa-plus"></i> IPD Consent Forms
                     </a>
 
-                    <form method="post" asp-action="DeleteSelectedPlan" id="deleteForm" style="display:inline-block;">
+                <form method="post" asp-action="DeleteConsentSelectedPlan" id="deleteForm" style="display:inline-block;">
                         <div id="hiddenInputsContainer"></div>
                         <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
                     </form>
@@ -59,7 +59,7 @@
                             Search
                         </button>
 
-                         <a asp-action="IPDConsentDetails"
+                        <a asp-action="IPDConsentDetails"
                            class="btn btn-default btn-sm">
                             Show All
                         </a>
@@ -102,20 +102,20 @@
 
                                 <td>
                                     @(string.IsNullOrEmpty(row.ConsentType)
-                                                                ? "-"
-                                                                : row.ConsentType)
-                                                                              </td>
+                                      ? "-"
+                                : row.ConsentType)
+                                    </td>
 
                                 <td>
                                     @(row.ConsentDate.HasValue
                                                                 ? row.ConsentDate.Value.ToString("dd-MM-yyyy")
-                                                                : "-")
+                                  : "-")
                                                                   </td>
 
                                 <td>
                                     @(string.IsNullOrEmpty(row.TakenBy)
                                                                 ? "-"
-                                                                : row.TakenBy)
+                                 : row.TakenBy)
                         </td>
 
                                 <td>
@@ -141,7 +141,7 @@
                                     </a>
 
                                     <form method="post"
-                                          asp-action="Delete"
+                                          asp-action="DeleteConsentForms"
                                           asp-route-id="@row.ConsentId"
                                           style="display:inline;"
                                           onsubmit="return confirm('Are you sure to delete this record?');">
