@@ -309,7 +309,7 @@ namespace HMSCore.Areas.Admin.Controllers
             new SqlParameter("@ToDate", (object)toDate?.AddDays(1) ?? DBNull.Value)
                 });
 
-            var list = dt.AsEnumerable().Select(r => new SaleMedicineReportViewModel
+            var list = dt.AsEnumerable().Select(r => new IPDSaleMedicineReportViewModel
             {
                 Id = Convert.ToInt32(r["Id"]),
                 InvoiceId = r["InvoiceId"].ToString(),

@@ -1,0 +1,226 @@
+﻿@model HMSCore.Areas.Admin.Models.IPDSaleMedicineReportPageVM
+@{
+    ViewData["Title"] = "Ipd Sale Medicine";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<head>
+    <style>
+        .btn-secondary {
+            background: #18d118bf;
+            font-weight: bold;
+            color: aliceblue;
+        }
+
+            .btn-secondary:hover {
+                color: aliceblue;
+            }
+    </style>
+</head>
+<section class="content-header">
+    <h1>Sale Medicine Report</h1>
+    <ol class="breadcrumb">
+        <li><a href="/Admin/Dashboard"><i class="fa fa-home"></i> Home</a></li>
+        <li class="active">Sale Medicine Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="box">
+        <div class="box-header with-border">
+            <div class="pull-left">
+                <a href="/Admin/IpdPharmacy/SaleMedicine" class="btn btn-danger btn-flat">
+                    <i class="fa fa-plus"></i>  Sale Medicine
+                </a>
+
+                <form method="post" asp-action="DeleteSelectedMedicineIpdMis" id="deleteForm" style="display:inline-block;">
+                    <div id="hiddenInputsContainer"></div>
+                    <button type="submit" class="btn btn-primary btn-flat" style="margin-left:10px;">Delete Selected</button>
+                </form>
+            </div>
+
+            <div class="pull-right">
+                <form method="get" class="form-inline">
+                    <!-- Page Size -->
+                    <select id="pageSizeSelect" class="form-control input-sm">
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+
+
+                    <!-- Filter Column -->
+                    <select class="form-control input-sm" asp-for="FilterColumn">
+                        <option value="">-- Select --</option>
+                        <option value="PatientName">Patient Name</option>
+                        <option value="Contact">Contact</option>
+                    </select>
+
+                    <input type="text" asp-for="Keyword" class="form-control input-sm" placeholder="Search" />
+                    <button type="submit" class="btn btn-primary btn-flat">Search</button>
+                    <a href="/Admin/IpdMis/IpdBillSaleMedicine" class="btn btn-default btn-flat">Show All</a>
+                </form>
+            </div>
+        </div>
+        <!-- Date Filter -->
+        <div class="row mt-3" style="margin-left: 3px !important;">
+            <div class="col-sm-3">
+                <label>From Date:</label>
+                <input type="date" id="FromDate" asp-for="FromDate" class="form-control input-sm" />
+
+            </div>
+            <div class="col-sm-3">
+                <label>To Date:</label>
+                <input type="date" id="ToDate" asp-for="ToDate" class="form-control input-sm" />
+            </div>
+            <div class="col-sm-2" style="margin-top: 22px;">
+                <button type="button" class="btn btn-primary btn-flat" onclick="submitSearchForm()">Search</button>
+            </div>
+
+        </div>
+
+        <div class="box-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead style="background-color:#41A5EE; color:white;">
+                        <tr>
+                            <th>Amount (Last 1 Year)</th>
+                            <th>Amount (Last 6 Months)</th>
+                            <th>Amount (Current Month)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@Model.YearlyPaid</td>
+                            <td>@Model.HalfYearlyPaid</td>
+                            <td>@Model.MonthlyPaid</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="box-body table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th>Invoice Id</th>
+                        <th>Bill Date</th>
+                        <th>Patient Id</th>
+                        <th>Patient Name</th>
+                        <th>Grand Total</th>
+                        <th>Final Amount</th>
+                        <th>Print</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Records)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="chkSelect" value="@row.InvoiceId" /></td>
+                            <td>@row.InvoiceId</td>
+                            <td>@row.InvoiceDate.ToString("dd-MM-yyyy")</td>
+                            <td>@row.PatientId</td>
+                            <td>@row.PatientName</td>
+                            <td>@row.GrandTotal</td>
+                            <td>@row.FinalAmount</td>
+                            <td>
+                                <a target="_blank"
+                                   class="btn btn-secondary btn-sm"
+                                   href="@Url.Action("PrintMedicineBill","IPDPharmacy",  new { pageName = "PrintSale_Product", id = row.InvoiceId })">
+                                <i class="fa fa-print"></i>
+                            </a>
+                        </td>
+                        <td>
+                            <form method="post"
+                                  asp-action="DeleteMedicineBillIpdMis"
+                                  onsubmit="return confirm('Delete this invoice?');">
+                                <input type="hidden" name="id" value="@row.InvoiceId" />
+                                <button class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                                        }
+                </tbody>
+            </table>
+
+
+            <div id="pagination" class="mt-2"></div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function toggleAll(chkAll) {
+            var checkboxes = document.querySelectorAll('.chkSelect');
+            checkboxes.forEach(c => c.checked = chkAll.checked);
+        }
+
+        // Handle Delete Selected IDs
+        document.getElementById('deleteForm').onsubmit = function () {
+            var selected = Array.from(document.querySelectorAll('.chkSelect:checked')).map(c => c.value);
+            if (selected.length === 0) {
+                alert('Please select at least one invoice.');
+                return false;
+            }
+
+            // Clear previous hidden inputs
+            var container = document.getElementById('hiddenInputsContainer');
+            container.innerHTML = '';
+
+            // Create hidden input for each selected invoiceId
+            selected.forEach(id => {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedIds'; // maps to string[] in controller
+                input.value = id;
+                container.appendChild(input);
+            });
+        };
+    </script>
+
+    <script>
+        function submitSearchForm() {
+            // Find the existing form on the page (the one with method="get")
+            var form = document.querySelector('form[method="get"]');
+            if (!form) {
+                alert('Search form not found!');
+                return;
+            }
+
+            // Create hidden inputs for FromDate and ToDate if they don't exist
+            if (!document.getElementById('hiddenFromDate')) {
+                var fromInput = document.createElement('input');
+                fromInput.type = 'hidden';
+                fromInput.name = 'fromDate';
+                fromInput.id = 'hiddenFromDate';
+                form.appendChild(fromInput);
+
+                var toInput = document.createElement('input');
+                toInput.type = 'hidden';
+                toInput.name = 'toDate';
+                toInput.id = 'hiddenToDate';
+                form.appendChild(toInput);
+            }
+
+            // Copy values from visible inputs using 'name' selector
+            var visibleFrom = document.querySelector('input[name="FromDate"]');
+            var visibleTo = document.querySelector('input[name="ToDate"]');
+
+            document.getElementById('hiddenFromDate').value = visibleFrom ? visibleFrom.value : '';
+            document.getElementById('hiddenToDate').value = visibleTo ? visibleTo.value : '';
+
+            // Submit the form
+            form.submit();
+        }
+
+
+    </script>
+
+}
