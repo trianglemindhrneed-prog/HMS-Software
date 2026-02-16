@@ -234,8 +234,6 @@ namespace HMSCore.Areas.Admin.Controllers
             return View(list);
         }
 
-
-
         [HttpGet]
         public async Task<IActionResult> IPDTreatmentPlan(int? id)
         {
@@ -272,7 +270,6 @@ namespace HMSCore.Areas.Admin.Controllers
             return View(model);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> IPDTreatmentPlan(IPDTreatmentPlan model)
         {
@@ -302,7 +299,6 @@ namespace HMSCore.Areas.Admin.Controllers
 
             return RedirectToAction("IPDTRTPlanDetails");
         }
-
 
         [HttpPost]
         public async Task<IActionResult> DeletePlan(int id)
@@ -345,6 +341,44 @@ namespace HMSCore.Areas.Admin.Controllers
 
             return RedirectToAction("IPDTRTPlanDetails");
         }
+
+
+        //=================IPDConsentDetails====================
+
+
+        [HttpGet]
+        public async Task<IActionResult> IPDConsentDetails(string column, string search)
+        {
+            string action = string.IsNullOrEmpty(search) ? "GETALL" : "SEARCH";
+
+            var parameters = new[]
+            {
+        new SqlParameter("@Action", action),
+        new SqlParameter("@FilterColumn", (object?)column ?? DBNull.Value),
+        new SqlParameter("@FilterValue", (object?)search ?? DBNull.Value)
+    };
+
+            DataTable dt = await _dbLayer.ExecuteSPAsync("sp_IPDConsentForms_Manage", parameters);
+
+            var list = dt.AsEnumerable().Select(row => new IPDTreatmentPlan
+            {
+                PlanId = Convert.ToInt32(row["PlanId"]),
+                PatientId = row["PatientId"]?.ToString(),
+                TreatmentDay = row["TreatmentDay"] == DBNull.Value ? null : Convert.ToInt32(row["TreatmentDay"]),
+                TreatmentDate = Convert.ToDateTime(row["TreatmentDate"]),
+                Diagnosis = row["Diagnosis"]?.ToString(),
+                Treatment = row["Treatment"]?.ToString(),
+                DietPlan = row["DietPlan"]?.ToString(),
+                Notes = row["Notes"]?.ToString(),
+                EnteredBy = row["EnteredBy"]?.ToString()
+            }).ToList();
+
+            ViewBag.Column = column;
+            ViewBag.Search = search;
+
+            return View(list);
+        }
+
 
     }
 }
