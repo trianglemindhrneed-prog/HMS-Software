@@ -1002,6 +1002,8 @@ namespace HMSCore.Areas.Admin.Controllers
        int pageNumber = 1,
        int pageSize = 20)
         {
+            int? doctorid = HttpContext.Session.GetInt32("DoctorId");
+
             if (!HttpContext.Session.GetInt32("UserId").HasValue)
                 return RedirectToAction("Login", "Account", new { area = "" });
             var vm = new AppointmentReportVM
@@ -1016,13 +1018,14 @@ namespace HMSCore.Areas.Admin.Controllers
 
             var dt = await _dbLayer.ExecuteSPAsync("sp_TodayAppointmentReport", new[]
             {
-        new SqlParameter("@Action","GetPaged"),
+        new SqlParameter("@Action","GetPagedByDoctor"),
         new SqlParameter("@FilterColumn",(object?)filterColumn ?? DBNull.Value),
         new SqlParameter("@FilterValue",(object?)keyword ?? DBNull.Value),
         new SqlParameter("@FromDate",(object?)fromDate ?? DBNull.Value),
         new SqlParameter("@ToDate",(object?)toDate ?? DBNull.Value),
         new SqlParameter("@PageNumber",pageNumber),
-        new SqlParameter("@PageSize",pageSize)
+        new SqlParameter("@PageSize",pageSize),
+        new SqlParameter("@DoctorId",doctorid)
     });
 
             if (dt.Rows.Count > 0)

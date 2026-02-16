@@ -49,9 +49,8 @@
                 </form>
 
                 <!-- PRINT BUTTON -->
-                <button type="button" onclick="printGrid()" class="btn btn-primary btn-flat">
-                    Print
-                </button>
+                <button type="button" id="btnPrint" class="btn btn-primary btn-flat">Print</button>
+
             </div>
 
             <div class="pull-right">
@@ -93,7 +92,7 @@
             <table class="table table-bordered table-hover mt-2" id="appointmentTable">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
+                        <th class="no-print"><input type="checkbox" id="chkAll" onclick="toggleAll(this)" /></th>
                         <th>BookingId</th>
                         <th>Department</th>
                         <th>Doctor</th>
@@ -103,15 +102,15 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>Status</th>
-                        <th>Print</th>
-                        <th>Action</th>
+                        <th class="no-print">Print</th>
+                        <th class="no-print">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Appointments)
                     {
                         <tr>
-                            <td><input type="checkbox" class="chkSelect" value="@item.AppointmentId" /></td>
+                            <td class="no-print"><input type="checkbox" class="chkSelect" value="@item.AppointmentId" /></td>
                             <td>@item.BookingId</td>
                             <td>@item.DepartmentName</td>
                             <td>@item.DoctorName</td>
@@ -139,7 +138,7 @@
                                 </form>
                             </td>
 
-                          <td>
+                            <td class="no-print">
                                 <a class="btn btn-secondary btn-sm"
                                    target="_blank"
                                    href="@Url.Action("PrintAppointment", "Appointment", new { pageName = "Appointment_Print", id = item.AppointmentId })">
@@ -147,7 +146,7 @@
                                 </a>
                                  </td>
 
-                            <td>
+                            <td class="no-print">
                                 <form asp-action="DeleteTodayAppointment" method="post" onsubmit="return confirm('Delete this appointment?');">
                                     <input type="hidden" name="id" value="@item.AppointmentId" />
                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
@@ -162,6 +161,8 @@
 </section>
 
 @section Scripts {
+
+    <script src="~/adminassets/dist/js/appointmentprintjs.js"></script>
     <script>
         // Toggle All checkboxes
         function toggleAll(chkAll) {
@@ -178,16 +179,6 @@
             }
             document.getElementById('selectedIds').value = selected.join(',');
         }
-
-        // Print function
-        function printGrid() {
-            var grid = document.getElementById("appointmentTable");
-            var w = window.open('');
-            w.document.write('<html><head><title>Print</title></head><body>');
-            w.document.write(grid.outerHTML);
-            w.document.write('</body></html>');
-            w.document.close();
-            w.print();
-        }
+         
     </script>
 }

@@ -38,7 +38,7 @@
         </div>
 
         <div class="box-body table-responsive" id="printableArea">
-            <table id="gvDoctorSummary" class="table table-bordered table-striped">
+            <table id="appointmentTable" class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>Doctor Name</th>
@@ -70,80 +70,8 @@
 </section>
 
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            $("#btnPrint").click(function () {
-                var printContents = $("#printableArea").html();
-                var printFooter = $("#printableFooter").html();
 
-                // Open a new window
-                var newWin = window.open('', '', 'width=900,height=700');
-
-                // Create the HTML document structure
-                var doc = newWin.document;
-                doc.open();
-
-                // Build head
-                var head = doc.createElement('head');
-                var title = doc.createElement('title');
-                title.textContent = 'Seen Patients Appointment Report';
-                head.appendChild(title);
-
-                // Add Bootstrap CSS
-                var link = doc.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = '/adminassets/bower_components/bootstrap/dist/css/bootstrap.min.css';
-                head.appendChild(link);
-
-                // Add custom styles
-                var style = doc.createElement('style');
-                style.textContent = `
-                    table {width: 100%; border-collapse: collapse;}
-                    table, th, td {border: 1px solid black;}
-                    th, td {padding: 8px; text-align: left;}
-                    .box-footer {margin-top: 15px; font-weight: bold;}
-                    h3 {text-align: center;}
-                `;
-                head.appendChild(style);
-
-                doc.documentElement.appendChild(head);
-
-                // Build body
-                var body = doc.createElement('body');
-
-                // Header
-                var h3 = doc.createElement('h3');
-                h3.textContent = 'Seen Patients Appointment Report';
-                body.appendChild(h3);
-
-                // Printable table
-                var tableDiv = doc.createElement('div');
-                tableDiv.innerHTML = printContents;
-                body.appendChild(tableDiv);
-
-                // Footer
-                var footerDiv = doc.createElement('div');
-                footerDiv.innerHTML = printFooter;
-                body.appendChild(footerDiv);
-
-                doc.documentElement.appendChild(body);
-
-                // Add hot-reload script safely (escaped)
-                var refreshScript = doc.createElement('script');
-                refreshScript.src = '/_framework/aspnetcore-browser-refresh.js';
-                doc.body.appendChild(refreshScript);
-
-                doc.close();
-
-                // Wait for window to load before printing
-                newWin.onload = function () {
-                    newWin.focus();
-                    newWin.print();
-                    newWin.close();
-                };
-            });
-        });
-    </script>
+    <script src="~/adminassets/dist/js/appointmentprintjs.js"></script>
 }
 
 
