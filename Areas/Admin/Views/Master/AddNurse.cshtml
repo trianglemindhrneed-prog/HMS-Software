@@ -64,14 +64,25 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Password</label>
-                                            <input type="password"
-                                                   autocomplete="new-password"
-                                                   asp-for="Password"
-                                                   class="form-control"
-                                                   value="" />  
-                                            <small class="text-muted">Leave blank to keep existing password</small>
+                                            <div class="input-group">
+                                                <input type="password"
+                                                       class="form-control"
+                                                       id="passwordField"
+                                                       name="Password"
+                                                       value="@Model.Password"
+                                                       autocomplete="new-password" />
+
+                                                <span class="input-group-addon"
+                                                      style="cursor:pointer;"
+                                                      onclick="togglePassword()">
+                                                    <i class="fa fa-eye" id="toggleIcon"></i>
+                                                </span>
+                                            </div>
+
+                                            <span asp-validation-for="Password" class="text-danger"></span>
                                         </div>
                                     </div>
+
 
                                
 
@@ -131,6 +142,22 @@
             input.value = input.value.replace(/[^0-9]/g, '').slice(0, 10);
             document.getElementById("phoneError").style.display =
                 (input.value.length > 0 && input.value.length !== 10) ? "inline" : "none";
+        }
+    </script>
+    <script>
+        function togglePassword() {
+            var passwordInput = document.getElementById("passwordField");
+            var icon = document.getElementById("toggleIcon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
         }
     </script>
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HMSCore.Areas.Admin.Models
 {
@@ -8,6 +9,8 @@ namespace HMSCore.Areas.Admin.Models
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string MobileNu { get; set; } = string.Empty;
+        [StringLength(20, MinimumLength = 6,
+        ErrorMessage = "Password must be between 6 and 20 characters.")]
         public string Password { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public string? ProfileImagePath { get; set; }

@@ -222,6 +222,7 @@ namespace HMSCore.Areas.Admin.Controllers
                 {
                     DoctorId = Convert.ToInt32(r["DoctorId"]),
                     FullName = r["FullName"].ToString(),
+                    Password = r["Password"].ToString(),
                     DepartmentName = r["DepartmentName"].ToString(),
                     DEmail = r["Email"].ToString(),
                     MobileNu = r["MobileNu"].ToString(),
@@ -389,9 +390,14 @@ namespace HMSCore.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDoctor(Doctor model, IFormFile ProfileImage)
         {
-            // Load Departments for dropdown
+            // 🔐 Session Check
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
+
+            // Reload Departments dropdown
             DataTable dtDept = await _dbLayer.ExecuteSPAsync(
                 "sp_ManageDoctor",
                 new SqlParameter[] { new SqlParameter("@Action", "SelectDepartments") }
@@ -404,22 +410,23 @@ namespace HMSCore.Areas.Admin.Controllers
                     DepartmentName = r["DepartmentName"].ToString()
                 }).ToList();
 
-            // Remove non-required ModelState fields
-            ModelState.Remove("DepartmentName");
+            // Remove unnecessary ModelState validations
             ModelState.Remove("Departments");
-            ModelState.Remove("Address");
             ModelState.Remove("ProfileImagePath");
             ModelState.Remove("ProfileImage");
+            ModelState.Remove("DepartmentName");
 
-            // Handle password: fetch existing if blank on update
-            if (string.IsNullOrWhiteSpace(model.Password) && model.DoctorId != 0)
+            // ✏ INSERT case – password required
+            if (model.DoctorId == 0 && string.IsNullOrWhiteSpace(model.Password))
             {
-                string existingPassword = await GetExistingDoctorPassword(model.DoctorId);
-                if (!string.IsNullOrWhiteSpace(existingPassword))
-                {
-                    model.Password = existingPassword;
-                    ModelState.Remove("Password");
-                }
+                ModelState.AddModelError("Password", "Password is required.");
+            }
+
+            // ✏ UPDATE case – keep old password if blank
+            if (model.DoctorId > 0 && string.IsNullOrWhiteSpace(model.Password))
+            {
+                model.Password = await GetExistingDoctorPassword(model.DoctorId);
+                ModelState.Remove("Password");
             }
 
             if (!ModelState.IsValid)
@@ -429,19 +436,26 @@ namespace HMSCore.Areas.Admin.Controllers
                 return View(model);
             }
 
-            // Handle Profile Image Upload
+            // 📸 Handle Profile Image Upload
             string profilePath = model.ProfileImagePath;
+
             if (ProfileImage != null && ProfileImage.Length > 0)
             {
-                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/doctors");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                string uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/uploads/doctors"
+                );
 
-                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfileImage.FileName);
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                string extension = Path.GetExtension(ProfileImage.FileName);
+                string uniqueFileName = Guid.NewGuid() + extension;
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await ProfileImage.CopyToAsync(fileStream);
+                    await ProfileImage.CopyToAsync(stream);
                 }
 
                 profilePath = "/uploads/doctors/" + uniqueFileName;
@@ -456,13 +470,13 @@ namespace HMSCore.Areas.Admin.Controllers
             new SqlParameter("@Action", action),
             new SqlParameter("@DoctorId", model.DoctorId),
             new SqlParameter("@DepartmentId", model.DepartmentId),
-            new SqlParameter("@FullName", model.FullName),
-            new SqlParameter("@Email", model.DEmail),
+            new SqlParameter("@FullName", model.FullName.Trim()),
+            new SqlParameter("@Email", model.DEmail.Trim()),
             new SqlParameter("@MobileNu", model.MobileNu),
-            new SqlParameter("@Address", model.Address),
+            new SqlParameter("@Address", (object?)model.Address ?? DBNull.Value),
             new SqlParameter("@Password", model.Password),
             new SqlParameter("@IsActive", model.IsActive),
-            new SqlParameter("@ProfileImagePath", profilePath)
+            new SqlParameter("@ProfileImagePath", (object?)profilePath ?? DBNull.Value)
         };
 
                 await _dbLayer.ExecuteSPAsync("sp_ManageDoctor", parameters);
@@ -470,25 +484,28 @@ namespace HMSCore.Areas.Admin.Controllers
                 TempData["Message"] = action == "InsertDoctor"
                     ? "Doctor added successfully!"
                     : "Doctor updated successfully!";
+
                 TempData["MessageType"] = "success";
+
+                return RedirectToAction("DoctorsList");
             }
             catch (SqlException ex)
             {
-                // Catch RAISERROR from SP for duplicates
+                ModelState.AddModelError(string.Empty, ex.Message);
+
                 TempData["Message"] = ex.Message;
                 TempData["MessageType"] = "error";
+
                 return View(model);
             }
             catch (Exception)
             {
                 TempData["Message"] = "Something went wrong while saving doctor.";
                 TempData["MessageType"] = "error";
+
                 return View(model);
             }
-
-            return RedirectToAction("DoctorsList");
         }
-
 
         // ============================
         // Helper method to get existing password
@@ -524,6 +541,7 @@ namespace HMSCore.Areas.Admin.Controllers
 
             var nurses = dt.AsEnumerable().Select(r => new Nurse
             {
+                Password = r["Password"].ToString(),
                 NurseId = Convert.ToInt32(r["NurseId"]),
                 FullName = r["FullName"].ToString(),
                 Email = r["Email"].ToString(),
@@ -651,50 +669,41 @@ namespace HMSCore.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddNurse(Nurse model)
         {
-            // ----------------------------
-            // Handle image upload
-            // ----------------------------
-            if (model.ProfileImage != null && model.ProfileImage.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/nurses");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ProfileImage.FileName);
-                var filePath = Path.Combine(uploadsFolder, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.ProfileImage.CopyToAsync(stream);
-                }
-
-                model.ProfileImagePath = "/uploads/nurses/" + fileName;
-            }
+            // 🔐 Session Check (Recommended)
+            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+                return RedirectToAction("Login", "Account", new { area = "" });
 
             // ----------------------------
-            // Remove unnecessary fields for validation
+            // Remove unnecessary ModelState fields
             // ----------------------------
             ModelState.Remove("Departments");
             ModelState.Remove("ProfileImage");
             ModelState.Remove("Address");
+            ModelState.Remove("DepartmentName");
+            ModelState.Remove("ProfileImagePath");
 
             // ----------------------------
-            // Handle password
+            // INSERT case – password required
             // ----------------------------
-            if (string.IsNullOrWhiteSpace(model.Password) && model.NurseId != 0)
+            if (model.NurseId == 0 && string.IsNullOrWhiteSpace(model.Password))
             {
-                var existingPassword = await GetExistingNursePassword(model.NurseId);
-                if (!string.IsNullOrWhiteSpace(existingPassword))
-                {
-                    model.Password = existingPassword;
-                    ModelState.Remove("Password");
-                }
+                ModelState.AddModelError("Password", "Password is required.");
             }
 
             // ----------------------------
-            // Validate
+            // UPDATE case – keep old password if blank
+            // ----------------------------
+            if (model.NurseId > 0 && string.IsNullOrWhiteSpace(model.Password))
+            {
+                model.Password = await GetExistingNursePassword(model.NurseId);
+                ModelState.Remove("Password");
+            }
+
+            // ----------------------------
+            // Validate Model
             // ----------------------------
             if (!ModelState.IsValid)
             {
@@ -704,7 +713,34 @@ namespace HMSCore.Areas.Admin.Controllers
             }
 
             // ----------------------------
-            // Save via SP
+            // Handle Image Upload
+            // ----------------------------
+            string profilePath = model.ProfileImagePath;
+
+            if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/uploads/nurses"
+                );
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var extension = Path.GetExtension(model.ProfileImage.FileName);
+                var fileName = Guid.NewGuid() + extension;
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ProfileImage.CopyToAsync(stream);
+                }
+
+                profilePath = "/uploads/nurses/" + fileName;
+            }
+
+            // ----------------------------
+            // Save via Stored Procedure
             // ----------------------------
             try
             {
@@ -714,34 +750,40 @@ namespace HMSCore.Areas.Admin.Controllers
                 {
             new SqlParameter("@Action", action),
             new SqlParameter("@NurseId", model.NurseId),
-            new SqlParameter("@FullName", model.FullName),
-            new SqlParameter("@Email", model.Email),
+            new SqlParameter("@FullName", model.FullName.Trim()),
+            new SqlParameter("@Email", model.Email.Trim()),
             new SqlParameter("@MobileNu", model.MobileNu),
             new SqlParameter("@IsActive", model.IsActive),
             new SqlParameter("@Password", model.Password),
-            new SqlParameter("@ProfileImagePath", (object)model.ProfileImagePath ?? DBNull.Value)
+            new SqlParameter("@ProfileImagePath", (object?)profilePath ?? DBNull.Value)
         };
 
                 await _dbLayer.ExecuteSPAsync("sp_ManageNurse", parameters);
 
-                TempData["Message"] = action == "Insert" ? "Nurse added successfully!" : "Nurse updated successfully!";
+                TempData["Message"] = action == "Insert"
+                    ? "Nurse added successfully!"
+                    : "Nurse updated successfully!";
+
                 TempData["MessageType"] = "success";
+
+                return RedirectToAction("NurseList");
             }
             catch (SqlException ex)
             {
-                // Handle duplicate error from SP
+                ModelState.AddModelError(string.Empty, ex.Message);
+
                 TempData["Message"] = ex.Message;
                 TempData["MessageType"] = "error";
+
                 return View(model);
             }
             catch (Exception)
             {
                 TempData["Message"] = "Something went wrong while saving nurse.";
                 TempData["MessageType"] = "error";
+
                 return View(model);
             }
-
-            return RedirectToAction("NurseList");
         }
 
         // ============================

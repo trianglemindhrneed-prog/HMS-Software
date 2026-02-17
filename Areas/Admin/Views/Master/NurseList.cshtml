@@ -57,7 +57,11 @@
                     <tr>
                         <th><input type="checkbox" id="chkAll" /></th>
                         <th>Nurse Name</th>
-                        <th>Email</th>
+                        <th>User(Email)</th>
+                        @if (ViewBag.UserRole?.ToString() == "Admin")
+                        {
+                            <th>Password</th>
+                        }
                         <th>Phone</th>
                         <th>Status</th>
                         <th>Edit</th>
@@ -79,6 +83,24 @@
 
                             <td>@nurse.FullName</td>
                             <td>@nurse.Email</td>
+                            @if (ViewBag.UserRole?.ToString() == "Admin")
+                            {
+                                <td>
+                                    <span id="pwd_@nurse.NurseId" style="display:none;">
+                                        @nurse.Password
+                                    </span>
+
+                                    <span id="masked_@nurse.NurseId">
+                                        ********
+                                    </span>
+
+                                    <button type="button"
+                                            class="btn btn-xs btn-info"
+                                            onclick="togglePwd('@nurse.NurseId')">
+                                        Show
+                                    </button>
+                                </td>
+                            }
                             <td>@nurse.MobileNu</td>
 
                             <!-- Status Toggle -->
@@ -126,5 +148,19 @@
             var checked = this.checked;
             document.querySelectorAll('.chkItem').forEach(cb => cb.checked = checked);
         });
+    </script>
+    <script>
+        function togglePwd(id) {
+            var real = document.getElementById("pwd_" + id);
+            var masked = document.getElementById("masked_" + id);
+
+            if (real.style.display === "none") {
+                real.style.display = "inline";
+                masked.style.display = "none";
+            } else {
+                real.style.display = "none";
+                masked.style.display = "inline";
+            }
+        }
     </script>
 }
